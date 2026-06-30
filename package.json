@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/2026-06-30-game-rules.test.mjs"
+    "test": "node tests/2026-06-30-game-rules.test.mjs && node tests/2026-06-30-multiplayer.test.mjs"
   }
 }

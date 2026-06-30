@@ -61,6 +61,11 @@
             <span class="difficulty-badge">HARD</span>
           </button>
         </div>
+        <a class="online-cta" href="./2026-06-30-online.html">
+          <span class="online-cta-icon">◎</span>
+          <span><strong>친구와 온라인 대전</strong><small>6자리 방 코드로 바로 초대하기</small></span>
+          <b>ONLINE →</b>
+        </a>
       </section>
 
       <footer class="home-footer"><span>AI 대전</span><span>·</span><span>설치 없음</span><span>·</span><span>모바일 지원</span></footer>
@@ -153,6 +158,37 @@
     </div>
   </div>
 
+  <div id="dice-modal" class="modal dice-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dice-title">
+    <div class="modal-card dice-modal-card">
+      <p class="step-label">WHO GOES FIRST?</p>
+      <h2 id="dice-title">주사위로 선공을 정해요</h2>
+      <p id="dice-status" class="dice-status">버튼을 누르면 둘 다 주사위를 굴립니다.</p>
+      <div class="dice-arena">
+        <div class="dice-player mine">
+          <span>나</span>
+          <div id="player-die" class="die" aria-label="내 주사위">⚀</div>
+          <strong id="player-die-result">-</strong>
+        </div>
+        <div class="dice-versus">VS</div>
+        <div class="dice-player theirs">
+          <span id="dice-ai-name">영리한 네오</span>
+          <div id="ai-die" class="die" aria-label="상대 주사위">⚀</div>
+          <strong id="ai-die-result">-</strong>
+        </div>
+      </div>
+      <button id="roll-dice-button" class="primary-button dice-roll-button" type="button">주사위 굴리기</button>
+    </div>
+  </div>
+
+  <div id="draw-reveal" class="draw-reveal hidden" role="dialog" aria-modal="true" aria-labelledby="draw-reveal-title">
+    <div class="draw-reveal-panel">
+      <p class="step-label">NEW CARD</p>
+      <h2 id="draw-reveal-title">뽑은 카드를 확인하세요</h2>
+      <div id="draw-reveal-cards" class="draw-reveal-cards"></div>
+      <button id="draw-reveal-skip" class="draw-reveal-skip" type="button">패에 넣기</button>
+    </div>
+  </div>
+
   <div id="result-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
     <div class="modal-card result-card">
       <div id="result-icon" class="result-icon">✦</div>
@@ -192,7 +228,7 @@
         <div><span class="mini-card">J</span><p><strong>건너뛰기</strong><small>상대 턴을 한 번 건너뜁니다.</small></p></div>
         <div><span class="mini-card red">Q</span><p><strong>방향 전환</strong><small>2인 대전에서는 한 번 더 플레이해요.</small></p></div>
         <div><span class="mini-card">K</span><p><strong>한 번 더</strong><small>카드를 낸 사람이 다시 플레이해요.</small></p></div>
-        <div><span class="mini-card red">7</span><p><strong>무늬 변경</strong><small>같은 무늬에 낸 뒤 원하는 무늬로 바꿔요.</small></p></div>
+        <div><span class="mini-card red">7</span><p><strong>무늬 변경</strong><small>선언 무늬 또는 다른 7을 내고 다시 바꿔요.</small></p></div>
       </div>
       <button class="primary-button" data-close-modal="rules-modal" type="button">확인했어요</button>
     </div>

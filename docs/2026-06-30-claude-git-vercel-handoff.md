@@ -2,13 +2,16 @@
 
 ## 현재 상태
 
-- Codex가 처음부터 작성한 AI 원카드 1차 버전
-- 규칙·조커·부채꼴 손패 자동 테스트 22개 통과
+- Codex가 처음부터 작성한 AI 원카드와 Supabase 2인 온라인 대전 버전
+- 규칙·레이아웃·멀티 보안·DOM 계약 자동 테스트 34개 통과
 - 데스크톱 1280×720, 모바일 390×844 브라우저 점검 완료
 - 실제 카드 선택, 7 무늬 변경, AI 응답, 턴 연속 진행 확인
 - 7장·16장 손패 배치, 카드 기록, 장난감 상호작용 확인
 - 조커 +5, 7 패 확인, 원카드·공격 이펙트, 장난감 이동 확인
-- 브라우저 콘솔 오류와 경고 없음
+- 주사위 선공, 뽑은 카드 공개, 손패→더미 카드 이동 애니메이션 구현
+- 새 액션은 재생 중인 이전 액션을 즉시 교체하도록 구현
+- 온라인 화면은 Supabase 공개 값 입력 전 설정 안내 상태로 유지
+- 실제 온라인 2브라우저 통합 테스트는 Supabase 설정 후 필요
 - Git 커밋과 원격 저장소 작업은 수행하지 않음
 
 ## 배포 대상
@@ -26,16 +29,16 @@ Vercel 권장 설정:
 ## 커밋 전 확인
 
 ```powershell
-node tests\2026-06-30-game-rules.test.mjs
+npm.cmd test
 python -m http.server 8765
 ```
 
-브라우저에서 `http://localhost:8765/`을 열어 홈 화면과 AI 대전을 확인합니다.
+브라우저에서 `http://localhost:8765/`의 AI 대전을 확인합니다. Supabase 설정 후 일반 창과 시크릿 창에서 `/2026-06-30-online.html`을 각각 열어 2인 대전도 확인합니다.
 
 ## 권장 커밋 메시지
 
 ```text
-feat: add joker attacks, card effects, fan hand and draggable toys
+feat: add dice-driven AI and secure Supabase multiplayer
 ```
 
 ## 구현 구성
@@ -47,9 +50,15 @@ feat: add joker attacks, card effects, fan hand and draggable toys
 - `src/main.js`: 렌더링, 입력, AI 턴, 기록과 화면 흐름
 - `src/audio.js`: Web Audio 효과음과 소리 설정
 - `src/2026-06-30-hand-layout.js`: 손패 수와 화면 폭에 따른 동적 간격 계산
-- `src/2026-06-30-effects.js`: 공격·조커·원카드 전체 화면 이펙트 큐
+- `src/2026-06-30-effects.js`: 공격·조커·원카드 전체 화면 이펙트와 새 액션 우선 교체
+- `src/2026-06-30-card-motion.js`: 플레이 카드의 손패→더미 이동
 - `src/2026-06-30-toy-drag.js`: 마우스·터치·키보드 장난감 이동
-- `tests/2026-06-30-game-rules.test.mjs`: 핵심 규칙 자동 테스트
+- `2026-06-30-online.html`, `2026-06-30-online.css`: 온라인 입장·대기실·게임판
+- `src/2026-06-30-multiplayer.js`: 익명 인증, RPC, Realtime, 연결 유지
+- `src/2026-06-30-online-main.js`: 온라인 UI·주사위·카드·이펙트 흐름
+- `supabase/2026-06-30-onecard-schema.sql`: 방·비공개 패·이벤트·RLS·게임 RPC
+- `docs/2026-06-30-supabase-setup.md`: 사용자용 Supabase 설치 절차
+- `tests/`: 핵심 규칙·멀티·DOM 계약 자동 테스트
 - `vercel.json`: 정적 배포 URL 설정
 
 ## 적용 규칙
@@ -64,15 +73,15 @@ feat: add joker attacks, card effects, fan hand and draggable toys
 - 공격을 막지 못하면 누적 장수를 받고 턴 종료
 - 일반 드로우도 한 장을 받고 턴 종료
 - 덱이 떨어지면 맨 위 카드를 제외한 버린 카드 재혼합
-- 7은 현재 무늬와 맞을 때만 낼 수 있고, 이후 무늬를 변경
+- 7 선언 뒤에는 선언 무늬 또는 다른 7을 낼 수 있고, 새 7은 무늬를 다시 변경
 
-## 멀티플레이 확장 메모
+## 멀티플레이 배포 전 필수 작업
 
-`game-engine.js`는 DOM과 분리되어 있으므로 향후 방 코드 대전에서는 게임 상태의 소유권과 전송 계층을 추가하면 됩니다. 다음 단계에서 정할 사항은 다음과 같습니다.
+1. `docs/2026-06-30-supabase-setup.md`대로 새 Supabase 프로젝트를 만듭니다.
+2. Anonymous sign-ins를 켭니다.
+3. `supabase/2026-06-30-onecard-schema.sql` 전체를 SQL Editor에서 실행합니다.
+4. `src/2026-06-30-supabase-config.js`에 Project URL과 Publishable key만 입력합니다.
+5. 일반 창 + 시크릿 창으로 방 생성, 참가, 준비, 양쪽 주사위, 카드 내기·뽑기·나가기를 확인합니다.
+6. 그 다음 Git 커밋과 Vercel 배포를 진행합니다.
 
-1. 실시간 백엔드: Supabase Realtime, Firebase 또는 별도 WebSocket
-2. 방 코드 길이와 방 만료 시간
-3. 재접속·이탈 승패 정책
-4. 서버 권위형 검증과 카드 정보 비공개 전송 방식
-
-정적 파일만으로는 신뢰할 수 있는 온라인 멀티플레이를 구현할 수 없으므로 이 단계부터 외부 실시간 서비스가 필요합니다.
+`src/2026-06-30-supabase-config.js`는 현재 빈 값입니다. Secret key, service_role key, DB password는 어떤 경우에도 커밋하지 않습니다.

@@ -4,6 +4,7 @@ import { isSoundEnabled, playSound, toggleSound } from './audio.js';
 import { calculateFanTransform, calculateHandLayout } from './2026-06-30-hand-layout.js';
 import { createGameEffects } from './2026-06-30-effects.js';
 import { makeToyDraggable } from './2026-06-30-toy-drag.js';
+import { animateCardToPile } from './2026-06-30-card-motion.js';
 
 const DIFFICULTIES = {
   easy: { name: '느긋한 루미', icon: '☁', status: '느긋하게 패를 살펴보고 있어요', delay: 850 },
@@ -23,6 +24,15 @@ let toastTimer = null;
 let handLayoutFrame = null;
 let isPeekingHand = false;
 let oneCardAnnounced = [false, false];
+let gameReady = false;
+let diceRolling = false;
+let drawAnimating = false;
+let drawRevealResolve = null;
+let drawRevealTimer = null;
+let cardAnimating = false;
+let oneCardEffectTimer = null;
+
+const DIE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
 const TOY_LINES = {
   jelly: ['말랑!', '뿌잉!', '또 눌러줘!'],
@@ -65,6 +75,8 @@ els['change-ai-button'].addEventListener('click', goHome);
 els['peek-hand-button'].addEventListener('click', peekAtHand);
 els['return-to-suit-button'].addEventListener('click', returnToSuitPicker);
 els['cancel-seven-button'].addEventListener('click', cancelSevenSelection);
+els['roll-dice-button'].addEventListener('click', rollForFirstTurn);
+els['draw-reveal-skip'].addEventListener('click', finishDrawReveal);
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
@@ -87,11 +99,16 @@ function startGame(selectedDifficulty) {
   pendingSeven = null;
   isPeekingHand = false;
   oneCardAnnounced = [false, false];
+  gameReady = false;
+  diceRolling = false;
+  drawAnimating = false;
+  cardAnimating = false;
+  clearTimeout(oneCardEffectTimer);
   effects.clear();
   toyControllers.forEach((controller) => controller.reset());
   els['game-screen'].classList.remove('suit-peek-active');
   els['suit-return-bar'].classList.add('hidden');
-  startedAt = Date.now();
+  startedAt = 0;
   els['home-screen'].classList.add('hidden');
   els['game-screen'].classList.remove('hidden');
   closeModal('result-modal');
@@ -100,18 +117,155 @@ function startGame(selectedDifficulty) {
   els['ai-name'].textContent = profile.name;
   els['ai-avatar'].textContent = profile.icon;
   els['ai-status'].textContent = profile.status;
+  els['dice-ai-name'].textContent = profile.name;
   clearInterval(timerId);
-  timerId = setInterval(updateTimer, 1000);
+  timerId = null;
   updateTimer();
   playSound('card');
   render();
+  resetDiceModal();
+  setTimeout(() => openModal('dice-modal'), 180);
+}
+
+function resetDiceModal() {
+  els['player-die'].textContent = DIE_FACES[0];
+  els['ai-die'].textContent = DIE_FACES[0];
+  els['player-die-result'].textContent = '-';
+  els['ai-die-result'].textContent = '-';
+  els['dice-status'].textContent = '버튼을 누르면 둘 다 주사위를 굴립니다.';
+  els['roll-dice-button'].textContent = '주사위 굴리기';
+  els['roll-dice-button'].disabled = false;
+  els['dice-modal'].classList.remove('dice-tie', 'dice-decided');
+}
+
+async function rollForFirstTurn() {
+  if (diceRolling || gameReady) return;
+  diceRolling = true;
+  els['roll-dice-button'].disabled = true;
+  els['dice-status'].textContent = '데구르르… 누가 먼저 시작할까요?';
+  els['dice-modal'].classList.remove('dice-tie', 'dice-decided');
+  const playerRoll = randomDie();
+  const aiRoll = randomDie();
+  playSound('dice');
+  await Promise.all([
+    animateDie(els['player-die'], els['player-die-result'], playerRoll, 920),
+    animateDie(els['ai-die'], els['ai-die-result'], aiRoll, 1060),
+  ]);
+
+  if (playerRoll === aiRoll) {
+    els['dice-modal'].classList.add('dice-tie');
+    els['dice-status'].textContent = `${playerRoll} 대 ${aiRoll}, 동점! 한 번 더 굴려요.`;
+    els['roll-dice-button'].textContent = '다시 굴리기';
+    els['roll-dice-button'].disabled = false;
+    diceRolling = false;
+    playSound('dice-tie');
+    return;
+  }
+
+  const playerFirst = playerRoll > aiRoll;
+  game.setStartingPlayer(playerFirst ? 0 : 1);
+  gameReady = true;
+  diceRolling = false;
+  els['dice-modal'].classList.add('dice-decided');
+  els['dice-status'].textContent = playerFirst
+    ? `${playerRoll} 대 ${aiRoll}! 내가 먼저 시작합니다.`
+    : `${playerRoll} 대 ${aiRoll}! ${DIFFICULTIES[difficulty].name}가 먼저 시작합니다.`;
+  els['roll-dice-button'].textContent = playerFirst ? '내가 선공!' : '나는 후공!';
+  startedAt = Date.now();
+  clearInterval(timerId);
+  timerId = setInterval(updateTimer, 1000);
+  render();
+  await wait(1050);
+  closeModal('dice-modal');
+  effects.play('initiative', {
+    symbol: playerFirst ? '1st' : '2nd',
+    title: playerFirst ? '선공!' : '후공!',
+    subtitle: playerFirst ? '내가 먼저 카드를 냅니다' : `${DIFFICULTIES[difficulty].name}의 선공입니다`,
+    particleCount: 24,
+  });
+  playSound(playerFirst ? 'first' : 'second');
+  if (!playerFirst) setTimeout(scheduleAiTurn, 2150);
+}
+
+function randomDie() {
+  if (globalThis.crypto?.getRandomValues) {
+    const value = new Uint32Array(1);
+    globalThis.crypto.getRandomValues(value);
+    return (value[0] % 6) + 1;
+  }
+  return Math.floor(Math.random() * 6) + 1;
+}
+
+function animateDie(die, resultLabel, result, duration) {
+  return new Promise((resolve) => {
+    die.classList.add('rolling');
+    resultLabel.textContent = '…';
+    let tick = 0;
+    const interval = setInterval(() => {
+      die.textContent = DIE_FACES[(tick + Math.floor(Math.random() * 6)) % 6];
+      tick += 1;
+    }, 75);
+    setTimeout(() => {
+      clearInterval(interval);
+      die.textContent = DIE_FACES[result - 1];
+      die.classList.remove('rolling');
+      die.classList.add('landed');
+      resultLabel.textContent = String(result);
+      setTimeout(() => die.classList.remove('landed'), 500);
+      resolve();
+    }, duration);
+  });
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function showDrawReveal(cards, wasPenalty) {
+  if (!cards.length) return Promise.resolve();
+  clearTimeout(drawRevealTimer);
+  els['draw-reveal-title'].textContent = wasPenalty
+    ? `공격으로 받은 카드 ${cards.length}장`
+    : '뽑은 카드를 확인하세요';
+  els['draw-reveal-cards'].replaceChildren();
+  cards.forEach((card, index) => {
+    const cardElement = createCardElement(card, false);
+    cardElement.classList.add('drawn-card');
+    cardElement.style.setProperty('--draw-index', index);
+    cardElement.style.setProperty('--draw-count', cards.length);
+    els['draw-reveal-cards'].append(cardElement);
+  });
+  els['draw-reveal'].classList.remove('hidden', 'leaving');
+  requestAnimationFrame(() => els['draw-reveal'].classList.add('open'));
+  setTimeout(() => els['draw-reveal-skip'].focus(), 120);
+
+  return new Promise((resolve) => {
+    drawRevealResolve = resolve;
+    drawRevealTimer = setTimeout(finishDrawReveal, Math.min(2600, 1150 + cards.length * 180));
+  });
+}
+
+function finishDrawReveal() {
+  if (!drawRevealResolve) return;
+  clearTimeout(drawRevealTimer);
+  const resolve = drawRevealResolve;
+  drawRevealResolve = null;
+  els['draw-reveal'].classList.add('leaving');
+  els['draw-reveal'].classList.remove('open');
+  setTimeout(() => {
+    els['draw-reveal'].classList.add('hidden');
+    els['draw-reveal'].classList.remove('leaving');
+    resolve();
+  }, 320);
 }
 
 function goHome() {
   clearTimeout(aiTimer);
+  clearTimeout(oneCardEffectTimer);
   clearInterval(timerId);
   window.scrollTo(0, 0);
   effects.clear();
+  gameReady = false;
   pendingSeven = null;
   isPeekingHand = false;
   els['suit-return-bar'].classList.add('hidden');
@@ -124,7 +278,7 @@ function goHome() {
 }
 
 function playerPlay(cardId) {
-  if (game.currentPlayer !== 0 || game.winner !== null) return;
+  if (!gameReady || drawAnimating || cardAnimating || game.currentPlayer !== 0 || game.winner !== null) return;
   if (pendingSeven) {
     showToast('먼저 7의 무늬를 선택하거나 내기를 취소해 주세요');
     return;
@@ -184,40 +338,58 @@ function cancelSevenSelection() {
   showToast('7 내기를 취소했어요');
 }
 
-function applyPlayerCard(cardId, suit = null) {
+async function applyPlayerCard(cardId, suit = null) {
+  if (cardAnimating) return;
+  cardAnimating = true;
+  clearTimeout(oneCardEffectTimer);
+  effects.clear();
+  const source = els['player-hand'].querySelector(`[data-card-id="${cardId}"]`);
+  await animateCardToPile({ source, target: els['discard-pile'] });
+  if (!gameReady || game.currentPlayer !== 0 || !game.hands[0].some((card) => card.id === cardId)) {
+    cardAnimating = false;
+    return;
+  }
   const result = game.playCard(0, cardId, suit);
   moves += 1;
   playSound(result.card.rank === 'JOKER' ? 'joker' : ['2', 'A', 'J', 'Q', 'K', '7'].includes(result.card.rank) ? 'action' : 'card');
+  cardAnimating = false;
   render();
   if (result.type === 'win') return endGame(0);
-  announceSpecial(result);
-  announceOneCardIfNeeded(0);
+  const hasSpecialEffect = announceSpecial(result);
+  announceOneCardIfNeeded(0, hasSpecialEffect ? 2200 : 0);
   if (game.currentPlayer === 1) scheduleAiTurn();
 }
 
-function playerDraw() {
-  if (game.currentPlayer !== 0 || game.winner !== null) return;
+async function playerDraw() {
+  if (!gameReady || drawAnimating || cardAnimating || game.currentPlayer !== 0 || game.winner !== null) return;
+  drawAnimating = true;
+  clearTimeout(oneCardEffectTimer);
+  effects.clear();
   const result = game.drawCards(0);
   playSound('draw');
+  await showDrawReveal(result.cards, result.wasPenalty);
+  render();
   if (result.wasPenalty) {
     effects.play('impact', { symbol: `+${result.count}`, title: `${result.count}장 받기!`, subtitle: '공격을 막지 못했어요' });
   } else {
     showToast('카드 1장을 뽑았어요');
   }
   refreshOneCardFlags();
-  render();
+  drawAnimating = false;
   scheduleAiTurn();
 }
 
 function scheduleAiTurn() {
   clearTimeout(aiTimer);
-  if (game.currentPlayer !== 1 || game.winner !== null) return;
+  if (!gameReady || game.currentPlayer !== 1 || game.winner !== null) return;
   render();
   aiTimer = setTimeout(runAiTurn, DIFFICULTIES[difficulty].delay);
 }
 
-function runAiTurn() {
-  if (game.currentPlayer !== 1 || game.winner !== null) return;
+async function runAiTurn() {
+  if (!gameReady || game.currentPlayer !== 1 || game.winner !== null) return;
+  clearTimeout(oneCardEffectTimer);
+  effects.clear();
   const move = chooseAiMove(game, difficulty);
   if (move.type === 'draw') {
     const result = game.drawCards(1);
@@ -229,17 +401,32 @@ function runAiTurn() {
     }
     refreshOneCardFlags();
   } else {
+    cardAnimating = true;
+    const aiCard = game.hands[1].find((card) => card.id === move.cardId);
+    const source = els['ai-hand'].lastElementChild;
+    await animateCardToPile({
+      source,
+      target: els['discard-pile'],
+      cardFace: createCardElement(aiCard, false),
+      fromOpponent: true,
+    });
+    if (!gameReady || game.currentPlayer !== 1 || !game.hands[1].some((card) => card.id === move.cardId)) {
+      cardAnimating = false;
+      return;
+    }
     const result = game.playCard(1, move.cardId, move.chosenSuit);
     playSound(result.card.rank === 'JOKER' ? 'joker' : ['2', 'A', 'J', 'Q', 'K', '7'].includes(result.card.rank) ? 'action' : 'card');
+    cardAnimating = false;
     if (result.type === 'win') { render(); return endGame(1); }
-    announceSpecial(result, true);
-    announceOneCardIfNeeded(1);
+    const hasSpecialEffect = announceSpecial(result, true);
+    announceOneCardIfNeeded(1, hasSpecialEffect ? 2200 : 0);
   }
   render();
   if (game.currentPlayer === 1) scheduleAiTurn();
 }
 
 function announceSpecial(result, isAi = false) {
+  clearTimeout(oneCardEffectTimer);
   const owner = isAi ? '상대가' : '내가';
   const notices = {
     '2': { type: 'attack', symbol: '+2', title: '+2 공격!', subtitle: `${owner} 공격을 이어갑니다` },
@@ -252,16 +439,21 @@ function announceSpecial(result, isAi = false) {
   };
   const notice = notices[result.card.rank];
   if (notice) effects.play(notice.type, notice);
+  return Boolean(notice);
 }
 
-function announceOneCardIfNeeded(player) {
+function announceOneCardIfNeeded(player, delay = 0) {
   if (game.hands[player].length !== 1 || oneCardAnnounced[player]) return;
   oneCardAnnounced[player] = true;
   const owner = player === 0 ? '내 손에 마지막 한 장!' : `${DIFFICULTIES[difficulty].name}도 단 한 장!`;
-  effects.play('onecard', { symbol: '1', title: 'ONE CARD!', subtitle: owner, particleCount: 32 });
-  playSound('onecard');
-  els['game-table'].classList.add('one-card-pulse');
-  setTimeout(() => els['game-table'].classList.remove('one-card-pulse'), 1500);
+  const showEffect = () => {
+    effects.play('onecard', { symbol: '1', title: 'ONE CARD!', subtitle: owner, particleCount: 32 });
+    playSound('onecard');
+    els['game-table'].classList.add('one-card-pulse');
+    setTimeout(() => els['game-table'].classList.remove('one-card-pulse'), 1500);
+  };
+  if (delay) oneCardEffectTimer = setTimeout(showEffect, delay);
+  else showEffect();
 }
 
 function refreshOneCardFlags() {
@@ -274,15 +466,15 @@ function render() {
   renderOpponent();
   renderPlayerHand();
   renderTopCard();
-  const playerTurn = game.currentPlayer === 0;
+  const playerTurn = gameReady && game.currentPlayer === 0;
   els['game-table'].classList.toggle('ai-turn', !playerTurn);
-  els['turn-banner'].textContent = playerTurn ? '내 차례예요' : `${DIFFICULTIES[difficulty].name}의 차례`;
-  els['player-status'].textContent = playerTurn ? (game.attackCount ? '공격을 막거나 카드를 뽑으세요' : '낼 카드를 선택하세요') : '상대의 선택을 기다리는 중';
+  els['turn-banner'].textContent = !gameReady ? '주사위로 선공을 정하는 중' : playerTurn ? '내 차례예요' : `${DIFFICULTIES[difficulty].name}의 차례`;
+  els['player-status'].textContent = !gameReady ? '선공 결정 후 카드를 낼 수 있어요' : playerTurn ? (game.attackCount ? '공격을 막거나 카드를 뽑으세요' : '낼 카드를 선택하세요') : '상대의 선택을 기다리는 중';
   els['action-hint'].textContent = game.attackCount
     ? `공격이 ${game.attackCount}장 누적됐어요 · 2, A, 조커로 방어하세요`
     : `${suitName(game.activeSuit)} 또는 ${game.topCard.rank} 카드를 낼 수 있어요`;
   els['deck-count'].textContent = game.drawPile.length;
-  els['draw-pile'].disabled = !playerTurn || game.winner !== null;
+  els['draw-pile'].disabled = !playerTurn || drawAnimating || game.winner !== null;
   els['attack-badge'].classList.toggle('hidden', game.attackCount === 0);
   els['attack-badge'].querySelector('b').textContent = game.attackCount;
 }
@@ -304,14 +496,14 @@ function renderOpponent() {
 function renderPlayerHand() {
   els['player-card-count'].textContent = game.hands[0].length;
   els['player-hand'].replaceChildren();
-  const playerTurn = game.currentPlayer === 0;
+  const playerTurn = gameReady && game.currentPlayer === 0;
   game.hands[0].forEach((card) => {
     const button = createCardElement(card, true);
     const playable = playerTurn && game.isPlayable(card);
     button.classList.toggle('playable', playable);
     button.classList.toggle('not-playable', playerTurn && !playable);
     button.classList.toggle('pending-wild', card.id === pendingSeven);
-    button.disabled = !playerTurn || Boolean(pendingSeven);
+    button.disabled = !playerTurn || cardAnimating || Boolean(pendingSeven);
     button.addEventListener('click', () => playerPlay(card.id));
     els['player-hand'].append(button);
   });
@@ -408,8 +600,26 @@ function playWithToy(button) {
   button.classList.remove('is-playing');
   void button.offsetWidth;
   button.classList.add('is-playing');
-  playSound('toy');
+  playSound(`toy-${toy}`);
+  burstToyParticles(button, toy);
   setTimeout(() => button.classList.remove('is-playing'), 850);
+}
+
+function burstToyParticles(button, toy) {
+  button.querySelector('.toy-particles')?.remove();
+  const burst = document.createElement('span');
+  burst.className = `toy-particles toy-particles-${toy}`;
+  for (let index = 0; index < 10; index += 1) {
+    const spark = document.createElement('i');
+    const angle = (Math.PI * 2 * index) / 10;
+    const distance = 28 + (index % 3) * 8;
+    spark.style.setProperty('--toy-px', `${Math.cos(angle) * distance}px`);
+    spark.style.setProperty('--toy-py', `${Math.sin(angle) * distance}px`);
+    spark.style.setProperty('--toy-delay', `${(index % 4) * 25}ms`);
+    burst.append(spark);
+  }
+  button.append(burst);
+  setTimeout(() => burst.remove(), 850);
 }
 
 function createCardElement(card, interactive) {
@@ -418,6 +628,7 @@ function createCardElement(card, interactive) {
   element.className = `playing-card ${['hearts', 'diamonds'].includes(card.suit) ? 'red-card' : ''} ${isJoker ? 'joker-card' : ''}`;
   if (interactive) {
     element.type = 'button';
+    element.dataset.cardId = card.id;
     element.setAttribute('aria-label', isJoker ? '조커 공격 +5' : `${suitName(card.suit)} ${card.rank}`);
   }
   const top = document.createElement('span');
@@ -435,6 +646,7 @@ function createCardElement(card, interactive) {
 function endGame(winner) {
   clearInterval(timerId);
   clearTimeout(aiTimer);
+  clearTimeout(oneCardEffectTimer);
   const won = winner === 0;
   playSound(won ? 'win' : 'lose');
   els['result-icon'].textContent = won ? '✦' : '↻';
@@ -466,7 +678,7 @@ function updateRecord() {
 }
 
 function updateTimer() {
-  els['round-timer'].textContent = formatTime(Date.now() - startedAt);
+  els['round-timer'].textContent = startedAt ? formatTime(Date.now() - startedAt) : '00:00';
 }
 
 function formatTime(milliseconds) {

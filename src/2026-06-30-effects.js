@@ -1,10 +1,11 @@
 const EFFECT_DURATIONS = {
-  attack: 1050,
-  joker: 1450,
-  skip: 1050,
-  suit: 1050,
-  onecard: 1650,
-  impact: 1150,
+  attack: 1750,
+  joker: 2100,
+  skip: 1800,
+  suit: 1750,
+  onecard: 2300,
+  impact: 1800,
+  initiative: 2100,
 };
 
 const EFFECT_COLORS = {
@@ -17,38 +18,41 @@ const EFFECT_COLORS = {
 };
 
 export function createGameEffects({ root, particles, symbol, title, subtitle }) {
-  let queue = [];
   let activeTimer = null;
   let settleTimer = null;
-  let running = false;
+  let generation = 0;
 
   function play(type, payload = {}) {
-    queue.push({ type, ...payload });
-    if (!running) runNext();
-  }
-
-  function runNext() {
-    const effect = queue.shift();
-    if (!effect) {
-      running = false;
-      return;
-    }
-    running = true;
+    generation += 1;
+    const currentGeneration = generation;
+    const effect = { type, ...payload };
+    clearTimeout(activeTimer);
+    clearTimeout(settleTimer);
+    root.className = 'action-overlay';
+    particles.replaceChildren();
     const duration = effect.duration || EFFECT_DURATIONS[effect.type] || 1100;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     root.className = `action-overlay effect-${effect.type}`;
+    root.style.setProperty('--effect-duration', `${duration}ms`);
     symbol.textContent = effect.symbol || '!';
     title.textContent = effect.title || 'ACTION';
     subtitle.textContent = effect.subtitle || '';
     root.setAttribute('aria-label', [effect.title, effect.subtitle].filter(Boolean).join('. '));
     createParticles(effect.type, reducedMotion ? 0 : effect.particleCount);
-    requestAnimationFrame(() => root.classList.add('is-active'));
-
-    activeTimer = setTimeout(() => {
-      root.classList.remove('is-active');
-      settleTimer = setTimeout(runNext, reducedMotion ? 20 : 190);
-    }, reducedMotion ? Math.min(duration, 650) : duration);
+    requestAnimationFrame(() => {
+      if (currentGeneration !== generation) return;
+      root.classList.add('is-active');
+      activeTimer = setTimeout(() => {
+        if (currentGeneration !== generation) return;
+        root.classList.remove('is-active');
+        settleTimer = setTimeout(() => {
+          if (currentGeneration !== generation) return;
+          root.className = 'action-overlay';
+          particles.replaceChildren();
+        }, reducedMotion ? 20 : 190);
+      }, reducedMotion ? Math.min(duration, 650) : duration);
+    });
   }
 
   function createParticles(type, requestedCount) {
@@ -70,10 +74,9 @@ export function createGameEffects({ root, particles, symbol, title, subtitle }) 
   }
 
   function clear() {
+    generation += 1;
     clearTimeout(activeTimer);
     clearTimeout(settleTimer);
-    queue = [];
-    running = false;
     root.className = 'action-overlay';
     particles.replaceChildren();
   }

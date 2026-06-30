@@ -53,7 +53,8 @@ function scoreCard(card, game, difficulty, player) {
 
 function canFollow(card, previous, activeSuit) {
   if (card.rank === 'JOKER') return true;
-  if (previous.rank === '7' || previous.rank === 'JOKER') return card.suit === activeSuit;
+  if (previous.rank === '7') return card.suit === activeSuit || card.rank === '7';
+  if (previous.rank === 'JOKER') return card.suit === activeSuit;
   return card.suit === activeSuit || card.rank === previous.rank;
 }
 

@@ -28,7 +28,11 @@ setState(game, { hands: [[card('hearts', '7'), card('spades', '7')], [card('club
 assert.deepEqual(game.playableCards(0).map((item) => item.id), ['hearts-7'], '7은 현재 무늬와 맞을 때만 낼 수 있어야 함');
 
 setState(game, { top: card('spades', '7'), requestedSuit: 'hearts', hands: [[card('spades', '7'), card('hearts', '3')], [card('clubs', '3')]] });
-assert.deepEqual(game.playableCards(0).map((item) => item.id), ['hearts-3'], '7 이후에는 선택된 무늬만 따라야 함');
+assert.deepEqual(game.playableCards(0).map((item) => item.id), ['spades-7', 'hearts-3'], '7 이후에는 선택된 무늬 또는 다른 7을 낼 수 있어야 함');
+
+setState(game, { hands: [[card('hearts', '9')], [card('clubs', '3')]] });
+assert.equal(game.setStartingPlayer(1), 1, '주사위 결과에 따라 AI를 선공으로 지정할 수 있어야 함');
+assert.equal(game.currentPlayer, 1, '선공 지정이 현재 플레이어에 반영되어야 함');
 
 setState(game, { attack: 5, hands: [[card('hearts', '2'), card('clubs', 'A'), card('joker', 'JOKER'), card('hearts', '9')], [card('clubs', '3')]] });
 assert.deepEqual(game.playableCards(0).map((item) => item.rank).sort(), ['2', 'A', 'JOKER'], '공격 중에는 2, A, 조커만 허용');
@@ -74,4 +78,4 @@ assert.equal(calculateFanTransform({ index: 3, cardCount: 7, compact: true }).y,
 assert.equal(calculateFanTransform({ index: 6, cardCount: 7, compact: true }).angle, 15, '모바일 마지막 카드는 오른쪽으로 펼쳐져야 함');
 assert.equal(calculateFanTransform({ index: 15, cardCount: 16, compact: true }).angle, 9, '많은 패는 부채 각도를 줄여야 함');
 
-console.log('원카드 규칙·레이아웃 테스트 22개 통과');
+console.log('원카드 규칙·레이아웃 테스트 24개 통과');

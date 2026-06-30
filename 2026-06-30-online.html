@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101426">
+  <meta name="description" content="방 코드로 친구와 즐기는 ONE! 온라인 원카드">
+  <title>ONE! — 온라인 대전</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./2026-06-30-online.css">
+</head>
+<body>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+
+  <main id="online-app">
+    <header class="online-header">
+      <a class="brand" href="./index.html" aria-label="ONE 홈으로"><span>ONE</span><b>!</b></a>
+      <span id="connection-pill" class="connection-pill">연결 준비</span>
+      <a class="online-back" href="./index.html">← AI 대전</a>
+    </header>
+
+    <section id="online-entry" class="online-entry" aria-labelledby="online-title">
+      <div class="online-hero">
+        <p class="eyebrow">LIVE CARD BATTLE</p>
+        <h1 id="online-title">친구와 한 판,<br><em>코드 하나면 충분해요.</em></h1>
+        <p>회원가입 없이 닉네임과 6자리 코드로 시작합니다.</p>
+      </div>
+
+      <div id="setup-required" class="setup-required hidden" role="alert">
+        <strong>Supabase 연결 설정이 필요해요</strong>
+        <p>설정 문서대로 프로젝트를 만든 뒤 공개 URL과 Publishable key를 입력하세요.</p>
+        <a href="./docs/2026-06-30-supabase-setup.md">설정 문서 보기</a>
+      </div>
+
+      <div class="online-entry-card">
+        <label for="online-nickname">내 닉네임</label>
+        <input id="online-nickname" maxlength="12" autocomplete="nickname" placeholder="2~12자 닉네임">
+        <button id="create-room-button" class="primary-button" type="button">새 방 만들기</button>
+        <div class="entry-divider"><span>또는</span></div>
+        <label for="room-code-input">초대받은 방 코드</label>
+        <div class="code-input-row">
+          <input id="room-code-input" maxlength="6" inputmode="text" autocomplete="off" placeholder="ABC234">
+          <button id="join-room-button" type="button">참가</button>
+        </div>
+        <p id="entry-error" class="online-error" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="online-lobby" class="online-lobby hidden" aria-labelledby="lobby-title">
+      <div class="lobby-card">
+        <p class="step-label">PRIVATE ROOM</p>
+        <h1 id="lobby-title">친구를 기다리는 중</h1>
+        <button id="copy-code-button" class="room-code-display" type="button" aria-label="방 코드 복사">
+          <small>ROOM CODE</small><strong id="lobby-room-code">------</strong><span>복사</span>
+        </button>
+        <div class="lobby-players">
+          <article id="host-slot" class="lobby-player"><span>HOST</span><strong>대기 중</strong><small>연결 확인 중</small></article>
+          <div class="lobby-vs">VS</div>
+          <article id="guest-slot" class="lobby-player"><span>GUEST</span><strong>친구 대기 중</strong><small>방 코드를 알려주세요</small></article>
+        </div>
+
+        <div id="online-dice-area" class="online-dice-area hidden">
+          <p id="online-dice-status">두 플레이어가 주사위를 굴리면 시작해요.</p>
+          <div class="online-dice-row">
+            <div><span>HOST</span><b id="online-host-die">⚀</b><strong id="online-host-roll">-</strong></div>
+            <i>VS</i>
+            <div><span>GUEST</span><b id="online-guest-die">⚀</b><strong id="online-guest-roll">-</strong></div>
+          </div>
+          <button id="online-roll-button" class="primary-button" type="button">내 주사위 굴리기</button>
+        </div>
+
+        <button id="ready-button" class="primary-button" type="button">준비 완료</button>
+        <button id="leave-lobby-button" class="secondary-button" type="button">방 나가기</button>
+        <p id="lobby-error" class="online-error" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section id="online-game" class="online-game hidden" aria-label="온라인 원카드 게임판">
+      <header class="online-game-header">
+        <button id="leave-game-button" class="text-button" type="button">← 방 나가기</button>
+        <div><strong id="online-opponent-title">상대</strong><small id="online-room-mini">------</small></div>
+        <span id="online-live-state" class="online-live-state">LIVE</span>
+      </header>
+
+      <div id="online-table" class="online-table">
+        <section class="online-opponent-zone">
+          <div class="player-meta"><div class="avatar">●</div><div><strong id="online-opponent-name">상대</strong><small id="online-opponent-status">연결 중</small></div><span class="card-count"><b id="online-opponent-count">0</b>장</span></div>
+          <div id="online-opponent-hand" class="ai-hand"></div>
+        </section>
+
+        <aside class="table-toys" aria-label="움직일 수 있는 장난감">
+          <button class="table-toy jelly-toy" data-online-toy="jelly" type="button" aria-label="말랑 젤리"><span class="toy-bubble">말랑!</span><span class="jelly-body"><i></i><b></b></span></button>
+          <button class="table-toy star-toy" data-online-toy="star" type="button" aria-label="별 팽이"><span class="toy-bubble">빙글!</span><span class="star-body">★</span></button>
+          <button class="table-toy rose-toy" data-online-toy="rose" type="button" aria-label="빨간 장미"><span class="toy-bubble">향긋!</span><span class="rose-bloom"><i></i><i></i><i></i><i></i><i></i><b></b></span><span class="rose-stem"><i></i><b></b></span></button>
+        </aside>
+
+        <section class="online-center-zone">
+          <div id="online-turn-banner" class="turn-banner">상태 동기화 중</div>
+          <div class="piles">
+            <button id="online-draw-pile" class="draw-pile card-back" type="button" aria-label="카드 뽑기"><span class="back-logo">ONE<b>!</b></span><small id="online-deck-count">0</small></button>
+            <div class="discard-wrap"><div id="online-top-card" class="playing-card"></div><span id="online-active-suit" class="active-suit hidden"></span></div>
+          </div>
+          <p id="online-action-hint" class="action-hint">게임 상태를 불러오고 있어요</p>
+          <div id="online-attack-badge" class="attack-badge hidden">공격 +<b>0</b></div>
+        </section>
+
+        <section class="online-player-zone">
+          <div class="player-meta"><div class="avatar player-avatar">ME</div><div><strong id="online-my-name">나</strong><small id="online-my-status">대기 중</small></div><span class="card-count"><b id="online-my-count">0</b>장</span></div>
+          <div id="online-player-hand" class="player-hand"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="online-suit-picker" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="online-suit-title">
+    <div class="modal-card suit-modal-card"><p class="step-label">WILD CARD</p><h2 id="online-suit-title">바꿀 무늬를 고르세요</h2><div class="suit-grid"><button data-online-suit="hearts" class="suit-option red"><span>♥</span>하트</button><button data-online-suit="diamonds" class="suit-option red"><span>♦</span>다이아</button><button data-online-suit="spades" class="suit-option"><span>♠</span>스페이드</button><button data-online-suit="clubs" class="suit-option"><span>♣</span>클로버</button></div><button id="online-suit-cancel" class="secondary-button" type="button">취소</button></div>
+  </div>
+
+  <div id="online-draw-reveal" class="draw-reveal hidden" role="dialog" aria-modal="true" aria-labelledby="online-draw-title"><div class="draw-reveal-panel"><p class="step-label">NEW CARD</p><h2 id="online-draw-title">뽑은 카드</h2><div id="online-draw-cards" class="draw-reveal-cards"></div><button id="online-draw-close" class="draw-reveal-skip" type="button">패에 넣기</button></div></div>
+
+  <div id="online-action-overlay" class="action-overlay" role="status" aria-live="assertive"><div class="effect-vignette"></div><div id="online-effect-particles" class="effect-particles"></div><div class="effect-message"><span id="online-effect-symbol" class="effect-symbol">!</span><strong id="online-effect-title">ACTION</strong><small id="online-effect-subtitle"></small></div></div>
+
+  <div id="online-toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <script type="module" src="./src/2026-06-30-online-main.js"></script>
+</body>
+</html>

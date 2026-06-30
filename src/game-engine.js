@@ -99,6 +99,7 @@ export class OneCardGame {
     if (this.attackCount > 0) return ['2', 'A', 'JOKER'].includes(card.rank);
     if (card.rank === 'JOKER') return true;
     if (card.suit === this.activeSuit) return true;
+    if (this.topCard.rank === '7' && card.rank === '7') return true;
     if (this.requestedSuit) return false;
     return card.rank === this.topCard.rank;
   }
@@ -178,6 +179,15 @@ export class OneCardGame {
   advanceTurn() {
     this.currentPlayer = this.currentPlayer === 0 ? 1 : 0;
     this.turnNumber += 1;
+  }
+
+  setStartingPlayer(player) {
+    if (![0, 1].includes(player)) throw new Error('선공 플레이어 값이 올바르지 않습니다.');
+    if (this.turnNumber !== 1 || this.playedCount.some((count) => count > 0)) {
+      throw new Error('게임 시작 전에만 선공을 정할 수 있습니다.');
+    }
+    this.currentPlayer = player;
+    return this.currentPlayer;
   }
 
   assertTurn(player) {

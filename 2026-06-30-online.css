@@ -1,0 +1,88 @@
+#online-app { width: min(1180px, 100%); min-height: 100dvh; margin: auto; padding: max(18px, env(safe-area-inset-top)) clamp(18px,4vw,52px) max(18px,env(safe-area-inset-bottom)); }
+.online-header { height: 58px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; position: relative; z-index: 10; }
+.online-back { justify-self: end; color: var(--muted); text-decoration: none; font-size: 12px; }
+.connection-pill, .online-live-state { padding: 6px 10px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); background: rgba(255,255,255,.04); font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+.connection-pill.live, .online-live-state { color: var(--green); border-color: rgba(93,228,180,.3); background: rgba(93,228,180,.08); }
+
+.online-entry { min-height: calc(100dvh - 100px); display: grid; grid-template-columns: 1fr minmax(330px,430px); align-items: center; gap: clamp(36px,8vw,110px); }
+.online-hero h1 { margin: 0; font-size: clamp(40px,5.8vw,72px); line-height: 1.1; letter-spacing: -.055em; }
+.online-hero h1 em { display: inline-block; font-style: normal; color: transparent; background: linear-gradient(120deg,#5de4b4,#8f8aff); background-clip: text; -webkit-background-clip: text; }
+.online-hero > p:last-child { color: var(--muted); line-height: 1.8; font-size: 14px; }
+.online-entry-card, .setup-required { border: 1px solid var(--line); border-radius: 22px; background: var(--surface); padding: 28px; backdrop-filter: blur(18px); box-shadow: 0 24px 65px rgba(0,0,0,.28); }
+.online-entry-card { display: flex; flex-direction: column; gap: 9px; }
+.online-entry-card label { margin-top: 5px; color: var(--muted); font-size: 10px; font-weight: 700; }
+.online-entry-card input { width: 100%; height: 50px; border: 1px solid var(--line); border-radius: 12px; padding: 0 15px; background: rgba(255,255,255,.055); color: #fff; outline: none; font: 600 14px/1 'Noto Sans KR',sans-serif; }
+.online-entry-card input:focus { border-color: rgba(93,228,180,.6); box-shadow: 0 0 0 3px rgba(93,228,180,.08); }
+.entry-divider { height: 22px; display: flex; align-items: center; color: #6f7489; font-size: 9px; }
+.entry-divider::before, .entry-divider::after { content:''; height:1px; flex:1; background: var(--line); }
+.entry-divider span { padding: 0 10px; }
+.code-input-row { display: grid; grid-template-columns: 1fr 75px; gap: 8px; }
+.code-input-row input { text-transform: uppercase; letter-spacing: .16em; font-family:'DM Sans',sans-serif; }
+.code-input-row button { border: 0; border-radius: 12px; background: #5de4b4; color: #10251e; cursor: pointer; font-weight: 800; }
+.online-error { min-height: 18px; margin: 4px 0 0; color: #ff7995; font-size: 10px; }
+.setup-required { grid-column: 1/-1; max-width: 620px; margin: 24px auto; }
+.setup-required p { color: var(--muted); }
+.setup-required a { color: var(--green); }
+
+.online-lobby { min-height: calc(100dvh - 80px); display: grid; place-items: center; }
+.lobby-card { width: min(650px,100%); padding: clamp(25px,5vw,48px); border: 1px solid var(--line); border-radius: 28px; background: linear-gradient(145deg,rgba(34,39,65,.95),rgba(18,21,37,.96)); text-align: center; box-shadow: 0 30px 85px rgba(0,0,0,.4); }
+.lobby-card h1 { margin: 0 0 22px; font-size: clamp(26px,4vw,38px); }
+.room-code-display { width: min(330px,100%); min-height: 91px; margin: 0 auto 28px; display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 14px 18px; border: 1px dashed rgba(93,228,180,.45); border-radius: 17px; background: rgba(93,228,180,.06); color:#fff; cursor:pointer; }
+.room-code-display small { grid-column:1/-1; color:var(--muted); font:700 8px/1 'DM Sans',sans-serif; letter-spacing:.2em; }
+.room-code-display strong { font:800 31px/1 'DM Sans',sans-serif; letter-spacing:.14em; }
+.room-code-display span { color:var(--green); font-size:9px; font-weight:800; }
+.lobby-players { display:grid; grid-template-columns:1fr 36px 1fr; align-items:center; gap:10px; margin-bottom:20px; }
+.lobby-player { min-height:112px; padding:16px 12px; display:flex; flex-direction:column; justify-content:center; gap:7px; border:1px solid var(--line); border-radius:17px; background:rgba(255,255,255,.03); }
+.lobby-player.me { border-color:rgba(255,77,116,.34); }
+.lobby-player.ready { border-color:rgba(93,228,180,.38); background:rgba(93,228,180,.055); }
+.lobby-player > span { color:var(--muted); font:800 8px/1 'DM Sans',sans-serif; letter-spacing:.15em; }
+.lobby-player strong { font-size:15px; }
+.lobby-player small { color:var(--muted); font-size:9px; }
+.lobby-vs { color:#70758c; font:800 10px/1 'DM Sans',sans-serif; }
+.online-dice-area { margin: 18px 0; padding:18px; border:1px solid rgba(255,211,111,.18); border-radius:18px; background:rgba(255,211,111,.035); }
+.online-dice-area > p { margin:0 0 13px; color:var(--muted); font-size:11px; }
+.online-dice-row { display:grid; grid-template-columns:1fr 28px 1fr; align-items:center; margin-bottom:15px; }
+.online-dice-row > div { display:grid; grid-template-columns:1fr auto; align-items:center; gap:8px; }
+.online-dice-row span { grid-column:1/-1; color:var(--muted); font-size:8px; }
+.online-dice-row b { font:700 49px/1 'Segoe UI Symbol',sans-serif; }
+.online-dice-row strong { font:800 22px/1 'DM Sans',sans-serif; }
+.online-dice-row i { color:#747a90; font:normal 800 9px/1 'DM Sans',sans-serif; }
+
+.online-game { height:100dvh; min-height:650px; display:flex; flex-direction:column; margin:calc(max(18px,env(safe-area-inset-top)) * -1) 0 calc(max(18px,env(safe-area-inset-bottom)) * -1); }
+.online-game-header { height:64px; flex:0 0 64px; display:flex; align-items:center; justify-content:space-between; }
+.online-game-header > div { position:absolute; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:3px; }
+.online-game-header strong { font-size:12px; }
+.online-game-header small { color:var(--muted); font:700 9px/1 'DM Sans',sans-serif; letter-spacing:.12em; }
+.online-table { flex:1; min-height:0; display:grid; grid-template-rows:140px minmax(220px,1fr) 250px; position:relative; }
+.online-table::before { content:''; position:absolute; width:min(770px,74vw); height:min(540px,64vh); left:50%; top:50%; transform:translate(-50%,-48%); border-radius:50%; background:radial-gradient(ellipse,rgba(50,56,89,.5),rgba(22,26,45,.08) 70%); border:1px solid rgba(255,255,255,.035); pointer-events:none; }
+.online-opponent-zone,.online-player-zone { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; }
+.online-opponent-zone { padding-top:8px; }
+.online-player-zone { justify-content:end; padding-bottom:max(12px,env(safe-area-inset-bottom)); }
+.online-center-zone { position:relative; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.online-center-zone .turn-banner { margin-bottom:18px; }
+.online-player-zone .player-hand { width:min(900px,calc(100vw - 24px)); }
+.online-game .table-toys { z-index:4; }
+.online-live-state { margin-left:auto; }
+
+@media (max-width:760px) {
+  #online-app { padding-left:12px; padding-right:12px; }
+  .online-header { height:54px; }
+  .online-entry { grid-template-columns:1fr; align-content:start; padding:42px 6px 28px; }
+  .online-hero { text-align:center; }
+  .online-hero h1 { font-size:38px; }
+  .online-entry-card { padding:21px; }
+  .online-back { font-size:10px; }
+  .connection-pill { font-size:8px; }
+  .lobby-card { padding:25px 17px; }
+  .online-game { min-height:620px; }
+  .online-game-header { height:54px; flex-basis:54px; }
+  .online-table { grid-template-rows:126px minmax(220px,1fr) 220px; }
+  .online-table::before { width:105vw; height:52vh; }
+  .online-opponent-zone .player-meta,.online-player-zone .player-meta { width:calc(100% - 18px); margin-bottom:6px; }
+  .online-opponent-zone .ai-hand { height:66px; transform:scale(.8); transform-origin:top center; }
+  .online-center-zone .turn-banner { margin-bottom:12px; }
+  .online-player-zone .player-hand { padding:39px 18px 12px; scroll-padding-inline:18px; }
+  .online-game .jelly-toy { --toy-scale:.72; left:4px; top:49%; }
+  .online-game .star-toy { --toy-scale:.7; right:4px; top:39%; }
+  .online-game .rose-toy { --toy-scale:.68; right:5px; top:62%; }
+}
