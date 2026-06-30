@@ -24,12 +24,18 @@ create table if not exists public.onecard_rooms (
   top_card jsonb,
   host_count integer not null default 0 check (host_count >= 0),
   guest_count integer not null default 0 check (guest_count >= 0),
+  host_wins integer not null default 0 check (host_wins >= 0),
+  guest_wins integer not null default 0 check (guest_wins >= 0),
   winner_seat smallint check (winner_seat in (0, 1)),
   version bigint not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   expires_at timestamptz not null default (now() + interval '2 hours')
 );
+
+-- 기존 프로젝트에서 전체 SQL을 다시 실행해도 전적 컬럼만 안전하게 추가됩니다.
+alter table public.onecard_rooms add column if not exists host_wins integer not null default 0 check (host_wins >= 0);
+alter table public.onecard_rooms add column if not exists guest_wins integer not null default 0 check (guest_wins >= 0);
 
 create table if not exists public.onecard_private_state (
   room_id uuid primary key references public.onecard_rooms(id) on delete cascade,
@@ -188,6 +194,7 @@ begin
       'ready', v_room.host_ready,
       'die', v_room.host_die,
       'count', v_room.host_count,
+      'wins', v_room.host_wins,
       'connected', v_room.host_last_seen > now() - interval '35 seconds'
     ),
     'guest', case when v_room.guest_id is null then null else jsonb_build_object(
@@ -195,6 +202,7 @@ begin
       'ready', v_room.guest_ready,
       'die', v_room.guest_die,
       'count', v_room.guest_count,
+      'wins', v_room.guest_wins,
       'connected', v_room.guest_last_seen > now() - interval '35 seconds'
     ) end,
     'myHand', coalesce(v_hand, '[]'::jsonb),
@@ -490,6 +498,8 @@ begin
       current_seat = v_next_seat,
       host_count = case when v_seat = 0 then jsonb_array_length(v_new_hand) else host_count end,
       guest_count = case when v_seat = 1 then jsonb_array_length(v_new_hand) else guest_count end,
+      host_wins = host_wins + case when jsonb_array_length(v_new_hand) = 0 and v_seat = 0 then 1 else 0 end,
+      guest_wins = guest_wins + case when jsonb_array_length(v_new_hand) = 0 and v_seat = 1 then 1 else 0 end,
       status = case when jsonb_array_length(v_new_hand) = 0 then 'finished' else status end,
       winner_seat = case when jsonb_array_length(v_new_hand) = 0 then v_seat else winner_seat end,
       host_ready = case when jsonb_array_length(v_new_hand) = 0 then false else host_ready end,
@@ -662,6 +672,8 @@ begin
   if v_room.status in ('playing', 'dice') and v_room.guest_id is not null then
     update public.onecard_rooms
     set status = 'finished', winner_seat = 1 - v_seat,
+        host_wins = host_wins + case when v_room.status = 'playing' and v_seat = 1 then 1 else 0 end,
+        guest_wins = guest_wins + case when v_room.status = 'playing' and v_seat = 0 then 1 else 0 end,
         host_ready = false, guest_ready = false, updated_at = now(), version = version + 1
     where id = p_room_id;
     insert into public.onecard_events(room_id, actor_seat, event_type)
@@ -670,6 +682,7 @@ begin
     update public.onecard_rooms
     set guest_id = null, guest_nickname = null, guest_ready = false, guest_die = null,
         host_ready = false, host_die = null, status = 'waiting', dice_tie = false,
+        host_wins = 0, guest_wins = 0,
         updated_at = now(), version = version + 1
     where id = p_room_id;
   else

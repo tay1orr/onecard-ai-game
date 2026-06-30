@@ -153,6 +153,8 @@ function renderLobby(nextView) {
   const { mine, opponent } = getSeatView(nextView);
   renderLobbySlot(els['host-slot'], nextView.host, nextView.mySeat === 0);
   renderLobbySlot(els['guest-slot'], nextView.guest, nextView.mySeat === 1);
+  els['lobby-host-wins'].textContent = nextView.host?.wins ?? 0;
+  els['lobby-guest-wins'].textContent = nextView.guest?.wins ?? 0;
   const hasTwo = Boolean(nextView.host && nextView.guest);
   els['lobby-title'].textContent = !hasTwo ? '친구를 기다리는 중' : nextView.status === 'dice' ? '주사위로 선공 결정' : '두 플레이어가 모였어요';
   els['ready-button'].classList.toggle('hidden', nextView.status === 'dice');
@@ -187,6 +189,7 @@ function renderGame(nextView) {
   els['online-my-name'].textContent = mine.nickname;
   els['online-opponent-name'].textContent = opponent.nickname;
   els['online-opponent-title'].textContent = opponent.nickname;
+  els['online-match-score'].textContent = `HOST ${nextView.host.wins ?? 0} : ${nextView.guest.wins ?? 0} GUEST`;
   els['online-my-count'].textContent = mine.count;
   els['online-opponent-count'].textContent = opponent.count;
   els['online-opponent-status'].textContent = opponent.connected ? '온라인' : '재접속 대기 중';
@@ -506,7 +509,7 @@ function renderOnlineResult(nextView) {
   const won = nextView.winnerSeat === nextView.mySeat;
   els['online-result-icon'].textContent = won ? '✦' : '↻';
   els['online-result-title'].textContent = won ? '내 승리!' : '상대 승리';
-  els['online-result-description'].textContent = won ? '같은 방에서 흐름을 이어가 보세요.' : '방 코드는 그대로, 바로 다시 도전할 수 있어요.';
+  els['online-result-description'].textContent = `현재 전적 ${mine.wins ?? 0}승 ${opponent.wins ?? 0}패 · ${won ? '같은 방에서 흐름을 이어가 보세요.' : '바로 다시 도전할 수 있어요.'}`;
   els['online-rematch-me'].textContent = mine.ready ? '나 · 재대결 신청' : '나 · 대기';
   els['online-rematch-opponent'].textContent = opponent.ready ? `${opponent.nickname} · 신청` : `${opponent.nickname} · 대기`;
   els['online-rematch-me'].classList.toggle('ready', mine.ready);

@@ -106,4 +106,11 @@ test('서버 SQL은 준비 취소와 같은 방 재대결을 지원한다', () =
   assert.match(sql, /grant execute on function public\.onecard_request_rematch\(uuid\) to authenticated/);
 });
 
+test('같은 방 승패는 승리 시 누적되고 새 상대가 들어오면 초기화된다', () => {
+  assert.match(sql, /add column if not exists host_wins integer not null default 0/);
+  assert.match(sql, /'wins', v_room\.host_wins/);
+  assert.match(sql, /host_wins = host_wins \+ case when jsonb_array_length\(v_new_hand\) = 0 and v_seat = 0 then 1 else 0 end/);
+  assert.match(sql, /host_wins = 0, guest_wins = 0/);
+});
+
 console.log(`멀티플레이 도우미·보안 테스트 ${passed}개 통과`);

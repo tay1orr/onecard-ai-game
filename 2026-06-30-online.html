@@ -59,6 +59,11 @@
           <div class="lobby-vs">VS</div>
           <article id="guest-slot" class="lobby-player"><span>GUEST</span><strong>친구 대기 중</strong><small>방 코드를 알려주세요</small></article>
         </div>
+        <div class="room-score" aria-label="같은 방 누적 전적">
+          <span>ROOM SCORE</span>
+          <strong><b id="lobby-host-wins">0</b><i>:</i><b id="lobby-guest-wins">0</b></strong>
+          <small>HOST 승리&nbsp;&nbsp;&nbsp;GUEST 승리</small>
+        </div>
 
         <div id="online-dice-area" class="online-dice-area hidden">
           <p id="online-dice-status">두 플레이어가 주사위를 굴리면 시작해요.</p>
@@ -79,7 +84,7 @@
     <section id="online-game" class="online-game hidden" aria-label="온라인 원카드 게임판">
       <header class="online-game-header">
         <button id="leave-game-button" class="text-button" type="button">← 방 나가기</button>
-        <div><strong id="online-opponent-title">상대</strong><small id="online-room-mini">------</small></div>
+        <div><strong id="online-opponent-title">상대</strong><span id="online-match-score">HOST 0 : 0 GUEST</span><small id="online-room-mini">------</small></div>
         <span id="online-live-state" class="online-live-state">LIVE</span>
       </header>
 
