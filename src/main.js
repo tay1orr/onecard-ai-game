@@ -5,6 +5,7 @@ import { calculateFanTransform, calculateHandLayout } from './2026-06-30-hand-la
 import { createGameEffects } from './2026-06-30-effects.js';
 import { makeToyDraggable } from './2026-06-30-toy-drag.js';
 import { animateCardToPile } from './2026-06-30-card-motion.js';
+import { runDealAnimation } from './2026-06-30-deal-animation.js';
 
 const DIFFICULTIES = {
   easy: { name: '느긋한 루미', icon: '☁', status: '느긋하게 패를 살펴보고 있어요', delay: 850 },
@@ -164,19 +165,28 @@ async function rollForFirstTurn() {
 
   const playerFirst = playerRoll > aiRoll;
   game.setStartingPlayer(playerFirst ? 0 : 1);
-  gameReady = true;
   diceRolling = false;
   els['dice-modal'].classList.add('dice-decided');
   els['dice-status'].textContent = playerFirst
     ? `${playerRoll} 대 ${aiRoll}! 내가 먼저 시작합니다.`
     : `${playerRoll} 대 ${aiRoll}! ${DIFFICULTIES[difficulty].name}가 먼저 시작합니다.`;
   els['roll-dice-button'].textContent = playerFirst ? '내가 선공!' : '나는 후공!';
+  render();
+  await wait(1050);
+  closeModal('dice-modal');
+  await wait(220);
+  els['game-table'].classList.add('dealing-cards');
+  await runDealAnimation({
+    playerCards: game.hands[0],
+    createCardFace: (card) => createCardElement(card, false),
+    playSound,
+  });
+  els['game-table'].classList.remove('dealing-cards');
+  gameReady = true;
   startedAt = Date.now();
   clearInterval(timerId);
   timerId = setInterval(updateTimer, 1000);
   render();
-  await wait(1050);
-  closeModal('dice-modal');
   effects.play('initiative', {
     symbol: playerFirst ? '1st' : '2nd',
     title: playerFirst ? '선공!' : '후공!',
@@ -228,13 +238,17 @@ function showDrawReveal(cards, wasPenalty) {
     ? `공격으로 받은 카드 ${cards.length}장`
     : '뽑은 카드를 확인하세요';
   els['draw-reveal-cards'].replaceChildren();
+  const track = document.createElement('div');
+  track.className = 'draw-reveal-track';
   cards.forEach((card, index) => {
     const cardElement = createCardElement(card, false);
     cardElement.classList.add('drawn-card');
     cardElement.style.setProperty('--draw-index', index);
     cardElement.style.setProperty('--draw-count', cards.length);
-    els['draw-reveal-cards'].append(cardElement);
+    track.append(cardElement);
   });
+  els['draw-reveal-cards'].append(track);
+  els['draw-reveal-cards'].scrollLeft = 0;
   els['draw-reveal'].classList.remove('hidden', 'leaving');
   requestAnimationFrame(() => els['draw-reveal'].classList.add('open'));
   setTimeout(() => els['draw-reveal-skip'].focus(), 120);

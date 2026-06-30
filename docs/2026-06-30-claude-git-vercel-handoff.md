@@ -3,15 +3,19 @@
 ## 현재 상태
 
 - Codex가 처음부터 작성한 AI 원카드와 Supabase 2인 온라인 대전 버전
-- 규칙·레이아웃·멀티 보안·DOM 계약 자동 테스트 34개 통과
+- 규칙·레이아웃·멀티 보안·DOM 계약 자동 테스트 36개 통과
 - 데스크톱 1280×720, 모바일 390×844 브라우저 점검 완료
 - 실제 카드 선택, 7 무늬 변경, AI 응답, 턴 연속 진행 확인
 - 7장·16장 손패 배치, 카드 기록, 장난감 상호작용 확인
 - 조커 +5, 7 패 확인, 원카드·공격 이펙트, 장난감 이동 확인
 - 주사위 선공, 뽑은 카드 공개, 손패→더미 카드 이동 애니메이션 구현
 - 새 액션은 재생 중인 이전 액션을 즉시 교체하도록 구현
-- 온라인 화면은 Supabase 공개 값 입력 전 설정 안내 상태로 유지
-- 실제 온라인 2브라우저 통합 테스트는 Supabase 설정 후 필요
+- 모바일 드로우 중앙 정렬과 다량 카드 가로 슬라이드 구현
+- 준비 취소, 같은 방 재대결, 멀티 주사위 굴림 애니메이션 구현
+- AI·멀티 공통 셔플과 14장 교차 배분 연출 구현
+- Supabase Project URL과 Publishable key 입력 및 최신 SQL 적용 완료
+- Supabase 익명 사용자 2명 서버 통합 테스트 통과: 준비·취소, 22액션 게임 종료, 재대결 신청·취소, 같은 코드 새 게임과 7장 재배분 확인
+- 배포 URL에서 일반 창 + 시크릿 창 UI 최종 확인만 권장
 - Git 커밋과 원격 저장소 작업은 수행하지 않음
 
 ## 배포 대상
@@ -52,6 +56,7 @@ feat: add dice-driven AI and secure Supabase multiplayer
 - `src/2026-06-30-hand-layout.js`: 손패 수와 화면 폭에 따른 동적 간격 계산
 - `src/2026-06-30-effects.js`: 공격·조커·원카드 전체 화면 이펙트와 새 액션 우선 교체
 - `src/2026-06-30-card-motion.js`: 플레이 카드의 손패→더미 이동
+- `src/2026-06-30-deal-animation.js`: 셔플·양쪽 7장 배분 연출
 - `src/2026-06-30-toy-drag.js`: 마우스·터치·키보드 장난감 이동
 - `2026-06-30-online.html`, `2026-06-30-online.css`: 온라인 입장·대기실·게임판
 - `src/2026-06-30-multiplayer.js`: 익명 인증, RPC, Realtime, 연결 유지
@@ -81,7 +86,7 @@ feat: add dice-driven AI and secure Supabase multiplayer
 2. Anonymous sign-ins를 켭니다.
 3. `supabase/2026-06-30-onecard-schema.sql` 전체를 SQL Editor에서 실행합니다.
 4. `src/2026-06-30-supabase-config.js`에 Project URL과 Publishable key만 입력합니다.
-5. 일반 창 + 시크릿 창으로 방 생성, 참가, 준비, 양쪽 주사위, 카드 내기·뽑기·나가기를 확인합니다.
+5. 일반 창 + 시크릿 창으로 방 생성, 준비·취소, 양쪽 주사위, 카드 내기·뽑기, 게임 종료·재대결·나가기를 확인합니다.
 6. 그 다음 Git 커밋과 Vercel 배포를 진행합니다.
 
 `src/2026-06-30-supabase-config.js`는 현재 빈 값입니다. Secret key, service_role key, DB password는 어떤 경우에도 커밋하지 않습니다.

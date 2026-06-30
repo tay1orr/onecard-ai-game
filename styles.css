@@ -166,6 +166,20 @@ button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset:
 .card-flight { position: fixed !important; z-index: 90 !important; margin: 0 !important; pointer-events: none !important; transform-origin: center; will-change: transform, opacity; filter: drop-shadow(0 20px 24px rgba(0,0,0,.42)); }
 .card-motion-source { opacity: .18 !important; filter: saturate(.45) !important; }
 .card-motion-target { opacity: .16 !important; }
+.deal-overlay { position: fixed; inset: 0; z-index: 88; overflow: hidden; pointer-events: all; background: rgba(6,8,17,.76); backdrop-filter: blur(8px); opacity: 0; transition: opacity .22s ease; }
+.deal-overlay.is-active { opacity: 1; }
+.deal-copy { position: absolute; z-index: 3; left: 50%; top: 50%; transform: translate(-50%, calc(-50% - 110px)); display: flex; flex-direction: column; align-items: center; gap: 7px; white-space: nowrap; }
+.deal-copy small { color: var(--green); font: 800 9px/1 'DM Sans',sans-serif; letter-spacing: .18em; }
+.deal-copy strong { font-size: clamp(18px,3vw,28px); }
+.deal-deck { --deal-w: clamp(62px,8vw,86px); position: absolute; left: 50%; top: 50%; width: var(--deal-w); height: calc(var(--deal-w) * 1.42); transform: translate(-50%,-50%); border-radius: 9px; box-shadow: -5px 4px 0 #20243a,-10px 8px 0 #151827,0 20px 35px rgba(0,0,0,.4); }
+.deal-overlay.is-shuffling .deal-deck { animation: deal-shuffle .18s ease-in-out 4 alternate; }
+.deal-overlay.is-dealing .deal-deck { transform: translate(-50%,-50%) scale(.94); }
+.deal-flight-card { --deal-w: clamp(62px,8vw,86px); position: fixed !important; z-index: 2; left: 50% !important; top: 50% !important; width: var(--deal-w) !important; height: calc(var(--deal-w) * 1.42) !important; margin: 0 !important; pointer-events: none; transform-origin: center; box-shadow: 0 13px 25px rgba(0,0,0,.38); }
+.deal-flight-card .card-corner { font-size: calc(var(--deal-w) * .15); }
+.deal-flight-card .card-suit { font-size: calc(var(--deal-w) * .44); }
+.deal-overlay.is-complete .deal-flight-card { filter: brightness(1.08); }
+.dealing-cards .player-hand .playing-card, .dealing-cards .ai-hand .mini-back { opacity: 0 !important; }
+@keyframes deal-shuffle { from { transform: translate(calc(-50% - 24px),-50%) rotate(-7deg); } to { transform: translate(calc(-50% + 24px),-50%) rotate(7deg); } }
 button.playing-card { cursor: pointer; }
 .playing-card.red-card { color: #df3558; }
 .playing-card.joker-card { color: #ffe47f; background: radial-gradient(circle at 50% 44%, #5d477f 0 16%, #201a33 17% 52%, #090b14 100%); border: 1px solid rgba(255,222,113,.72); box-shadow: 0 13px 30px rgba(0,0,0,.4), inset 0 0 24px rgba(167,117,255,.23); }
@@ -244,8 +258,10 @@ button.playing-card { cursor: pointer; }
 .draw-reveal.leaving { opacity: 0; }
 .draw-reveal-panel { width: min(720px, 100%); text-align: center; }
 .draw-reveal-panel h2 { margin: 0 0 22px; font-size: clamp(22px, 4vw, 34px); letter-spacing: -.04em; }
-.draw-reveal-cards { --card-w: clamp(88px, 12vw, 122px); min-height: calc(var(--card-h) + 40px); display: flex; justify-content: center; align-items: center; padding: 18px 25px; overflow-x: auto; }
+.draw-reveal-cards { --card-w: clamp(88px, 12vw, 122px); min-height: calc(var(--card-h) + 40px); width: 100%; padding: 18px 0 22px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.28) transparent; }
+.draw-reveal-track { width: max-content; min-width: min-content; margin-inline: auto; display: flex; align-items: center; padding-inline: 28px; }
 .draw-reveal-cards .drawn-card { margin-left: calc(var(--card-w) * -.28); opacity: 0; transform: translateY(-65px) rotate(calc((var(--draw-index) - (var(--draw-count) - 1) / 2) * 3deg)) scale(.72); animation: drawn-card-enter .58s cubic-bezier(.17,.84,.3,1.18) calc(var(--draw-index) * 90ms) forwards; }
+.draw-reveal-cards .drawn-card { scroll-snap-align: center; }
 .draw-reveal-cards .drawn-card:first-child { margin-left: 0; }
 .draw-reveal.leaving .drawn-card { animation: drawn-card-to-hand .3s ease-in both; }
 .draw-reveal-skip { min-width: 150px; height: 43px; padding: 0 18px; border: 1px solid var(--line); border-radius: 13px; background: rgba(255,255,255,.08); color: #fff; cursor: pointer; font-size: 12px; font-weight: 700; }
@@ -376,7 +392,9 @@ button.playing-card { cursor: pointer; }
   .dice-modal-card { padding-inline: 17px; }
   .dice-arena { grid-template-columns: 1fr 30px 1fr; gap: 5px; }
   .die { width: 72px; height: 72px; border-radius: 17px; font-size: 59px; }
-  .draw-reveal-cards { --card-w: 82px; justify-content: flex-start; }
+  .draw-reveal-panel { width: calc(100vw - 24px); }
+  .draw-reveal-cards { --card-w: 82px; margin-inline: auto; }
+  .draw-reveal-track { padding-inline: max(22px, calc((100vw - var(--card-w)) / 2 - 12px)); }
   .modal-card { padding: 29px 22px; border-radius: 21px; }
   .rule-list { grid-template-columns: 1fr; }
 }

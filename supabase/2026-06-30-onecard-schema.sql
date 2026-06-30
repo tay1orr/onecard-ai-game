@@ -281,16 +281,18 @@ declare
   v_uid uuid := auth.uid();
   v_room public.onecard_rooms%rowtype;
   v_seat smallint;
+  v_ready boolean;
 begin
   select * into v_room from public.onecard_rooms where id = p_room_id for update;
   if not found or (v_room.host_id <> v_uid and v_room.guest_id is distinct from v_uid) then raise exception 'ROOM_NOT_FOUND'; end if;
   if v_room.guest_id is null then raise exception 'WAITING_FOR_GUEST'; end if;
-  if v_room.status not in ('waiting', 'dice') then raise exception 'ROOM_ALREADY_STARTED'; end if;
+  if v_room.status <> 'waiting' then raise exception 'ROOM_ALREADY_STARTED'; end if;
   v_seat := case when v_room.host_id = v_uid then 0 else 1 end;
+  v_ready := not (case when v_seat = 0 then v_room.host_ready else v_room.guest_ready end);
 
   update public.onecard_rooms
-  set host_ready = case when v_seat = 0 then true else host_ready end,
-      guest_ready = case when v_seat = 1 then true else guest_ready end,
+  set host_ready = case when v_seat = 0 then v_ready else host_ready end,
+      guest_ready = case when v_seat = 1 then v_ready else guest_ready end,
       updated_at = now(), version = version + 1
   where id = p_room_id;
 
@@ -298,8 +300,8 @@ begin
   set status = 'dice', updated_at = now(), version = version + 1
   where id = p_room_id and host_ready and guest_ready and status = 'waiting';
 
-  insert into public.onecard_events(room_id, actor_seat, event_type)
-  values (p_room_id, v_seat, 'ready');
+  insert into public.onecard_events(room_id, actor_seat, event_type, payload)
+  values (p_room_id, v_seat, 'ready_changed', jsonb_build_object('ready', v_ready));
   return public.onecard_get_view(p_room_id);
 end;
 $$;
@@ -355,6 +357,7 @@ begin
       active_suit = v_top_card->>'suit', attack_count = 0,
       top_card = v_top_card, host_count = 7, guest_count = 7,
       winner_seat = null, dice_tie = false,
+      host_ready = false, guest_ready = false,
       updated_at = now(), version = version + 1
   where id = p_room_id;
 end;
@@ -489,6 +492,8 @@ begin
       guest_count = case when v_seat = 1 then jsonb_array_length(v_new_hand) else guest_count end,
       status = case when jsonb_array_length(v_new_hand) = 0 then 'finished' else status end,
       winner_seat = case when jsonb_array_length(v_new_hand) = 0 then v_seat else winner_seat end,
+      host_ready = case when jsonb_array_length(v_new_hand) = 0 then false else host_ready end,
+      guest_ready = case when jsonb_array_length(v_new_hand) = 0 then false else guest_ready end,
       updated_at = now(), version = version + 1
   where id = p_room_id;
 
@@ -500,6 +505,47 @@ begin
     'remaining', jsonb_array_length(v_new_hand),
     'attackCount', v_attack
   ), p_action_id);
+  return public.onecard_get_view(p_room_id);
+end;
+$$;
+
+create or replace function public.onecard_request_rematch(p_room_id uuid)
+returns jsonb
+language plpgsql security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_room public.onecard_rooms%rowtype;
+  v_seat smallint;
+  v_ready boolean;
+begin
+  select * into v_room from public.onecard_rooms where id = p_room_id for update;
+  if not found or (v_room.host_id <> v_uid and v_room.guest_id is distinct from v_uid) then raise exception 'ROOM_NOT_FOUND'; end if;
+  if v_room.status <> 'finished' then raise exception 'GAME_NOT_FINISHED'; end if;
+  if v_room.guest_id is null then raise exception 'WAITING_FOR_GUEST'; end if;
+  v_seat := case when v_room.host_id = v_uid then 0 else 1 end;
+  v_ready := not (case when v_seat = 0 then v_room.host_ready else v_room.guest_ready end);
+
+  update public.onecard_rooms
+  set host_ready = case when v_seat = 0 then v_ready else host_ready end,
+      guest_ready = case when v_seat = 1 then v_ready else guest_ready end,
+      updated_at = now(), version = version + 1
+  where id = p_room_id;
+
+  insert into public.onecard_events(room_id, actor_seat, event_type, payload)
+  values (p_room_id, v_seat, 'rematch_ready', jsonb_build_object('ready', v_ready));
+
+  update public.onecard_rooms
+  set status = 'dice', host_die = null, guest_die = null, dice_tie = false,
+      current_seat = null, active_suit = null, attack_count = 0, top_card = null,
+      host_count = 0, guest_count = 0, winner_seat = null,
+      updated_at = now(), version = version + 1
+  where id = p_room_id and host_ready and guest_ready and status = 'finished';
+
+  if found then
+    insert into public.onecard_events(room_id, event_type) values (p_room_id, 'rematch_started');
+  end if;
   return public.onecard_get_view(p_room_id);
 end;
 $$;
@@ -615,7 +661,8 @@ begin
   v_seat := case when v_room.host_id = v_uid then 0 else 1 end;
   if v_room.status in ('playing', 'dice') and v_room.guest_id is not null then
     update public.onecard_rooms
-    set status = 'finished', winner_seat = 1 - v_seat, updated_at = now(), version = version + 1
+    set status = 'finished', winner_seat = 1 - v_seat,
+        host_ready = false, guest_ready = false, updated_at = now(), version = version + 1
     where id = p_room_id;
     insert into public.onecard_events(room_id, actor_seat, event_type)
     values (p_room_id, v_seat, 'left');
@@ -662,6 +709,7 @@ revoke execute on function public.onecard_play_card(uuid, text, text, uuid, bigi
 revoke execute on function public.onecard_draw_cards(uuid, uuid, bigint) from public, anon;
 revoke execute on function public.onecard_ping(uuid) from public, anon;
 revoke execute on function public.onecard_leave_room(uuid) from public, anon;
+revoke execute on function public.onecard_request_rematch(uuid) from public, anon;
 
 grant execute on function public.onecard_get_view(uuid) to authenticated;
 grant execute on function public.onecard_create_room(text) to authenticated;
@@ -672,6 +720,7 @@ grant execute on function public.onecard_play_card(uuid, text, text, uuid, bigin
 grant execute on function public.onecard_draw_cards(uuid, uuid, bigint) to authenticated;
 grant execute on function public.onecard_ping(uuid) to authenticated;
 grant execute on function public.onecard_leave_room(uuid) to authenticated;
+grant execute on function public.onecard_request_rematch(uuid) to authenticated;
 
 -- Realtime에서 방 상태와 공개 이벤트를 전달합니다. 이미 추가돼 있으면 오류 없이 넘어갑니다.
 do $$

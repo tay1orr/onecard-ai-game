@@ -39,6 +39,8 @@ export function playSound(name) {
   if (name === 'dice-tie') { tone(260, 0.12, 'triangle', 0.02); tone(260, 0.12, 'triangle', 0.02, 0.14); }
   if (name === 'first') { [440, 660, 880].forEach((note, i) => tone(note, 0.22, 'triangle', 0.028, i * 0.07)); }
   if (name === 'second') { [520, 420, 620].forEach((note, i) => tone(note, 0.2, 'sine', 0.025, i * 0.08)); }
+  if (name === 'shuffle') { [180, 245, 205, 285, 220].forEach((note, i) => tone(note, 0.06, 'triangle', 0.014, i * 0.07)); }
+  if (name === 'deal') { tone(235, 0.055, 'triangle', 0.014); tone(360, 0.04, 'sine', 0.01, 0.025); }
 }
 
 export function toggleSound() {

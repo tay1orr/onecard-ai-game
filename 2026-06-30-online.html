@@ -119,6 +119,22 @@
 
   <div id="online-draw-reveal" class="draw-reveal hidden" role="dialog" aria-modal="true" aria-labelledby="online-draw-title"><div class="draw-reveal-panel"><p class="step-label">NEW CARD</p><h2 id="online-draw-title">뽑은 카드</h2><div id="online-draw-cards" class="draw-reveal-cards"></div><button id="online-draw-close" class="draw-reveal-skip" type="button">패에 넣기</button></div></div>
 
+  <div id="online-result-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="online-result-title">
+    <div class="modal-card result-card online-result-card">
+      <div id="online-result-icon" class="result-icon">✦</div>
+      <p class="step-label">MATCH COMPLETE</p>
+      <h2 id="online-result-title">게임 종료</h2>
+      <p id="online-result-description">같은 방에서 바로 한 판 더 할 수 있어요.</p>
+      <div class="rematch-state">
+        <span><b id="online-rematch-me">나 · 대기</b><small>내 상태</small></span>
+        <i>↻</i>
+        <span><b id="online-rematch-opponent">상대 · 대기</b><small>상대 상태</small></span>
+      </div>
+      <button id="online-rematch-button" class="primary-button" type="button">재대결 신청</button>
+      <button id="online-result-leave" class="secondary-button" type="button">방 나가기</button>
+    </div>
+  </div>
+
   <div id="online-action-overlay" class="action-overlay" role="status" aria-live="assertive"><div class="effect-vignette"></div><div id="online-effect-particles" class="effect-particles"></div><div class="effect-message"><span id="online-effect-symbol" class="effect-symbol">!</span><strong id="online-effect-title">ACTION</strong><small id="online-effect-subtitle"></small></div></div>
 
   <div id="online-toast" class="toast hidden" role="status" aria-live="polite"></div>

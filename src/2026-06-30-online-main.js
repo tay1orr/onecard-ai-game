@@ -7,6 +7,7 @@ import { getSeatView, isMyTurn, normalizeRoomCode, validateNickname, validateRoo
 import { isSupabaseConfigured } from './2026-06-30-supabase-config.js';
 import { playSound } from './audio.js';
 import { animateCardToPile } from './2026-06-30-card-motion.js';
+import { runDealAnimation } from './2026-06-30-deal-animation.js';
 
 const els = Object.fromEntries([...document.querySelectorAll('[id]')].map((element) => [element.id, element]));
 const effects = createGameEffects({
@@ -24,6 +25,13 @@ let revealResolve = null;
 let latestDeferredView = null;
 let eventEffectTimer = null;
 let eventEffectGeneration = 0;
+let startSequenceRunning = false;
+let deferredStartView = null;
+let displayedDice = [null, null];
+let diceIntervals = [null, null];
+let diceTimeouts = [null, null];
+let diceGenerations = [0, 0];
+let lastDiceTie = false;
 
 els['room-code-input'].addEventListener('input', () => {
   els['room-code-input'].value = normalizeRoomCode(els['room-code-input'].value);
@@ -35,6 +43,8 @@ els['ready-button'].addEventListener('click', () => perform(() => client.setRead
 els['online-roll-button'].addEventListener('click', rollOnlineDice);
 els['leave-lobby-button'].addEventListener('click', leaveRoom);
 els['leave-game-button'].addEventListener('click', leaveRoom);
+els['online-result-leave'].addEventListener('click', leaveRoom);
+els['online-rematch-button'].addEventListener('click', () => perform(() => client.requestRematch(), 'online-toast'));
 els['online-draw-pile'].addEventListener('click', () => perform(() => client.drawCards(), 'online-toast'));
 els['online-suit-cancel'].addEventListener('click', closeSuitPicker);
 els['online-draw-close'].addEventListener('click', closeDrawReveal);
@@ -91,12 +101,17 @@ async function perform(action, errorTarget) {
 }
 
 function setButtonsBusy(value) {
-  ['create-room-button','join-room-button','ready-button','online-roll-button','online-draw-pile']
+  ['create-room-button','join-room-button','ready-button','online-roll-button','online-draw-pile','online-rematch-button']
     .forEach((id) => { if (els[id]) els[id].classList.toggle('is-busy', value); });
 }
 
 function handleView(nextView) {
+  const priorView = view;
   view = nextView;
+  if (startSequenceRunning) {
+    deferredStartView = nextView;
+    return;
+  }
   if (nextView.drawnCards?.length) {
     latestDeferredView = nextView;
     if (!revealActive) showDrawReveal(nextView.drawnCards);
@@ -104,6 +119,10 @@ function handleView(nextView) {
   }
   if (revealActive) {
     latestDeferredView = nextView;
+    return;
+  }
+  if (nextView.status === 'playing' && priorView?.status === 'dice') {
+    runOnlineStartSequence(nextView);
     return;
   }
   renderView(nextView);
@@ -114,11 +133,13 @@ function renderView(nextView) {
   els['online-entry'].classList.add('hidden');
   els['lobby-room-code'].textContent = nextView.code;
   els['online-room-mini'].textContent = nextView.code;
+  if (nextView.status !== 'finished') closeOnlineResult();
   if (nextView.status === 'playing' || nextView.status === 'finished') {
     els['online-lobby'].classList.add('hidden');
     els['online-game'].classList.remove('hidden');
     renderGame(nextView);
     if (previousStatus !== 'playing' && nextView.status === 'playing') announceInitiative(nextView);
+    if (nextView.status === 'finished') renderOnlineResult(nextView);
   } else {
     els['online-game'].classList.add('hidden');
     els['online-lobby'].classList.remove('hidden');
@@ -135,17 +156,21 @@ function renderLobby(nextView) {
   const hasTwo = Boolean(nextView.host && nextView.guest);
   els['lobby-title'].textContent = !hasTwo ? '친구를 기다리는 중' : nextView.status === 'dice' ? '주사위로 선공 결정' : '두 플레이어가 모였어요';
   els['ready-button'].classList.toggle('hidden', nextView.status === 'dice');
-  els['ready-button'].disabled = !hasTwo || mine?.ready;
-  els['ready-button'].textContent = mine?.ready ? '준비 완료 ✓' : hasTwo ? '준비 완료' : '친구를 기다리는 중';
+  els['ready-button'].disabled = !hasTwo;
+  els['ready-button'].classList.toggle('is-ready', Boolean(mine?.ready));
+  els['ready-button'].textContent = mine?.ready ? '준비 취소' : hasTwo ? '준비 완료' : '친구를 기다리는 중';
   els['online-dice-area'].classList.toggle('hidden', nextView.status !== 'dice');
   if (nextView.status === 'dice') {
-    els['online-host-die'].textContent = dieFace(nextView.host?.die);
-    els['online-guest-die'].textContent = dieFace(nextView.guest?.die);
-    els['online-host-roll'].textContent = nextView.host?.die || '-';
-    els['online-guest-roll'].textContent = nextView.guest?.die || '-';
+    if (lastDiceTie && !nextView.diceTie && (!nextView.host?.die || !nextView.guest?.die)) {
+      displayedDice = [null, null];
+      clearDiceAnimation(0);
+      clearDiceAnimation(1);
+    }
+    renderDiceValue(0, nextView.host?.die);
+    renderDiceValue(1, nextView.guest?.die);
     els['online-dice-status'].textContent = nextView.diceTie ? '동점! 두 플레이어가 다시 굴려요.' : '두 플레이어가 각자 주사위를 굴려요.';
-    els['online-roll-button'].disabled = Boolean(mine?.die) && !nextView.diceTie;
-    els['online-roll-button'].textContent = mine?.die && !nextView.diceTie ? '상대 주사위 대기 중' : nextView.diceTie ? '다시 굴리기' : '내 주사위 굴리기';
+    updateDiceControls(nextView);
+    lastDiceTie = nextView.diceTie;
   }
   els['lobby-error'].textContent = opponent && !opponent.connected ? '상대 연결이 잠시 끊겼어요. 60초 동안 기다립니다.' : '';
 }
@@ -168,9 +193,9 @@ function renderGame(nextView) {
   els['online-my-status'].textContent = isMyTurn(nextView) ? '내 차례' : '상대 차례';
   renderOpponentHand(opponent.count);
   renderHand(nextView);
-  renderTopCard(nextView.topCard, nextView.activeSuit);
+    renderTopCard(nextView.topCard, nextView.activeSuit);
   els['online-deck-count'].textContent = nextView.drawCount;
-  els['online-draw-pile'].disabled = busy || !isMyTurn(nextView) || nextView.status !== 'playing';
+  els['online-draw-pile'].disabled = busy || startSequenceRunning || !isMyTurn(nextView) || nextView.status !== 'playing';
   els['online-turn-banner'].textContent = nextView.status === 'finished'
     ? nextView.winnerSeat === nextView.mySeat ? '내 승리!' : '상대 승리'
     : isMyTurn(nextView) ? '내 차례예요' : `${opponent.nickname}의 차례`;
@@ -204,7 +229,7 @@ function renderHand(nextView) {
     const playable = isMyTurn(nextView) && isPlayable(card, nextView);
     button.classList.toggle('playable', playable);
     button.classList.toggle('not-playable', isMyTurn(nextView) && !playable);
-    button.disabled = busy || !isMyTurn(nextView) || nextView.status !== 'playing';
+    button.disabled = busy || startSequenceRunning || !isMyTurn(nextView) || nextView.status !== 'playing';
     button.addEventListener('click', () => {
       if (busy) return;
       if (!playable) return showToast('지금은 낼 수 없는 카드예요');
@@ -275,12 +300,125 @@ function closeSuitPicker() {
 }
 
 async function rollOnlineDice() {
-  if (busy) return;
-  const mineDie = view.mySeat === 0 ? els['online-host-die'] : els['online-guest-die'];
-  mineDie.classList.add('rolling');
+  if (busy || diceTimeouts[view.mySeat]) return;
+  startDiceSuspense(view.mySeat);
   playSound('dice');
-  try { await perform(() => client.rollDice(), 'lobby-error'); }
-  finally { setTimeout(() => mineDie.classList.remove('rolling'), 500); }
+  const result = await perform(() => client.rollDice(), 'lobby-error');
+  if (!result) renderDiceValue(view.mySeat, getSeatDie(view, view.mySeat), true);
+}
+
+function getDiceElements(seat) {
+  return seat === 0
+    ? { die: els['online-host-die'], label: els['online-host-roll'] }
+    : { die: els['online-guest-die'], label: els['online-guest-roll'] };
+}
+
+function getSeatDie(nextView, seat) {
+  return seat === 0 ? nextView.host?.die : nextView.guest?.die;
+}
+
+function clearDiceAnimation(seat) {
+  diceGenerations[seat] += 1;
+  clearInterval(diceIntervals[seat]);
+  clearTimeout(diceTimeouts[seat]);
+  diceIntervals[seat] = null;
+  diceTimeouts[seat] = null;
+  const { die } = getDiceElements(seat);
+  die.classList.remove('rolling', 'landed');
+}
+
+function startDiceSuspense(seat) {
+  clearDiceAnimation(seat);
+  displayedDice[seat] = null;
+  const generation = diceGenerations[seat];
+  const { die, label } = getDiceElements(seat);
+  die.classList.add('rolling');
+  label.textContent = '…';
+  let tick = 0;
+  diceIntervals[seat] = setInterval(() => {
+    if (generation !== diceGenerations[seat]) return;
+    die.textContent = dieFace((tick % 6) + 1);
+    tick += 1;
+  }, 75);
+}
+
+function animateOnlineDie(seat, value, force = false) {
+  if (!value) {
+    clearDiceAnimation(seat);
+    displayedDice[seat] = null;
+    const { die, label } = getDiceElements(seat);
+    die.textContent = dieFace(null);
+    label.textContent = '-';
+    return Promise.resolve();
+  }
+  if (!force && displayedDice[seat] === value) return Promise.resolve();
+  clearDiceAnimation(seat);
+  displayedDice[seat] = value;
+  const generation = diceGenerations[seat];
+  const { die, label } = getDiceElements(seat);
+  die.classList.add('rolling');
+  label.textContent = '…';
+  let tick = 0;
+  diceIntervals[seat] = setInterval(() => {
+    if (generation !== diceGenerations[seat]) return;
+    die.textContent = dieFace(((tick * 3 + seat) % 6) + 1);
+    tick += 1;
+  }, 72);
+  return new Promise((resolve) => {
+    diceTimeouts[seat] = setTimeout(() => {
+      if (generation !== diceGenerations[seat]) return resolve();
+      clearInterval(diceIntervals[seat]);
+      diceIntervals[seat] = null;
+      diceTimeouts[seat] = null;
+      die.textContent = dieFace(value);
+      label.textContent = String(value);
+      die.classList.remove('rolling');
+      die.classList.add('landed');
+      setTimeout(() => die.classList.remove('landed'), 480);
+      if (view?.status === 'dice') updateDiceControls(view);
+      resolve();
+    }, 880);
+  });
+}
+
+function renderDiceValue(seat, value, force = false) {
+  animateOnlineDie(seat, value, force);
+}
+
+function updateDiceControls(nextView) {
+  const { mine } = getSeatView(nextView);
+  const rolling = diceTimeouts.some(Boolean) || diceIntervals.some(Boolean);
+  els['online-roll-button'].disabled = rolling || (Boolean(mine?.die) && !nextView.diceTie);
+  els['online-roll-button'].textContent = rolling
+    ? '주사위가 구르는 중…'
+    : mine?.die && !nextView.diceTie ? '상대 주사위 대기 중' : nextView.diceTie ? '다시 굴리기' : '내 주사위 굴리기';
+}
+
+async function runOnlineStartSequence(nextView) {
+  if (startSequenceRunning) return;
+  startSequenceRunning = true;
+  deferredStartView = nextView;
+  els['online-dice-status'].textContent = '두 주사위의 결과를 확인합니다!';
+  playSound('dice');
+  await Promise.all([
+    animateOnlineDie(0, nextView.host?.die, true),
+    animateOnlineDie(1, nextView.guest?.die, true),
+  ]);
+  const gameView = deferredStartView || nextView;
+  previousStatus = 'playing';
+  renderView(gameView);
+  els['online-table'].classList.add('dealing-cards');
+  await runDealAnimation({
+    playerCards: gameView.myHand,
+    createCardFace: (card) => createCard(card, false),
+    playSound,
+  });
+  els['online-table'].classList.remove('dealing-cards');
+  startSequenceRunning = false;
+  const latest = deferredStartView || gameView;
+  deferredStartView = null;
+  renderView(latest);
+  announceInitiative(latest);
 }
 
 function announceInitiative(nextView) {
@@ -363,16 +501,43 @@ function playFinishEffect(nextView) {
   playSound(won ? 'win' : 'lose');
 }
 
+function renderOnlineResult(nextView) {
+  const { mine, opponent } = getSeatView(nextView);
+  const won = nextView.winnerSeat === nextView.mySeat;
+  els['online-result-icon'].textContent = won ? '✦' : '↻';
+  els['online-result-title'].textContent = won ? '내 승리!' : '상대 승리';
+  els['online-result-description'].textContent = won ? '같은 방에서 흐름을 이어가 보세요.' : '방 코드는 그대로, 바로 다시 도전할 수 있어요.';
+  els['online-rematch-me'].textContent = mine.ready ? '나 · 재대결 신청' : '나 · 대기';
+  els['online-rematch-opponent'].textContent = opponent.ready ? `${opponent.nickname} · 신청` : `${opponent.nickname} · 대기`;
+  els['online-rematch-me'].classList.toggle('ready', mine.ready);
+  els['online-rematch-opponent'].classList.toggle('ready', opponent.ready);
+  els['online-rematch-button'].textContent = mine.ready ? '재대결 신청 취소' : '재대결 신청';
+  els['online-rematch-button'].disabled = !opponent.connected;
+  els['online-result-modal'].classList.remove('hidden');
+  requestAnimationFrame(() => els['online-result-modal'].classList.add('open'));
+}
+
+function closeOnlineResult() {
+  els['online-result-modal'].classList.remove('open');
+  setTimeout(() => {
+    if (view?.status !== 'finished') els['online-result-modal'].classList.add('hidden');
+  }, 180);
+}
+
 function showDrawReveal(cards) {
   revealActive = true;
   els['online-draw-cards'].replaceChildren();
+  const track = document.createElement('div');
+  track.className = 'draw-reveal-track';
   cards.forEach((card,index) => {
     const element = createCard(card,false);
     element.classList.add('drawn-card');
     element.style.setProperty('--draw-index',index);
     element.style.setProperty('--draw-count',cards.length);
-    els['online-draw-cards'].append(element);
+    track.append(element);
   });
+  els['online-draw-cards'].append(track);
+  els['online-draw-cards'].scrollLeft = 0;
   els['online-draw-title'].textContent = cards.length > 1 ? `뽑은 카드 ${cards.length}장` : '뽑은 카드';
   els['online-draw-reveal'].classList.remove('hidden','leaving');
   requestAnimationFrame(() => els['online-draw-reveal'].classList.add('open'));
@@ -429,6 +594,7 @@ async function leaveRoom() {
   finally {
     busy = false; view = null; previousStatus = null; lastEventId = null;
     eventEffectGeneration += 1; clearTimeout(eventEffectTimer); effects.clear();
+    displayedDice = [null, null]; lastDiceTie = false; clearDiceAnimation(0); clearDiceAnimation(1); closeOnlineResult();
     els['online-game'].classList.add('hidden'); els['online-lobby'].classList.add('hidden'); els['online-entry'].classList.remove('hidden');
   }
 }

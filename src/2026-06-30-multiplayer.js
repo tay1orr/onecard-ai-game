@@ -64,6 +64,10 @@ export class MultiplayerClient {
     return this.updateFromRpc('onecard_set_ready', { p_room_id: this.roomId });
   }
 
+  async requestRematch() {
+    return this.updateFromRpc('onecard_request_rematch', { p_room_id: this.roomId });
+  }
+
   async refresh() {
     if (!this.roomId || this.refreshing) return this.view;
     this.refreshing = true;

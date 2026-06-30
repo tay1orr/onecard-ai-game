@@ -9,6 +9,7 @@ import {
   validateRoomCode,
 } from '../src/2026-06-30-multiplayer-helpers.js';
 import { calculateCardFlight } from '../src/2026-06-30-card-motion.js';
+import { createDealSequence } from '../src/2026-06-30-deal-animation.js';
 
 let passed = 0;
 function test(name, callback) {
@@ -55,6 +56,13 @@ test('카드 이동은 양쪽 카드 중심을 정확히 연결한다', () => {
   assert.ok(flight.arc >= 30 && flight.arc <= 76);
 });
 
+test('시작 배분은 상대와 나에게 번갈아 7장씩 나눈다', () => {
+  const sequence = createDealSequence();
+  assert.equal(sequence.length, 14);
+  assert.equal(sequence.filter((item) => item.toPlayer).length, 7);
+  assert.deepEqual(sequence.slice(0, 4).map((item) => item.toPlayer), [false, true, false, true]);
+});
+
 const sql = await readFile(new URL('../supabase/2026-06-30-onecard-schema.sql', import.meta.url), 'utf8');
 const onlineHtml = await readFile(new URL('../2026-06-30-online.html', import.meta.url), 'utf8');
 const onlineMain = await readFile(new URL('../src/2026-06-30-online-main.js', import.meta.url), 'utf8');
@@ -89,6 +97,13 @@ test('서버 SQL은 같은 숫자 7과 조커 공격 규칙을 지원한다', ()
   assert.match(sql, /v_rank = v_room\.top_card->>'rank'/);
   assert.match(sql, /when 'JOKER' then 5/);
   assert.match(sql, /p_chosen_suit is null/);
+});
+
+test('서버 SQL은 준비 취소와 같은 방 재대결을 지원한다', () => {
+  assert.match(sql, /v_ready := not \(case when v_seat = 0 then v_room\.host_ready else v_room\.guest_ready end\)/);
+  assert.match(sql, /onecard_request_rematch/);
+  assert.match(sql, /rematch_started/);
+  assert.match(sql, /grant execute on function public\.onecard_request_rematch\(uuid\) to authenticated/);
 });
 
 console.log(`멀티플레이 도우미·보안 테스트 ${passed}개 통과`);
