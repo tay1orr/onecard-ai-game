@@ -3,7 +3,7 @@
 ## 현재 상태
 
 - Codex가 처음부터 작성한 AI 원카드와 Supabase 2인 온라인 대전 버전
-- 규칙·레이아웃·멀티 보안·DOM 계약 자동 테스트 37개 통과
+- 규칙·레이아웃·멀티 보안·DOM 계약 자동 테스트 42개 통과
 - 데스크톱 1280×720, 모바일 390×844 브라우저 점검 완료
 - 실제 카드 선택, 7 무늬 변경, AI 응답, 턴 연속 진행 확인
 - 7장·16장 손패 배치, 카드 기록, 장난감 상호작용 확인
@@ -14,7 +14,8 @@
 - 준비 취소, 같은 방 재대결, 멀티 주사위 굴림 애니메이션 구현
 - AI·멀티 공통 셔플과 14장 교차 배분 연출 구현
 - 같은 방 재대결 동안 HOST·GUEST 누적 승수 표시
-- Supabase Project URL과 Publishable key 입력 및 최신 SQL 적용 완료
+- 진행 중인 방 자동 복원, 이번 판 카드 기록, 6종 오리지널 스티커 구현
+- Supabase Project URL과 Publishable key 입력 완료, 최신 SQL 재실행 필요
 - Supabase 익명 사용자 2명 서버 통합 테스트 통과: 준비·취소, 22액션 게임 종료, 재대결 신청·취소, 같은 코드 새 게임과 7장 재배분 확인
 - 배포 URL에서 일반 창 + 시크릿 창 UI 최종 확인만 권장
 - Git 커밋과 원격 저장소 작업은 수행하지 않음
@@ -62,6 +63,7 @@ feat: add dice-driven AI and secure Supabase multiplayer
 - `2026-06-30-online.html`, `2026-06-30-online.css`: 온라인 입장·대기실·게임판
 - `src/2026-06-30-multiplayer.js`: 익명 인증, RPC, Realtime, 연결 유지
 - `src/2026-06-30-online-main.js`: 온라인 UI·주사위·카드·이펙트 흐름
+- `src/2026-06-30-reactions.js`: 6종 오리지널 스티커 화면 요소
 - `supabase/2026-06-30-onecard-schema.sql`: 방·비공개 패·이벤트·RLS·게임 RPC
 - `docs/2026-06-30-supabase-setup.md`: 사용자용 Supabase 설치 절차
 - `tests/`: 핵심 규칙·멀티·DOM 계약 자동 테스트
@@ -72,9 +74,9 @@ feat: add dice-driven AI and secure Supabase multiplayer
 - 7장씩 배분하는 표준 52장 + 조커 2장 덱
 - 같은 무늬 또는 같은 숫자를 낼 수 있음
 - 2는 +2, A는 +3, 조커는 +5이며 세 종류로 누적 방어 가능
-- 조커는 언제든 낼 수 있고 직전 유효 무늬를 유지
+- 조커는 언제든 낼 수 있고 직전 유효 무늬를 유지하며, 공격 성공 후 조커를 낸 플레이어가 원하는 카드 한 장을 낼 수 있음
 - J는 턴 건너뛰기
-- Q는 방향 전환이며 2인 대전에서는 한 번 더
+- Q는 2인 대전에서 추가 효과 없는 일반 카드
 - K는 한 번 더
 - 공격을 막지 못하면 누적 장수를 받고 턴 종료
 - 일반 드로우도 한 장을 받고 턴 종료
@@ -90,4 +92,4 @@ feat: add dice-driven AI and secure Supabase multiplayer
 5. 일반 창 + 시크릿 창으로 방 생성, 준비·취소, 양쪽 주사위, 카드 내기·뽑기, 게임 종료·재대결·나가기를 확인합니다.
 6. 그 다음 Git 커밋과 Vercel 배포를 진행합니다.
 
-`src/2026-06-30-supabase-config.js`는 현재 빈 값입니다. Secret key, service_role key, DB password는 어떤 경우에도 커밋하지 않습니다.
+`src/2026-06-30-supabase-config.js`에는 Project URL과 Publishable key가 설정돼 있습니다. Secret key, service_role key, DB password는 어떤 경우에도 커밋하지 않습니다.

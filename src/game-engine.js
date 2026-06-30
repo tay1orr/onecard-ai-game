@@ -46,6 +46,7 @@ export class OneCardGame {
     this.drawPile = deck;
     this.currentPlayer = 0;
     this.attackCount = 0;
+    this.freePlay = false;
     this.requestedSuit = null;
     this.winner = null;
     this.turnNumber = 1;
@@ -81,6 +82,7 @@ export class OneCardGame {
       topCard: { ...this.topCard },
       currentPlayer: this.currentPlayer,
       attackCount: this.attackCount,
+      freePlay: this.freePlay,
       requestedSuit: this.requestedSuit,
       activeSuit: this.activeSuit,
       winner: this.winner,
@@ -97,6 +99,7 @@ export class OneCardGame {
   isPlayable(card) {
     if (this.winner !== null) return false;
     if (this.attackCount > 0) return ['2', 'A', 'JOKER'].includes(card.rank);
+    if (this.freePlay) return true;
     if (card.rank === 'JOKER') return true;
     if (card.suit === this.activeSuit) return true;
     if (this.topCard.rank === '7' && card.rank === '7') return true;
@@ -117,6 +120,7 @@ export class OneCardGame {
     if (!this.isPlayable(card)) throw new Error('지금은 낼 수 없는 카드입니다.');
     if (card.rank === '7' && !SUITS.includes(chosenSuit)) throw new Error('변경할 무늬를 선택해 주세요.');
     const previousActiveSuit = this.activeSuit;
+    this.freePlay = false;
 
     hand.splice(cardIndex, 1);
     this.discardPile.push(card);
@@ -140,7 +144,7 @@ export class OneCardGame {
       return { type: 'win', player, card: { ...card }, winner: player };
     }
 
-    const extraTurn = ['J', 'Q', 'K'].includes(card.rank);
+    const extraTurn = ['J', 'K'].includes(card.rank);
     if (!extraTurn) this.advanceTurn();
     return {
       type: 'play', player, card: { ...card }, extraTurn,
@@ -159,9 +163,11 @@ export class OneCardGame {
       cards.push({ ...card });
     }
     const wasPenalty = this.attackCount > 0;
+    const grantsFreePlay = wasPenalty && this.topCard.rank === 'JOKER';
     this.attackCount = 0;
     this.advanceTurn();
-    return { type: 'draw', player, count: cards.length, cards, wasPenalty };
+    this.freePlay = grantsFreePlay;
+    return { type: 'draw', player, count: cards.length, cards, wasPenalty, grantsFreePlay };
   }
 
   drawOne() {

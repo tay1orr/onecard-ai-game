@@ -35,7 +35,7 @@ function scoreCard(card, game, difficulty, player) {
   if (card.rank === '2') score += opponentCount <= 3 ? 14 : 8;
   if (card.rank === 'A') score += opponentCount <= 3 ? 16 : 9;
   if (card.rank === 'JOKER') score += opponentCount <= 3 ? 24 : 12;
-  if (['J', 'Q', 'K'].includes(card.rank)) score += opponentCount <= 3 ? 12 : 6;
+  if (['J', 'K'].includes(card.rank)) score += opponentCount <= 3 ? 12 : 6;
   if (card.rank === '7') score += handAfter.length <= 2 ? 9 : 3;
   if (game.attackCount > 0) score += card.rank === 'JOKER' ? 8 : card.rank === 'A' ? 4 : 2;
 
@@ -44,7 +44,7 @@ function scoreCard(card, game, difficulty, player) {
     const futureMatches = handAfter.filter((item) => item.rank === 'JOKER' || item.suit === nextSuit || item.rank === card.rank).length;
     score += futureMatches * 3;
     if (handAfter.length === 1 && canFollow(handAfter[0], card, nextSuit)) score += 18;
-    if (opponentCount === 1 && ['2', 'A', 'JOKER', 'J', 'Q', 'K'].includes(card.rank)) score += 15;
+    if (opponentCount === 1 && ['2', 'A', 'JOKER', 'J', 'K'].includes(card.rank)) score += 15;
     if (opponentCount > 4 && ['2', 'A', 'JOKER'].includes(card.rank)) score -= 4;
   }
 

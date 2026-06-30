@@ -8,6 +8,7 @@ import { isSupabaseConfigured } from './2026-06-30-supabase-config.js';
 import { playSound } from './audio.js';
 import { animateCardToPile } from './2026-06-30-card-motion.js';
 import { runDealAnimation } from './2026-06-30-deal-animation.js';
+import { REACTIONS, createReactionArtwork, createReactionButton, getReaction } from './2026-06-30-reactions.js';
 
 const els = Object.fromEntries([...document.querySelectorAll('[id]')].map((element) => [element.id, element]));
 const effects = createGameEffects({
@@ -32,6 +33,9 @@ let diceIntervals = [null, null];
 let diceTimeouts = [null, null];
 let diceGenerations = [0, 0];
 let lastDiceTie = false;
+let connectionPromise = null;
+let reactionTimer = null;
+let reactionSending = false;
 
 els['room-code-input'].addEventListener('input', () => {
   els['room-code-input'].value = normalizeRoomCode(els['room-code-input'].value);
@@ -48,6 +52,18 @@ els['online-rematch-button'].addEventListener('click', () => perform(() => clien
 els['online-draw-pile'].addEventListener('click', () => perform(() => client.drawCards(), 'online-toast'));
 els['online-suit-cancel'].addEventListener('click', closeSuitPicker);
 els['online-draw-close'].addEventListener('click', closeDrawReveal);
+els['online-top-card'].addEventListener('click', openOnlineHistory);
+els['online-top-card'].addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    openOnlineHistory();
+  }
+});
+els['online-history-close'].addEventListener('click', closeOnlineHistory);
+els['online-history-modal'].addEventListener('click', (event) => {
+  if (event.target === els['online-history-modal']) closeOnlineHistory();
+});
+els['reaction-toggle'].addEventListener('click', toggleReactionPicker);
 document.querySelectorAll('[data-online-suit]').forEach((button) => {
   button.addEventListener('click', () => submitCard(pendingSeven, button.dataset.onlineSuit));
 });
@@ -57,11 +73,30 @@ document.querySelectorAll('[data-online-toy]').forEach((button) => {
 });
 window.addEventListener('resize', scheduleHandLayout);
 
+setupReactionPickers();
+
 if (!isSupabaseConfigured()) {
   els['setup-required'].classList.remove('hidden');
   els['create-room-button'].disabled = true;
   els['join-room-button'].disabled = true;
   renderConnection('setup required');
+} else {
+  els['create-room-button'].disabled = true;
+  els['join-room-button'].disabled = true;
+  connectionPromise = initializeConnection();
+}
+
+async function initializeConnection() {
+  try {
+    await client.connect();
+    await client.restoreRoom();
+  } catch (error) {
+    els['entry-error'].textContent = friendlyError(error.message);
+    renderConnection('reconnecting');
+  } finally {
+    els['create-room-button'].disabled = false;
+    els['join-room-button'].disabled = false;
+  }
 }
 
 async function runEntryAction(mode) {
@@ -76,7 +111,8 @@ async function runEntryAction(mode) {
     return;
   }
   await perform(async () => {
-    if (!client.supabase) await client.connect();
+    if (connectionPromise) await connectionPromise;
+    else if (!client.supabase) await client.connect();
     if (mode === 'create') await client.createRoom(nickname);
     else await client.joinRoom(code, nickname);
   }, 'entry-error');
@@ -193,7 +229,9 @@ function renderGame(nextView) {
   els['online-my-count'].textContent = mine.count;
   els['online-opponent-count'].textContent = opponent.count;
   els['online-opponent-status'].textContent = opponent.connected ? '온라인' : '재접속 대기 중';
-  els['online-my-status'].textContent = isMyTurn(nextView) ? '내 차례' : '상대 차례';
+  els['online-my-status'].textContent = isMyTurn(nextView)
+    ? nextView.freePlay ? '내 차례 · 자유 카드' : '내 차례'
+    : '상대 차례';
   renderOpponentHand(opponent.count);
   renderHand(nextView);
     renderTopCard(nextView.topCard, nextView.activeSuit);
@@ -204,7 +242,9 @@ function renderGame(nextView) {
     : isMyTurn(nextView) ? '내 차례예요' : `${opponent.nickname}의 차례`;
   els['online-action-hint'].textContent = nextView.attackCount
     ? `공격 +${nextView.attackCount} · 2, A, 조커로 방어하세요`
-    : `${suitName(nextView.activeSuit)} 또는 ${nextView.topCard.rank} 카드를 낼 수 있어요`;
+    : nextView.freePlay
+      ? '조커 공격 성공! 이번에는 원하는 카드 한 장을 낼 수 있어요'
+      : `${suitName(nextView.activeSuit)} 또는 ${nextView.topCard.rank} 카드를 낼 수 있어요`;
   els['online-attack-badge'].classList.toggle('hidden', !nextView.attackCount);
   els['online-attack-badge'].querySelector('b').textContent = nextView.attackCount;
   if (nextView.status === 'finished' && previousStatus !== 'finished' && nextView.lastEvent?.eventType !== 'play') {
@@ -277,6 +317,7 @@ function createCard(card, interactive) {
 
 function isPlayable(card, nextView) {
   if (nextView.attackCount > 0) return ['2','A','JOKER'].includes(card.rank);
+  if (nextView.freePlay) return true;
   return card.rank === 'JOKER' || card.suit === nextView.activeSuit || card.rank === nextView.topCard.rank;
 }
 
@@ -408,6 +449,9 @@ async function runOnlineStartSequence(nextView) {
     animateOnlineDie(1, nextView.guest?.die, true),
   ]);
   const gameView = deferredStartView || nextView;
+  const starter = gameView.currentSeat === 0 ? gameView.host.nickname : gameView.guest.nickname;
+  els['online-dice-status'].textContent = `${gameView.host.die} 대 ${gameView.guest.die} · ${starter} 선공!`;
+  await wait(1350);
   previousStatus = 'playing';
   renderView(gameView);
   els['online-table'].classList.add('dealing-cards');
@@ -434,6 +478,10 @@ function announceInitiative(nextView) {
 async function renderLastEvent(event) {
   if (!event || event.id === lastEventId) return;
   lastEventId = event.id;
+  if (event.eventType === 'emote') {
+    showReaction(event);
+    return;
+  }
   if (!['draw', 'play'].includes(event.eventType)) return;
   eventEffectGeneration += 1;
   const generation = eventEffectGeneration;
@@ -466,7 +514,6 @@ async function renderLastEvent(event) {
     '2':['attack','+2','+2 공격!',`${owner} 공격을 보냈어요`],
     A:['attack','+3','+3 공격!',`${owner} 공격을 보냈어요`],
     J:['skip','≫','턴 스킵!',`${owner} 턴을 건너뜁니다`],
-    Q:['skip','↻','방향 전환!',`${owner} 한 번 더 플레이합니다`],
     K:['skip','♛','한 번 더!',`${owner} 연속 플레이합니다`],
     '7':['suit',SUIT_SYMBOLS[event.payload.chosenSuit],`${suitName(event.payload.chosenSuit)}로 변경!`,`${owner} 무늬를 바꿨어요`],
     JOKER:['joker','★','JOKER +5',`${owner} 조커 공격을 보냈어요`],
@@ -525,6 +572,113 @@ function closeOnlineResult() {
   setTimeout(() => {
     if (view?.status !== 'finished') els['online-result-modal'].classList.add('hidden');
   }, 180);
+}
+
+function setupReactionPickers() {
+  [els['reaction-picker'], els['result-reaction-picker']].forEach((picker) => {
+    picker.replaceChildren();
+    REACTIONS.forEach((reaction) => {
+      const button = createReactionButton(reaction);
+      button.addEventListener('click', () => sendReaction(reaction.key));
+      picker.append(button);
+    });
+  });
+}
+
+function toggleReactionPicker() {
+  const willOpen = els['reaction-picker'].classList.contains('hidden');
+  els['reaction-picker'].classList.toggle('hidden', !willOpen);
+  els['reaction-toggle'].setAttribute('aria-expanded', String(willOpen));
+  if (willOpen) requestAnimationFrame(() => els['reaction-picker'].classList.add('open'));
+  else els['reaction-picker'].classList.remove('open');
+}
+
+function closeReactionPicker() {
+  els['reaction-picker'].classList.remove('open');
+  els['reaction-toggle'].setAttribute('aria-expanded', 'false');
+  setTimeout(() => els['reaction-picker'].classList.add('hidden'), 160);
+}
+
+async function sendReaction(key) {
+  if (reactionSending || !view || !['dice', 'playing', 'finished'].includes(view.status)) return;
+  reactionSending = true;
+  closeReactionPicker();
+  try {
+    await client.sendEmote(key);
+  } catch (error) {
+    showToast(friendlyError(error.message));
+  } finally {
+    setTimeout(() => { reactionSending = false; }, 1200);
+  }
+}
+
+function showReaction(event) {
+  const reaction = getReaction(event.payload?.emote);
+  if (!reaction) return;
+  const mine = event.actorSeat === view.mySeat;
+  clearTimeout(reactionTimer);
+  els['online-reaction-art'].replaceChildren(createReactionArtwork(reaction.key));
+  els['online-reaction-label'].textContent = reaction.label;
+  els['online-reaction-owner'].textContent = mine ? '내 반응' : `${getSeatView(view).opponent.nickname}의 반응`;
+  els['online-reaction-bubble'].className = `reaction-bubble reaction-${reaction.key} ${mine ? 'mine' : 'theirs'}`;
+  requestAnimationFrame(() => els['online-reaction-bubble'].classList.add('show'));
+  playSound(`reaction-${reaction.key}`);
+  reactionTimer = setTimeout(() => {
+    els['online-reaction-bubble'].classList.remove('show');
+    setTimeout(() => els['online-reaction-bubble'].classList.add('hidden'), 220);
+  }, 2600);
+}
+
+async function openOnlineHistory() {
+  if (!view || !['playing', 'finished'].includes(view.status)) return;
+  els['online-history-list'].innerHTML = '<p class="history-empty">기록을 불러오는 중…</p>';
+  els['online-history-modal'].classList.remove('hidden');
+  requestAnimationFrame(() => els['online-history-modal'].classList.add('open'));
+  try {
+    const history = await client.getHistory();
+    renderOnlineHistory(Array.isArray(history) ? history : []);
+  } catch (error) {
+    const message = document.createElement('p');
+    message.className = 'history-empty';
+    message.textContent = friendlyError(error.message);
+    els['online-history-list'].replaceChildren(message);
+  }
+}
+
+function renderOnlineHistory(history) {
+  els['online-history-list'].replaceChildren();
+  if (!history.length) {
+    const empty = document.createElement('p');
+    empty.className = 'history-empty';
+    empty.textContent = '아직 이번 판에 낸 카드가 없어요.';
+    els['online-history-list'].append(empty);
+    return;
+  }
+  history.forEach((entry, index) => {
+    if (!entry.card) return;
+    const mine = entry.actorSeat === view.mySeat;
+    const row = document.createElement('article');
+    row.className = `history-row ${mine ? 'mine' : 'theirs'}`;
+    const card = createCard(entry.card, false);
+    card.classList.add('history-mini-card');
+    const detail = document.createElement('div');
+    const title = document.createElement('strong');
+    title.textContent = mine ? '내가 낸 카드' : `${getSeatView(view).opponent.nickname}이(가) 낸 카드`;
+    const meta = document.createElement('small');
+    const changedSuit = entry.chosenSuit ? ` · ${suitName(entry.chosenSuit)}로 변경` : '';
+    meta.textContent = `${suitName(entry.card.suit)} ${entry.card.rank}${changedSuit}`;
+    detail.append(title, meta);
+    const order = document.createElement('span');
+    order.className = 'history-order';
+    order.textContent = `#${history.length - index}`;
+    row.append(card, detail, order);
+    els['online-history-list'].append(row);
+  });
+}
+
+function closeOnlineHistory() {
+  els['online-history-modal'].classList.remove('open');
+  setTimeout(() => els['online-history-modal'].classList.add('hidden'), 180);
 }
 
 function showDrawReveal(cards) {
@@ -597,7 +751,7 @@ async function leaveRoom() {
   finally {
     busy = false; view = null; previousStatus = null; lastEventId = null;
     eventEffectGeneration += 1; clearTimeout(eventEffectTimer); effects.clear();
-    displayedDice = [null, null]; lastDiceTie = false; clearDiceAnimation(0); clearDiceAnimation(1); closeOnlineResult();
+    displayedDice = [null, null]; lastDiceTie = false; clearDiceAnimation(0); clearDiceAnimation(1); closeOnlineResult(); closeOnlineHistory();
     els['online-game'].classList.add('hidden'); els['online-lobby'].classList.add('hidden'); els['online-entry'].classList.remove('hidden');
   }
 }
@@ -647,5 +801,11 @@ function friendlyError(message='') {
   if (message.includes('STALE_VERSION')) return '상태가 갱신됐어요. 다시 시도해 주세요.';
   if (message.includes('NOT_YOUR_TURN')) return '지금은 내 차례가 아니에요.';
   if (message.includes('SUPABASE_NOT_CONFIGURED')) return 'Supabase 공개 설정을 먼저 입력해 주세요.';
+  if (message.includes('EMOTE_RATE_LIMIT')) return '반응은 잠깐 쉬었다가 다시 보내 주세요.';
+  if (message.includes('EMOTE_NOT_AVAILABLE')) return '게임 준비 후 반응을 보낼 수 있어요.';
   return message || '처리 중 문제가 생겼어요.';
+}
+
+function wait(duration) {
+  return new Promise((resolve) => setTimeout(resolve, duration));
 }

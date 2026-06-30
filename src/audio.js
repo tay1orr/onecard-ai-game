@@ -41,6 +41,12 @@ export function playSound(name) {
   if (name === 'second') { [520, 420, 620].forEach((note, i) => tone(note, 0.2, 'sine', 0.025, i * 0.08)); }
   if (name === 'shuffle') { [180, 245, 205, 285, 220].forEach((note, i) => tone(note, 0.06, 'triangle', 0.014, i * 0.07)); }
   if (name === 'deal') { tone(235, 0.055, 'triangle', 0.014); tone(360, 0.04, 'sine', 0.01, 0.025); }
+  if (name === 'reaction-nice') { [523, 659, 784].forEach((note, i) => tone(note, 0.14, 'triangle', 0.025, i * 0.045)); }
+  if (name === 'reaction-fire') { [220, 330, 660].forEach((note, i) => tone(note, 0.16, i < 2 ? 'sawtooth' : 'square', 0.018, i * 0.055)); }
+  if (name === 'reaction-oops') { tone(520, 0.08, 'sine', 0.025); tone(250, 0.2, 'triangle', 0.023, 0.08); }
+  if (name === 'reaction-lol') { [620, 520, 680, 560].forEach((note, i) => tone(note, 0.08, 'square', 0.015, i * 0.07)); }
+  if (name === 'reaction-gg') { [392, 523, 659, 784].forEach((note, i) => tone(note, 0.18, 'sine', 0.025, i * 0.055)); }
+  if (name === 'reaction-again') { [500, 620, 500, 760].forEach((note, i) => tone(note, 0.12, 'triangle', 0.022, i * 0.06)); }
 }
 
 export function toggleSound() {

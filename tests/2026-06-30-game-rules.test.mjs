@@ -5,12 +5,13 @@ import { calculateFanTransform, calculateHandLayout } from '../src/2026-06-30-ha
 
 function card(suit, rank) { return { id: `${suit}-${rank}`, suit, rank }; }
 
-function setState(game, { player = 0, top = card('hearts', '5'), hands, attack = 0, requestedSuit = null }) {
+function setState(game, { player = 0, top = card('hearts', '5'), hands, attack = 0, requestedSuit = null, freePlay = false }) {
   game.currentPlayer = player;
   game.discardPile = [top];
   game.hands = hands;
   game.drawPile = [card('clubs', '3'), card('spades', '4'), card('diamonds', '5'), card('clubs', '6')];
   game.attackCount = attack;
+  game.freePlay = freePlay;
   game.requestedSuit = requestedSuit;
   game.winner = null;
   game.history = [{ player: null, card: { ...top }, turn: 0, requestedSuit: null }];
@@ -44,9 +45,22 @@ game.playCard(0, 'joker-JOKER');
 assert.equal(game.attackCount, 5, '조커 공격은 5장이 누적되어야 함');
 assert.equal(game.activeSuit, 'diamonds', '조커 이후에는 직전 유효 무늬를 유지해야 함');
 
+setState(game, { top: card('diamonds', '6'), hands: [[card('joker', 'JOKER'), card('clubs', '3')], [card('spades', '4')]] });
+game.playCard(0, 'joker-JOKER');
+const jokerPenalty = game.drawCards(1);
+assert.equal(jokerPenalty.grantsFreePlay, true, '조커 공격을 받으면 다음 플레이어에게 자유 플레이를 부여해야 함');
+assert.equal(game.isPlayable(card('clubs', '3')), true, '조커 공격 다음 턴에는 무늬와 관계없이 낼 수 있어야 함');
+game.playCard(0, 'clubs-3');
+assert.equal(game.freePlay, false, '자유 플레이는 한 번 행동하면 종료되어야 함');
+
 setState(game, { hands: [[card('hearts', 'K'), card('clubs', '3')], [card('clubs', '4')]] });
 game.playCard(0, 'hearts-K');
 assert.equal(game.currentPlayer, 0, 'K 이후 같은 플레이어 차례여야 함');
+
+setState(game, { hands: [[card('hearts', 'Q'), card('clubs', '3')], [card('clubs', '4')]] });
+const queenPlay = game.playCard(0, 'hearts-Q');
+assert.equal(queenPlay.extraTurn, false, '2인 게임에서 Q는 추가 효과가 없어야 함');
+assert.equal(game.currentPlayer, 1, 'Q를 내면 일반 카드처럼 상대 차례가 되어야 함');
 
 setState(game, { top: card('spades', '5'), hands: [[card('spades', '7'), card('clubs', '3')], [card('clubs', '4')]] });
 game.playCard(0, 'spades-7', 'clubs');
@@ -78,4 +92,4 @@ assert.equal(calculateFanTransform({ index: 3, cardCount: 7, compact: true }).y,
 assert.equal(calculateFanTransform({ index: 6, cardCount: 7, compact: true }).angle, 15, '모바일 마지막 카드는 오른쪽으로 펼쳐져야 함');
 assert.equal(calculateFanTransform({ index: 15, cardCount: 16, compact: true }).angle, 9, '많은 패는 부채 각도를 줄여야 함');
 
-console.log('원카드 규칙·레이아웃 테스트 24개 통과');
+console.log('원카드 규칙·레이아웃 테스트 26개 통과');

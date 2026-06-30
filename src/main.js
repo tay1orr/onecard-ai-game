@@ -365,7 +365,7 @@ async function applyPlayerCard(cardId, suit = null) {
   }
   const result = game.playCard(0, cardId, suit);
   moves += 1;
-  playSound(result.card.rank === 'JOKER' ? 'joker' : ['2', 'A', 'J', 'Q', 'K', '7'].includes(result.card.rank) ? 'action' : 'card');
+  playSound(result.card.rank === 'JOKER' ? 'joker' : ['2', 'A', 'J', 'K', '7'].includes(result.card.rank) ? 'action' : 'card');
   cardAnimating = false;
   render();
   if (result.type === 'win') return endGame(0);
@@ -429,7 +429,7 @@ async function runAiTurn() {
       return;
     }
     const result = game.playCard(1, move.cardId, move.chosenSuit);
-    playSound(result.card.rank === 'JOKER' ? 'joker' : ['2', 'A', 'J', 'Q', 'K', '7'].includes(result.card.rank) ? 'action' : 'card');
+    playSound(result.card.rank === 'JOKER' ? 'joker' : ['2', 'A', 'J', 'K', '7'].includes(result.card.rank) ? 'action' : 'card');
     cardAnimating = false;
     if (result.type === 'win') { render(); return endGame(1); }
     const hasSpecialEffect = announceSpecial(result, true);
@@ -446,7 +446,6 @@ function announceSpecial(result, isAi = false) {
     '2': { type: 'attack', symbol: '+2', title: '+2 공격!', subtitle: `${owner} 공격을 이어갑니다` },
     A: { type: 'attack', symbol: '+3', title: '+3 공격!', subtitle: `${owner} 강한 공격을 보냈어요` },
     J: { type: 'skip', symbol: '≫', title: '턴 스킵!', subtitle: `${owner} 상대 턴을 건너뜁니다` },
-    Q: { type: 'skip', symbol: '↻', title: '방향 전환!', subtitle: `${owner} 한 번 더 플레이합니다` },
     K: { type: 'skip', symbol: '♛', title: '한 번 더!', subtitle: `${owner} 연속으로 카드를 냅니다` },
     '7': { type: 'suit', symbol: SUIT_SYMBOLS[result.requestedSuit], title: `${suitName(result.requestedSuit)}로 변경!`, subtitle: `${owner} 무늬를 바꿨어요` },
     JOKER: { type: 'joker', symbol: '★', title: 'JOKER +5', subtitle: `${owner} 무시무시한 조커 공격을 보냈어요` },
@@ -483,10 +482,14 @@ function render() {
   const playerTurn = gameReady && game.currentPlayer === 0;
   els['game-table'].classList.toggle('ai-turn', !playerTurn);
   els['turn-banner'].textContent = !gameReady ? '주사위로 선공을 정하는 중' : playerTurn ? '내 차례예요' : `${DIFFICULTIES[difficulty].name}의 차례`;
-  els['player-status'].textContent = !gameReady ? '선공 결정 후 카드를 낼 수 있어요' : playerTurn ? (game.attackCount ? '공격을 막거나 카드를 뽑으세요' : '낼 카드를 선택하세요') : '상대의 선택을 기다리는 중';
+  els['player-status'].textContent = !gameReady
+    ? '선공 결정 후 카드를 낼 수 있어요'
+    : playerTurn ? game.attackCount ? '공격을 막거나 카드를 뽑으세요' : game.freePlay ? '아무 카드나 한 장 낼 수 있어요' : '낼 카드를 선택하세요'
+      : '상대의 선택을 기다리는 중';
   els['action-hint'].textContent = game.attackCount
     ? `공격이 ${game.attackCount}장 누적됐어요 · 2, A, 조커로 방어하세요`
-    : `${suitName(game.activeSuit)} 또는 ${game.topCard.rank} 카드를 낼 수 있어요`;
+    : game.freePlay ? '조커 보너스 · 이번 턴에는 아무 카드나 낼 수 있어요'
+      : `${suitName(game.activeSuit)} 또는 ${game.topCard.rank} 카드를 낼 수 있어요`;
   els['deck-count'].textContent = game.drawPile.length;
   els['draw-pile'].disabled = !playerTurn || drawAnimating || game.winner !== null;
   els['attack-badge'].classList.toggle('hidden', game.attackCount === 0);

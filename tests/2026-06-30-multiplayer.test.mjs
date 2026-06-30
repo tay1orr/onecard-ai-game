@@ -10,6 +10,7 @@ import {
 } from '../src/2026-06-30-multiplayer-helpers.js';
 import { calculateCardFlight } from '../src/2026-06-30-card-motion.js';
 import { createDealSequence } from '../src/2026-06-30-deal-animation.js';
+import { REACTIONS } from '../src/2026-06-30-reactions.js';
 
 let passed = 0;
 function test(name, callback) {
@@ -68,6 +69,7 @@ const onlineHtml = await readFile(new URL('../2026-06-30-online.html', import.me
 const onlineMain = await readFile(new URL('../src/2026-06-30-online-main.js', import.meta.url), 'utf8');
 const aiHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const aiMain = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+const multiplayerClient = await readFile(new URL('../src/2026-06-30-multiplayer.js', import.meta.url), 'utf8');
 
 function assertReferencedIdsExist(html, source) {
   const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
@@ -111,6 +113,32 @@ test('같은 방 승패는 승리 시 누적되고 새 상대가 들어오면 �
   assert.match(sql, /'wins', v_room\.host_wins/);
   assert.match(sql, /host_wins = host_wins \+ case when jsonb_array_length\(v_new_hand\) = 0 and v_seat = 0 then 1 else 0 end/);
   assert.match(sql, /host_wins = 0, guest_wins = 0/);
+});
+
+test('조커 공격을 받은 뒤 공격자가 자유롭게 한 장을 내고 Q는 일반 카드로 처리한다', () => {
+  assert.match(sql, /add column if not exists free_play boolean not null default false/);
+  assert.match(sql, /elsif not v_room\.free_play and not/);
+  assert.match(sql, /free_play = v_room\.attack_count > 0 and v_room\.top_card->>'rank' = 'JOKER'/);
+  assert.match(sql, /v_next_seat := case when v_rank in \('J', 'K'\) then v_seat else 1 - v_seat end/);
+  assert.doesNotMatch(sql, /v_rank in \('J', 'Q', 'K'\)/);
+});
+
+test('카드 기록과 커스텀 스티커 RPC는 참가자 확인·종류 제한·도배 방지를 포함한다', () => {
+  assert.match(sql, /function public\.onecard_get_history\(p_room_id uuid\)/);
+  assert.match(sql, /event_type = 'play' and e\.id > v_start_id/);
+  assert.match(sql, /function public\.onecard_send_emote\(p_room_id uuid, p_emote text\)/);
+  assert.match(sql, /interval '1200 milliseconds'/);
+  assert.match(sql, /p_emote not in \('nice', 'fire', 'oops', 'lol', 'gg', 'again'\)/);
+  assert.deepEqual(REACTIONS.map(({ key }) => key), ['nice', 'fire', 'oops', 'lol', 'gg', 'again']);
+});
+
+test('새로고침하면 익명 세션과 활성 방을 복원하고 주사위 결과를 보여준 뒤 시작한다', () => {
+  assert.match(multiplayerClient, /persistSession: true/);
+  assert.match(multiplayerClient, /async restoreRoom\(\)/);
+  assert.match(multiplayerClient, /onecard-active-room-v1/);
+  assert.match(onlineMain, /await wait\(1350\)/);
+  assert.match(onlineMain, /client\.getHistory\(\)/);
+  assert.match(onlineMain, /client\.sendEmote\(key\)/);
 });
 
 console.log(`멀티플레이 도우미·보안 테스트 ${passed}개 통과`);

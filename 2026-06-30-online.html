@@ -100,11 +100,19 @@
           <button class="table-toy rose-toy" data-online-toy="rose" type="button" aria-label="빨간 장미"><span class="toy-bubble">향긋!</span><span class="rose-bloom"><i></i><i></i><i></i><i></i><i></i><b></b></span><span class="rose-stem"><i></i><b></b></span></button>
         </aside>
 
+        <aside class="reaction-dock" aria-label="스티커 반응 보내기">
+          <button id="reaction-toggle" class="reaction-toggle" type="button" aria-expanded="false"><span>ONE!</span><small>반응</small></button>
+          <div id="reaction-picker" class="reaction-picker hidden"></div>
+        </aside>
+        <div id="online-reaction-bubble" class="reaction-bubble hidden" role="status" aria-live="polite">
+          <div id="online-reaction-art"></div><strong id="online-reaction-label"></strong><small id="online-reaction-owner"></small>
+        </div>
+
         <section class="online-center-zone">
           <div id="online-turn-banner" class="turn-banner">상태 동기화 중</div>
           <div class="piles">
             <button id="online-draw-pile" class="draw-pile card-back" type="button" aria-label="카드 뽑기"><span class="back-logo">ONE<b>!</b></span><small id="online-deck-count">0</small></button>
-            <div class="discard-wrap"><div id="online-top-card" class="playing-card"></div><span id="online-active-suit" class="active-suit hidden"></span></div>
+            <div class="discard-wrap"><div id="online-top-card" class="playing-card" role="button" tabindex="0" aria-label="버린 카드 기록 보기"></div><span id="online-active-suit" class="active-suit hidden"></span></div>
           </div>
           <p id="online-action-hint" class="action-hint">게임 상태를 불러오고 있어요</p>
           <div id="online-attack-badge" class="attack-badge hidden">공격 +<b>0</b></div>
@@ -136,7 +144,18 @@
         <span><b id="online-rematch-opponent">상대 · 대기</b><small>상대 상태</small></span>
       </div>
       <button id="online-rematch-button" class="primary-button" type="button">재대결 신청</button>
+      <div class="result-reactions"><span>스티커 보내기</span><div id="result-reaction-picker" class="result-reaction-picker"></div></div>
       <button id="online-result-leave" class="secondary-button" type="button">방 나가기</button>
+    </div>
+  </div>
+
+  <div id="online-history-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="online-history-title">
+    <div class="modal-card history-card">
+      <p class="step-label">ROUND HISTORY</p>
+      <h2 id="online-history-title">이번 판 카드 기록</h2>
+      <p class="history-intro">현재 판에서 낸 카드만 최신순으로 보여요.</p>
+      <div id="online-history-list" class="history-list"></div>
+      <button id="online-history-close" class="secondary-button" type="button">닫기</button>
     </div>
   </div>
 
