@@ -1,18 +1,25 @@
 export const SUITS = ['hearts', 'diamonds', 'spades', 'clubs'];
 export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+export const JOKER_COUNT = 2;
 
 export const SUIT_SYMBOLS = {
-  hearts: '♥', diamonds: '♦', spades: '♠', clubs: '♣',
+  hearts: '♥', diamonds: '♦', spades: '♠', clubs: '♣', joker: '★',
 };
 
 const VALID_DIFFICULTIES = new Set(['easy', 'normal', 'hard']);
 
 export function createDeck() {
-  return SUITS.flatMap((suit) => RANKS.map((rank) => ({
+  const standardCards = SUITS.flatMap((suit) => RANKS.map((rank) => ({
     id: `${suit}-${rank}`,
     suit,
     rank,
   })));
+  const jokers = Array.from({ length: JOKER_COUNT }, (_, index) => ({
+    id: `joker-${index + 1}`,
+    suit: 'joker',
+    rank: 'JOKER',
+  }));
+  return [...standardCards, ...jokers];
 }
 
 export function shuffled(cards, random = Math.random) {
@@ -45,7 +52,7 @@ export class OneCardGame {
     this.playedCount = [0, 0];
 
     let firstCard = this.drawPile.pop();
-    while (['2', '7', 'A', 'J', 'Q', 'K'].includes(firstCard.rank)) {
+    while (['2', '7', 'A', 'J', 'Q', 'K', 'JOKER'].includes(firstCard.rank)) {
       this.drawPile.unshift(firstCard);
       firstCard = this.drawPile.pop();
     }
@@ -89,7 +96,8 @@ export class OneCardGame {
 
   isPlayable(card) {
     if (this.winner !== null) return false;
-    if (this.attackCount > 0) return card.rank === '2' || card.rank === 'A';
+    if (this.attackCount > 0) return ['2', 'A', 'JOKER'].includes(card.rank);
+    if (card.rank === 'JOKER') return true;
     if (card.suit === this.activeSuit) return true;
     if (this.requestedSuit) return false;
     return card.rank === this.topCard.rank;
@@ -107,11 +115,14 @@ export class OneCardGame {
     const card = hand[cardIndex];
     if (!this.isPlayable(card)) throw new Error('지금은 낼 수 없는 카드입니다.');
     if (card.rank === '7' && !SUITS.includes(chosenSuit)) throw new Error('변경할 무늬를 선택해 주세요.');
+    const previousActiveSuit = this.activeSuit;
 
     hand.splice(cardIndex, 1);
     this.discardPile.push(card);
     this.playedCount[player] += 1;
-    this.requestedSuit = card.rank === '7' ? chosenSuit : null;
+    this.requestedSuit = card.rank === '7'
+      ? chosenSuit
+      : card.rank === 'JOKER' ? previousActiveSuit : null;
     this.history.push({
       player,
       card: { ...card },
@@ -121,6 +132,7 @@ export class OneCardGame {
 
     if (card.rank === '2') this.attackCount += 2;
     if (card.rank === 'A') this.attackCount += 3;
+    if (card.rank === 'JOKER') this.attackCount += 5;
 
     if (hand.length === 0) {
       this.winner = player;

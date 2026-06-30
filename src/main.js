@@ -1,7 +1,9 @@
 import { OneCardGame, SUIT_SYMBOLS } from './game-engine.js';
 import { chooseAiMove } from './ai-player.js';
 import { isSoundEnabled, playSound, toggleSound } from './audio.js';
-import { calculateHandLayout } from './2026-06-30-hand-layout.js';
+import { calculateFanTransform, calculateHandLayout } from './2026-06-30-hand-layout.js';
+import { createGameEffects } from './2026-06-30-effects.js';
+import { makeToyDraggable } from './2026-06-30-toy-drag.js';
 
 const DIFFICULTIES = {
   easy: { name: '느긋한 루미', icon: '☁', status: '느긋하게 패를 살펴보고 있어요', delay: 850 },
@@ -19,12 +21,25 @@ let moves = 0;
 let pendingSeven = null;
 let toastTimer = null;
 let handLayoutFrame = null;
+let isPeekingHand = false;
+let oneCardAnnounced = [false, false];
 
 const TOY_LINES = {
   jelly: ['말랑!', '뿌잉!', '또 눌러줘!'],
   star: ['빙글!', '반짝!', '슈웅!'],
-  flower: ['활짝!', '쑥쑥!', '좋은 수야!'],
+  rose: ['향긋!', '사랑을 담아!', '장미 파워!'],
 };
+
+const effects = createGameEffects({
+  root: els['action-overlay'],
+  particles: els['effect-particles'],
+  symbol: els['effect-symbol'],
+  title: els['effect-title'],
+  subtitle: els['effect-subtitle'],
+});
+
+const toyControllers = [...document.querySelectorAll('[data-toy]')]
+  .map((button) => makeToyDraggable(button, els['game-table'], playWithToy));
 
 document.querySelectorAll('[data-difficulty]').forEach((button) => {
   button.addEventListener('click', () => startGame(button.dataset.difficulty));
@@ -42,23 +57,26 @@ document.querySelectorAll('.sound-button').forEach((button) => button.addEventLi
   toggleSound();
   updateSoundButtons();
 }));
-document.querySelectorAll('[data-toy]').forEach((button) => {
-  button.addEventListener('click', () => playWithToy(button));
-});
-
 els['draw-pile'].addEventListener('click', playerDraw);
 els['discard-pile'].addEventListener('click', openHistory);
 els['exit-button'].addEventListener('click', goHome);
 els['rematch-button'].addEventListener('click', () => startGame(difficulty));
 els['change-ai-button'].addEventListener('click', goHome);
+els['peek-hand-button'].addEventListener('click', peekAtHand);
+els['return-to-suit-button'].addEventListener('click', returnToSuitPicker);
+els['cancel-seven-button'].addEventListener('click', cancelSevenSelection);
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     const open = document.querySelector('.modal:not(.hidden)');
+    if (open?.id === 'suit-picker') peekAtHand();
     if (['rules-modal', 'history-modal'].includes(open?.id)) closeModal(open.id);
   }
 });
-window.addEventListener('resize', scheduleHandLayout);
+window.addEventListener('resize', () => {
+  scheduleHandLayout();
+  toyControllers.forEach((controller) => controller.reset());
+});
 
 function startGame(selectedDifficulty) {
   clearTimeout(aiTimer);
@@ -66,6 +84,13 @@ function startGame(selectedDifficulty) {
   difficulty = selectedDifficulty;
   game.reset(difficulty);
   moves = 0;
+  pendingSeven = null;
+  isPeekingHand = false;
+  oneCardAnnounced = [false, false];
+  effects.clear();
+  toyControllers.forEach((controller) => controller.reset());
+  els['game-screen'].classList.remove('suit-peek-active');
+  els['suit-return-bar'].classList.add('hidden');
   startedAt = Date.now();
   els['home-screen'].classList.add('hidden');
   els['game-screen'].classList.remove('hidden');
@@ -86,6 +111,12 @@ function goHome() {
   clearTimeout(aiTimer);
   clearInterval(timerId);
   window.scrollTo(0, 0);
+  effects.clear();
+  pendingSeven = null;
+  isPeekingHand = false;
+  els['suit-return-bar'].classList.add('hidden');
+  els['game-screen'].classList.remove('suit-peek-active');
+  closeModal('suit-picker');
   closeModal('result-modal');
   els['game-screen'].classList.add('hidden');
   els['home-screen'].classList.remove('hidden');
@@ -94,14 +125,20 @@ function goHome() {
 
 function playerPlay(cardId) {
   if (game.currentPlayer !== 0 || game.winner !== null) return;
+  if (pendingSeven) {
+    showToast('먼저 7의 무늬를 선택하거나 내기를 취소해 주세요');
+    return;
+  }
   const card = game.hands[0].find((item) => item.id === cardId);
   if (!card || !game.isPlayable(card)) {
     playSound('error');
-    showToast(game.attackCount ? '2 또는 A로 막거나 카드를 뽑아야 해요' : '같은 무늬나 숫자의 카드를 골라주세요');
+    showToast(game.attackCount ? '2, A, 조커로 막거나 카드를 뽑아야 해요' : '같은 무늬나 숫자의 카드를 골라주세요');
     return;
   }
   if (card.rank === '7') {
     pendingSeven = cardId;
+    isPeekingHand = false;
+    renderPlayerHand();
     openModal('suit-picker');
     return;
   }
@@ -113,16 +150,48 @@ function finishSeven(suit) {
   closeModal('suit-picker');
   const cardId = pendingSeven;
   pendingSeven = null;
+  isPeekingHand = false;
+  els['suit-return-bar'].classList.add('hidden');
+  els['game-screen'].classList.remove('suit-peek-active');
   applyPlayerCard(cardId, suit);
+}
+
+function peekAtHand() {
+  if (!pendingSeven) return;
+  isPeekingHand = true;
+  closeModal('suit-picker');
+  els['suit-return-bar'].classList.remove('hidden');
+  els['game-screen'].classList.add('suit-peek-active');
+  renderPlayerHand();
+  setTimeout(() => els['return-to-suit-button'].focus(), 190);
+}
+
+function returnToSuitPicker() {
+  if (!pendingSeven) return;
+  isPeekingHand = false;
+  els['suit-return-bar'].classList.add('hidden');
+  els['game-screen'].classList.remove('suit-peek-active');
+  openModal('suit-picker');
+}
+
+function cancelSevenSelection() {
+  pendingSeven = null;
+  isPeekingHand = false;
+  els['suit-return-bar'].classList.add('hidden');
+  els['game-screen'].classList.remove('suit-peek-active');
+  closeModal('suit-picker');
+  renderPlayerHand();
+  showToast('7 내기를 취소했어요');
 }
 
 function applyPlayerCard(cardId, suit = null) {
   const result = game.playCard(0, cardId, suit);
   moves += 1;
-  playSound(['2', 'A', 'J', 'Q', 'K', '7'].includes(result.card.rank) ? 'action' : 'card');
+  playSound(result.card.rank === 'JOKER' ? 'joker' : ['2', 'A', 'J', 'Q', 'K', '7'].includes(result.card.rank) ? 'action' : 'card');
   render();
   if (result.type === 'win') return endGame(0);
   announceSpecial(result);
+  announceOneCardIfNeeded(0);
   if (game.currentPlayer === 1) scheduleAiTurn();
 }
 
@@ -130,7 +199,12 @@ function playerDraw() {
   if (game.currentPlayer !== 0 || game.winner !== null) return;
   const result = game.drawCards(0);
   playSound('draw');
-  showToast(result.wasPenalty ? `공격을 받아 ${result.count}장을 뽑았어요` : '카드 1장을 뽑았어요');
+  if (result.wasPenalty) {
+    effects.play('impact', { symbol: `+${result.count}`, title: `${result.count}장 받기!`, subtitle: '공격을 막지 못했어요' });
+  } else {
+    showToast('카드 1장을 뽑았어요');
+  }
+  refreshOneCardFlags();
   render();
   scheduleAiTurn();
 }
@@ -148,12 +222,18 @@ function runAiTurn() {
   if (move.type === 'draw') {
     const result = game.drawCards(1);
     playSound('draw');
-    showToast(result.wasPenalty ? `${DIFFICULTIES[difficulty].name}가 ${result.count}장을 받았어요` : '상대가 카드 1장을 뽑았어요');
+    if (result.wasPenalty) {
+      effects.play('impact', { symbol: `+${result.count}`, title: `${result.count}장 받기!`, subtitle: `${DIFFICULTIES[difficulty].name}가 공격을 받았어요` });
+    } else {
+      showToast('상대가 카드 1장을 뽑았어요');
+    }
+    refreshOneCardFlags();
   } else {
     const result = game.playCard(1, move.cardId, move.chosenSuit);
-    playSound(['2', 'A', 'J', 'Q', 'K', '7'].includes(result.card.rank) ? 'action' : 'card');
+    playSound(result.card.rank === 'JOKER' ? 'joker' : ['2', 'A', 'J', 'Q', 'K', '7'].includes(result.card.rank) ? 'action' : 'card');
     if (result.type === 'win') { render(); return endGame(1); }
     announceSpecial(result, true);
+    announceOneCardIfNeeded(1);
   }
   render();
   if (game.currentPlayer === 1) scheduleAiTurn();
@@ -161,15 +241,33 @@ function runAiTurn() {
 
 function announceSpecial(result, isAi = false) {
   const owner = isAi ? '상대가' : '내가';
-  const messages = {
-    '2': `${owner} +2 공격을 보냈어요`,
-    A: `${owner} +3 공격을 보냈어요`,
-    J: `${owner} 상대 턴을 건너뛰었어요`,
-    Q: `${owner} 방향을 바꿔 한 번 더 플레이해요`,
-    K: `${owner} 한 번 더 플레이해요`,
-    '7': `${owner} ${suitName(result.requestedSuit)} 무늬를 선택했어요`,
+  const notices = {
+    '2': { type: 'attack', symbol: '+2', title: '+2 공격!', subtitle: `${owner} 공격을 이어갑니다` },
+    A: { type: 'attack', symbol: '+3', title: '+3 공격!', subtitle: `${owner} 강한 공격을 보냈어요` },
+    J: { type: 'skip', symbol: '≫', title: '턴 스킵!', subtitle: `${owner} 상대 턴을 건너뜁니다` },
+    Q: { type: 'skip', symbol: '↻', title: '방향 전환!', subtitle: `${owner} 한 번 더 플레이합니다` },
+    K: { type: 'skip', symbol: '♛', title: '한 번 더!', subtitle: `${owner} 연속으로 카드를 냅니다` },
+    '7': { type: 'suit', symbol: SUIT_SYMBOLS[result.requestedSuit], title: `${suitName(result.requestedSuit)}로 변경!`, subtitle: `${owner} 무늬를 바꿨어요` },
+    JOKER: { type: 'joker', symbol: '★', title: 'JOKER +5', subtitle: `${owner} 무시무시한 조커 공격을 보냈어요` },
   };
-  if (messages[result.card.rank]) showToast(messages[result.card.rank]);
+  const notice = notices[result.card.rank];
+  if (notice) effects.play(notice.type, notice);
+}
+
+function announceOneCardIfNeeded(player) {
+  if (game.hands[player].length !== 1 || oneCardAnnounced[player]) return;
+  oneCardAnnounced[player] = true;
+  const owner = player === 0 ? '내 손에 마지막 한 장!' : `${DIFFICULTIES[difficulty].name}도 단 한 장!`;
+  effects.play('onecard', { symbol: '1', title: 'ONE CARD!', subtitle: owner, particleCount: 32 });
+  playSound('onecard');
+  els['game-table'].classList.add('one-card-pulse');
+  setTimeout(() => els['game-table'].classList.remove('one-card-pulse'), 1500);
+}
+
+function refreshOneCardFlags() {
+  game.hands.forEach((hand, player) => {
+    if (hand.length !== 1) oneCardAnnounced[player] = false;
+  });
 }
 
 function render() {
@@ -181,7 +279,7 @@ function render() {
   els['turn-banner'].textContent = playerTurn ? '내 차례예요' : `${DIFFICULTIES[difficulty].name}의 차례`;
   els['player-status'].textContent = playerTurn ? (game.attackCount ? '공격을 막거나 카드를 뽑으세요' : '낼 카드를 선택하세요') : '상대의 선택을 기다리는 중';
   els['action-hint'].textContent = game.attackCount
-    ? `공격이 ${game.attackCount}장 누적됐어요 · 2 또는 A로 방어하세요`
+    ? `공격이 ${game.attackCount}장 누적됐어요 · 2, A, 조커로 방어하세요`
     : `${suitName(game.activeSuit)} 또는 ${game.topCard.rank} 카드를 낼 수 있어요`;
   els['deck-count'].textContent = game.drawPile.length;
   els['draw-pile'].disabled = !playerTurn || game.winner !== null;
@@ -212,7 +310,8 @@ function renderPlayerHand() {
     const playable = playerTurn && game.isPlayable(card);
     button.classList.toggle('playable', playable);
     button.classList.toggle('not-playable', playerTurn && !playable);
-    button.disabled = !playerTurn;
+    button.classList.toggle('pending-wild', card.id === pendingSeven);
+    button.disabled = !playerTurn || Boolean(pendingSeven);
     button.addEventListener('click', () => playerPlay(card.id));
     els['player-hand'].append(button);
   });
@@ -256,6 +355,15 @@ function updateHandLayout() {
   hand.style.setProperty('--hand-step', `${step}px`);
   hand.classList.toggle('hand-scrolls', scrolls);
   hand.classList.toggle('hand-centered', !scrolls);
+  const compact = window.innerWidth <= 760;
+  hand.classList.toggle('fan-hand', compact);
+  cards.forEach((card, index) => {
+    const { angle, hoverAngle, y } = calculateFanTransform({ index, cardCount: cards.length, compact });
+    card.style.setProperty('--fan-rotate', `${angle}deg`);
+    card.style.setProperty('--fan-hover-rotate', `${hoverAngle}deg`);
+    card.style.setProperty('--fan-y', `${y}px`);
+    card.style.zIndex = String(index + 1);
+  });
 }
 
 function openHistory() {
@@ -277,7 +385,9 @@ function renderHistory() {
     const title = document.createElement('strong');
     const detail = document.createElement('small');
     title.textContent = entry.player === null ? '시작 카드' : entry.player === 0 ? '내가 낸 카드' : `${DIFFICULTIES[difficulty].name}가 낸 카드`;
-    const suitChange = entry.requestedSuit ? ` · ${suitName(entry.requestedSuit)}로 변경` : '';
+    const suitChange = entry.requestedSuit
+      ? entry.card.rank === 'JOKER' ? ` · ${suitName(entry.requestedSuit)} 유지` : ` · ${suitName(entry.requestedSuit)}로 변경`
+      : '';
     detail.textContent = `${suitName(entry.card.suit)} ${entry.card.rank}${suitChange}`;
     copy.append(title, detail);
 
@@ -304,14 +414,15 @@ function playWithToy(button) {
 
 function createCardElement(card, interactive) {
   const element = document.createElement(interactive ? 'button' : 'div');
-  element.className = `playing-card ${['hearts', 'diamonds'].includes(card.suit) ? 'red-card' : ''}`;
+  const isJoker = card.rank === 'JOKER';
+  element.className = `playing-card ${['hearts', 'diamonds'].includes(card.suit) ? 'red-card' : ''} ${isJoker ? 'joker-card' : ''}`;
   if (interactive) {
     element.type = 'button';
-    element.setAttribute('aria-label', `${suitName(card.suit)} ${card.rank}`);
+    element.setAttribute('aria-label', isJoker ? '조커 공격 +5' : `${suitName(card.suit)} ${card.rank}`);
   }
   const top = document.createElement('span');
   top.className = 'card-corner top';
-  top.innerHTML = `<b>${card.rank}</b><i>${SUIT_SYMBOLS[card.suit]}</i>`;
+  top.innerHTML = `<b>${isJoker ? 'JOKER' : card.rank}</b><i>${SUIT_SYMBOLS[card.suit]}</i>`;
   const center = document.createElement('strong');
   center.className = 'card-suit';
   center.textContent = SUIT_SYMBOLS[card.suit];
@@ -364,7 +475,7 @@ function formatTime(milliseconds) {
 }
 
 function suitName(suit) {
-  return { hearts: '하트', diamonds: '다이아', spades: '스페이드', clubs: '클로버' }[suit] || '';
+  return { hearts: '하트', diamonds: '다이아', spades: '스페이드', clubs: '클로버', joker: '조커' }[suit] || '';
 }
 
 function showToast(message) {

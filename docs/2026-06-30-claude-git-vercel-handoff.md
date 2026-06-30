@@ -3,10 +3,11 @@
 ## 현재 상태
 
 - Codex가 처음부터 작성한 AI 원카드 1차 버전
-- 규칙·손패 레이아웃 자동 테스트 14개 통과
+- 규칙·조커·부채꼴 손패 자동 테스트 22개 통과
 - 데스크톱 1280×720, 모바일 390×844 브라우저 점검 완료
 - 실제 카드 선택, 7 무늬 변경, AI 응답, 턴 연속 진행 확인
 - 7장·16장 손패 배치, 카드 기록, 장난감 상호작용 확인
+- 조커 +5, 7 패 확인, 원카드·공격 이펙트, 장난감 이동 확인
 - 브라우저 콘솔 오류와 경고 없음
 - Git 커밋과 원격 저장소 작업은 수행하지 않음
 
@@ -34,7 +35,7 @@ python -m http.server 8765
 ## 권장 커밋 메시지
 
 ```text
-feat: add responsive one-card game with three AI levels
+feat: add joker attacks, card effects, fan hand and draggable toys
 ```
 
 ## 구현 구성
@@ -46,14 +47,17 @@ feat: add responsive one-card game with three AI levels
 - `src/main.js`: 렌더링, 입력, AI 턴, 기록과 화면 흐름
 - `src/audio.js`: Web Audio 효과음과 소리 설정
 - `src/2026-06-30-hand-layout.js`: 손패 수와 화면 폭에 따른 동적 간격 계산
+- `src/2026-06-30-effects.js`: 공격·조커·원카드 전체 화면 이펙트 큐
+- `src/2026-06-30-toy-drag.js`: 마우스·터치·키보드 장난감 이동
 - `tests/2026-06-30-game-rules.test.mjs`: 핵심 규칙 자동 테스트
 - `vercel.json`: 정적 배포 URL 설정
 
 ## 적용 규칙
 
-- 7장씩 배분하는 52장 덱
+- 7장씩 배분하는 표준 52장 + 조커 2장 덱
 - 같은 무늬 또는 같은 숫자를 낼 수 있음
-- 2는 +2, A는 +3이며 서로 누적 방어 가능
+- 2는 +2, A는 +3, 조커는 +5이며 세 종류로 누적 방어 가능
+- 조커는 언제든 낼 수 있고 직전 유효 무늬를 유지
 - J는 턴 건너뛰기
 - Q는 방향 전환이며 2인 대전에서는 한 번 더
 - K는 한 번 더

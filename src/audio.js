@@ -31,6 +31,8 @@ export function playSound(name) {
   if (name === 'lose') [330, 277, 220].forEach((note, i) => tone(note, 0.2, 'triangle', 0.03, i * 0.1));
   if (name === 'error') tone(135, 0.12, 'sawtooth', 0.02);
   if (name === 'toy') { tone(620, 0.07, 'sine', 0.018); tone(820, 0.09, 'triangle', 0.015, 0.04); }
+  if (name === 'joker') { [180, 240, 360, 720].forEach((note, i) => tone(note, 0.2, i % 2 ? 'square' : 'sawtooth', 0.022, i * 0.055)); }
+  if (name === 'onecard') { [523, 659, 784, 1047].forEach((note, i) => tone(note, 0.25, 'triangle', 0.032, i * 0.075)); }
 }
 
 export function toggleSound() {

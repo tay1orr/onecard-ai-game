@@ -34,24 +34,26 @@ function scoreCard(card, game, difficulty, player) {
 
   if (card.rank === '2') score += opponentCount <= 3 ? 14 : 8;
   if (card.rank === 'A') score += opponentCount <= 3 ? 16 : 9;
+  if (card.rank === 'JOKER') score += opponentCount <= 3 ? 24 : 12;
   if (['J', 'Q', 'K'].includes(card.rank)) score += opponentCount <= 3 ? 12 : 6;
   if (card.rank === '7') score += handAfter.length <= 2 ? 9 : 3;
-  if (game.attackCount > 0) score += card.rank === 'A' ? 4 : 2;
+  if (game.attackCount > 0) score += card.rank === 'JOKER' ? 8 : card.rank === 'A' ? 4 : 2;
 
   if (difficulty === 'hard') {
-    const nextSuit = card.rank === '7' ? chooseSuit(handAfter) : card.suit;
-    const futureMatches = handAfter.filter((item) => item.suit === nextSuit || item.rank === card.rank || item.rank === '7').length;
+    const nextSuit = card.rank === '7' ? chooseSuit(handAfter) : card.rank === 'JOKER' ? game.activeSuit : card.suit;
+    const futureMatches = handAfter.filter((item) => item.rank === 'JOKER' || item.suit === nextSuit || item.rank === card.rank).length;
     score += futureMatches * 3;
     if (handAfter.length === 1 && canFollow(handAfter[0], card, nextSuit)) score += 18;
-    if (opponentCount === 1 && ['2', 'A', 'J', 'Q', 'K'].includes(card.rank)) score += 15;
-    if (opponentCount > 4 && ['2', 'A'].includes(card.rank)) score -= 4;
+    if (opponentCount === 1 && ['2', 'A', 'JOKER', 'J', 'Q', 'K'].includes(card.rank)) score += 15;
+    if (opponentCount > 4 && ['2', 'A', 'JOKER'].includes(card.rank)) score -= 4;
   }
 
   return score;
 }
 
 function canFollow(card, previous, activeSuit) {
-  if (previous.rank === '7') return card.suit === activeSuit;
+  if (card.rank === 'JOKER') return true;
+  if (previous.rank === '7' || previous.rank === 'JOKER') return card.suit === activeSuit;
   return card.suit === activeSuit || card.rank === previous.rank;
 }
 
