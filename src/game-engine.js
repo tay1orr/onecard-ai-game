@@ -50,6 +50,12 @@ export class OneCardGame {
       firstCard = this.drawPile.pop();
     }
     this.discardPile.push(firstCard);
+    this.history = [{
+      player: null,
+      card: { ...firstCard },
+      turn: 0,
+      requestedSuit: null,
+    }];
     return this.snapshot();
   }
 
@@ -74,13 +80,19 @@ export class OneCardGame {
       turnNumber: this.turnNumber,
       playedCount: [...this.playedCount],
       difficulty: this.difficulty,
+      history: this.history.map((entry) => ({
+        ...entry,
+        card: { ...entry.card },
+      })),
     };
   }
 
   isPlayable(card) {
     if (this.winner !== null) return false;
     if (this.attackCount > 0) return card.rank === '2' || card.rank === 'A';
-    return card.rank === '7' || card.suit === this.activeSuit || card.rank === this.topCard.rank;
+    if (card.suit === this.activeSuit) return true;
+    if (this.requestedSuit) return false;
+    return card.rank === this.topCard.rank;
   }
 
   playableCards(player = this.currentPlayer) {
@@ -100,6 +112,12 @@ export class OneCardGame {
     this.discardPile.push(card);
     this.playedCount[player] += 1;
     this.requestedSuit = card.rank === '7' ? chosenSuit : null;
+    this.history.push({
+      player,
+      card: { ...card },
+      turn: this.turnNumber,
+      requestedSuit: this.requestedSuit,
+    });
 
     if (card.rank === '2') this.attackCount += 2;
     if (card.rank === 'A') this.attackCount += 3;

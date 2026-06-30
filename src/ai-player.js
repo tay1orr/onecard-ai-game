@@ -51,7 +51,8 @@ function scoreCard(card, game, difficulty, player) {
 }
 
 function canFollow(card, previous, activeSuit) {
-  return card.rank === '7' || card.suit === activeSuit || card.rank === previous.rank;
+  if (previous.rank === '7') return card.suit === activeSuit;
+  return card.suit === activeSuit || card.rank === previous.rank;
 }
 
 export function chooseSuit(hand, excludedCardId = null) {

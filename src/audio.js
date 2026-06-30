@@ -30,6 +30,7 @@ export function playSound(name) {
   if (name === 'win') [440, 554, 659, 880].forEach((note, i) => tone(note, 0.22, 'sine', 0.035, i * 0.09));
   if (name === 'lose') [330, 277, 220].forEach((note, i) => tone(note, 0.2, 'triangle', 0.03, i * 0.1));
   if (name === 'error') tone(135, 0.12, 'sawtooth', 0.02);
+  if (name === 'toy') { tone(620, 0.07, 'sine', 0.018); tone(820, 0.09, 'triangle', 0.015, 0.04); }
 }
 
 export function toggleSound() {

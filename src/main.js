@@ -1,6 +1,7 @@
 import { OneCardGame, SUIT_SYMBOLS } from './game-engine.js';
 import { chooseAiMove } from './ai-player.js';
 import { isSoundEnabled, playSound, toggleSound } from './audio.js';
+import { calculateHandLayout } from './2026-06-30-hand-layout.js';
 
 const DIFFICULTIES = {
   easy: { name: '느긋한 루미', icon: '☁', status: '느긋하게 패를 살펴보고 있어요', delay: 850 },
@@ -17,6 +18,13 @@ let aiTimer = null;
 let moves = 0;
 let pendingSeven = null;
 let toastTimer = null;
+let handLayoutFrame = null;
+
+const TOY_LINES = {
+  jelly: ['말랑!', '뿌잉!', '또 눌러줘!'],
+  star: ['빙글!', '반짝!', '슈웅!'],
+  flower: ['활짝!', '쑥쑥!', '좋은 수야!'],
+};
 
 document.querySelectorAll('[data-difficulty]').forEach((button) => {
   button.addEventListener('click', () => startGame(button.dataset.difficulty));
@@ -34,8 +42,12 @@ document.querySelectorAll('.sound-button').forEach((button) => button.addEventLi
   toggleSound();
   updateSoundButtons();
 }));
+document.querySelectorAll('[data-toy]').forEach((button) => {
+  button.addEventListener('click', () => playWithToy(button));
+});
 
 els['draw-pile'].addEventListener('click', playerDraw);
+els['discard-pile'].addEventListener('click', openHistory);
 els['exit-button'].addEventListener('click', goHome);
 els['rematch-button'].addEventListener('click', () => startGame(difficulty));
 els['change-ai-button'].addEventListener('click', goHome);
@@ -43,9 +55,10 @@ els['change-ai-button'].addEventListener('click', goHome);
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     const open = document.querySelector('.modal:not(.hidden)');
-    if (open?.id === 'rules-modal') closeModal(open.id);
+    if (['rules-modal', 'history-modal'].includes(open?.id)) closeModal(open.id);
   }
 });
+window.addEventListener('resize', scheduleHandLayout);
 
 function startGame(selectedDifficulty) {
   clearTimeout(aiTimer);
@@ -203,17 +216,90 @@ function renderPlayerHand() {
     button.addEventListener('click', () => playerPlay(card.id));
     els['player-hand'].append(button);
   });
+  scheduleHandLayout();
 }
 
 function renderTopCard() {
   const card = game.topCard;
   const current = createCardElement(card, false);
-  els['discard-pile'].className = current.className;
+  els['discard-pile'].className = `${current.className} discard-card history-trigger`;
   els['discard-pile'].replaceChildren(...current.childNodes);
+  els['discard-pile'].setAttribute('aria-label', `현재 카드 ${suitName(card.suit)} ${card.rank}, 낸 카드 기록 보기`);
+  els['discard-pile'].dataset.historyCount = String(game.history.length);
   const changed = Boolean(game.requestedSuit);
   els['active-suit'].classList.toggle('hidden', !changed);
   els['active-suit'].classList.toggle('red', ['hearts', 'diamonds'].includes(game.requestedSuit));
   els['active-suit'].textContent = changed ? SUIT_SYMBOLS[game.requestedSuit] : '';
+}
+
+function scheduleHandLayout() {
+  cancelAnimationFrame(handLayoutFrame);
+  handLayoutFrame = requestAnimationFrame(updateHandLayout);
+}
+
+function updateHandLayout() {
+  const hand = els['player-hand'];
+  const cards = [...hand.children];
+  if (!cards.length || hand.clientWidth === 0) return;
+
+  const cardWidth = cards[0].getBoundingClientRect().width;
+  const style = getComputedStyle(hand);
+  const horizontalPadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+  const { step, contentWidth, scrolls } = calculateHandLayout({
+    containerWidth: hand.clientWidth,
+    horizontalPadding,
+    cardWidth,
+    cardCount: cards.length,
+    compact: window.innerWidth <= 760,
+  });
+
+  hand.style.setProperty('--hand-step', `${step}px`);
+  hand.classList.toggle('hand-scrolls', scrolls);
+  hand.classList.toggle('hand-centered', !scrolls);
+}
+
+function openHistory() {
+  clearTimeout(aiTimer);
+  renderHistory();
+  openModal('history-modal');
+}
+
+function renderHistory() {
+  els['history-list'].replaceChildren();
+  [...game.history].reverse().forEach((entry, index) => {
+    const row = document.createElement('div');
+    row.className = `history-row ${entry.player === 0 ? 'mine' : entry.player === 1 ? 'theirs' : 'initial'}`;
+
+    const miniCard = createCardElement(entry.card, false);
+    miniCard.classList.add('history-mini-card');
+
+    const copy = document.createElement('div');
+    const title = document.createElement('strong');
+    const detail = document.createElement('small');
+    title.textContent = entry.player === null ? '시작 카드' : entry.player === 0 ? '내가 낸 카드' : `${DIFFICULTIES[difficulty].name}가 낸 카드`;
+    const suitChange = entry.requestedSuit ? ` · ${suitName(entry.requestedSuit)}로 변경` : '';
+    detail.textContent = `${suitName(entry.card.suit)} ${entry.card.rank}${suitChange}`;
+    copy.append(title, detail);
+
+    const order = document.createElement('span');
+    order.className = 'history-order';
+    order.textContent = index === 0 ? '최근' : entry.turn ? `${entry.turn}턴` : '시작';
+    row.append(miniCard, copy, order);
+    els['history-list'].append(row);
+  });
+}
+
+function playWithToy(button) {
+  const toy = button.dataset.toy;
+  const lines = TOY_LINES[toy];
+  const count = Number(button.dataset.playCount || 0);
+  button.dataset.playCount = String(count + 1);
+  button.querySelector('.toy-bubble').textContent = lines[count % lines.length];
+  button.classList.remove('is-playing');
+  void button.offsetWidth;
+  button.classList.add('is-playing');
+  playSound('toy');
+  setTimeout(() => button.classList.remove('is-playing'), 850);
 }
 
 function createCardElement(card, interactive) {
@@ -305,6 +391,9 @@ function closeModal(id) {
   if (!modal) return;
   modal.classList.remove('open');
   setTimeout(() => modal.classList.add('hidden'), 180);
+  if (id === 'history-modal' && game.currentPlayer === 1 && game.winner === null) {
+    setTimeout(scheduleAiTurn, 190);
+  }
 }
 
 function updateSoundButtons() {

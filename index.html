@@ -86,6 +86,22 @@
           <div id="ai-hand" class="ai-hand" aria-label="상대방 카드 7장"></div>
         </section>
 
+        <aside class="table-toys" aria-label="기다리는 동안 가지고 놀 수 있는 장난감">
+          <button class="table-toy jelly-toy" data-toy="jelly" type="button" aria-label="말랑 젤리 눌러보기">
+            <span class="toy-bubble" aria-hidden="true">말랑!</span>
+            <span class="jelly-body" aria-hidden="true"><i></i><b></b></span>
+          </button>
+          <button class="table-toy star-toy" data-toy="star" type="button" aria-label="별 팽이 돌리기">
+            <span class="toy-bubble" aria-hidden="true">빙글!</span>
+            <span class="star-body" aria-hidden="true">★</span>
+          </button>
+          <button class="table-toy flower-toy" data-toy="flower" type="button" aria-label="화분 꽃 피우기">
+            <span class="toy-bubble" aria-hidden="true">활짝!</span>
+            <span class="flower-head" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></span>
+            <span class="flower-pot" aria-hidden="true"></span>
+          </button>
+        </aside>
+
         <section class="center-zone" aria-label="카드 더미와 현재 카드">
           <div id="turn-banner" class="turn-banner" role="status" aria-live="polite">내 차례예요</div>
           <div class="piles">
@@ -94,7 +110,7 @@
               <small id="deck-count">37</small>
             </button>
             <div class="discard-wrap">
-              <div id="discard-pile" class="playing-card discard-card" aria-label="현재 카드"></div>
+              <button id="discard-pile" class="playing-card discard-card history-trigger" type="button" aria-label="현재 카드와 낸 카드 기록 보기"></button>
               <span id="active-suit" class="active-suit hidden" aria-label="현재 지정 무늬"></span>
             </div>
           </div>
@@ -142,6 +158,17 @@
     </div>
   </div>
 
+  <div id="history-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="history-title">
+    <div class="modal-card history-card">
+      <button class="modal-close" data-close-modal="history-modal" aria-label="카드 기록 닫기">×</button>
+      <p class="step-label">CARD HISTORY</p>
+      <h2 id="history-title">지금까지 낸 카드</h2>
+      <p class="history-intro">최근에 낸 카드부터 보여드려요.</p>
+      <div id="history-list" class="history-list" aria-live="polite"></div>
+      <button class="primary-button" data-close-modal="history-modal" type="button">게임으로 돌아가기</button>
+    </div>
+  </div>
+
   <div id="rules-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="rules-title">
     <div class="modal-card rules-card">
       <button class="modal-close" data-close-modal="rules-modal" aria-label="규칙 닫기">×</button>
@@ -154,7 +181,7 @@
         <div><span class="mini-card">J</span><p><strong>건너뛰기</strong><small>상대 턴을 한 번 건너뜁니다.</small></p></div>
         <div><span class="mini-card red">Q</span><p><strong>방향 전환</strong><small>2인 대전에서는 한 번 더 플레이해요.</small></p></div>
         <div><span class="mini-card">K</span><p><strong>한 번 더</strong><small>카드를 낸 사람이 다시 플레이해요.</small></p></div>
-        <div><span class="mini-card red">7</span><p><strong>무늬 변경</strong><small>원하는 무늬로 흐름을 바꿉니다.</small></p></div>
+        <div><span class="mini-card red">7</span><p><strong>무늬 변경</strong><small>같은 무늬에 낸 뒤 원하는 무늬로 바꿔요.</small></p></div>
       </div>
       <button class="primary-button" data-close-modal="rules-modal" type="button">확인했어요</button>
     </div>
