@@ -1,0 +1,8 @@
+{
+  "name": "onecard-ai-game",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/2026-06-30-game-rules.test.mjs"
+  }
+}

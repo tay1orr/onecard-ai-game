@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101426">
+  <meta name="description" content="설치 없이 즐기는 세련된 AI 원카드 게임">
+  <title>ONE! — AI 원카드</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+
+  <main id="app">
+    <section id="home-screen" class="screen home-screen" aria-labelledby="home-title">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="ONE 홈"><span>ONE</span><b>!</b></a>
+        <div class="topbar-actions">
+          <button class="icon-button" data-open-modal="rules-modal" aria-label="게임 규칙">?</button>
+          <button id="home-sound-button" class="icon-button sound-button" aria-label="소리 켜기 또는 끄기">♪</button>
+        </div>
+      </header>
+
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">QUICK CARD BATTLE</p>
+          <h1 id="home-title">한 장이 뒤집는<br><em>완벽한 역전.</em></h1>
+          <p class="hero-description">가볍게 시작하고, 영리하게 끝내세요.<br>나에게 맞는 AI를 골라 바로 대결할 수 있어요.</p>
+        </div>
+        <div class="hero-cards" aria-hidden="true">
+          <div class="demo-card demo-card-one"><span>7</span><i>♥</i><strong>7</strong></div>
+          <div class="demo-card demo-card-two"><span>A</span><i>♠</i><strong>A</strong></div>
+          <div class="demo-card demo-card-three"><span>2</span><i>♦</i><strong>2</strong></div>
+        </div>
+      </div>
+
+      <section class="difficulty-section" aria-labelledby="difficulty-title">
+        <div class="section-heading">
+          <div>
+            <p class="step-label">STEP 01</p>
+            <h2 id="difficulty-title">상대를 선택하세요</h2>
+          </div>
+          <p id="record-summary" class="record-summary">첫 승리에 도전해 보세요</p>
+        </div>
+        <div class="difficulty-grid">
+          <button class="difficulty-card" data-difficulty="easy">
+            <span class="difficulty-icon">☁</span>
+            <span class="difficulty-copy"><strong>느긋한 루미</strong><small>처음이라면 여기서 시작</small></span>
+            <span class="difficulty-badge">EASY</span>
+          </button>
+          <button class="difficulty-card recommended" data-difficulty="normal">
+            <span class="recommend-label">추천</span>
+            <span class="difficulty-icon">✦</span>
+            <span class="difficulty-copy"><strong>영리한 네오</strong><small>상황에 맞춰 카드를 선택</small></span>
+            <span class="difficulty-badge">NORMAL</span>
+          </button>
+          <button class="difficulty-card" data-difficulty="hard">
+            <span class="difficulty-icon">♛</span>
+            <span class="difficulty-copy"><strong>냉철한 아스트라</strong><small>패 흐름을 읽는 도전자</small></span>
+            <span class="difficulty-badge">HARD</span>
+          </button>
+        </div>
+      </section>
+
+      <footer class="home-footer"><span>AI 대전</span><span>·</span><span>설치 없음</span><span>·</span><span>모바일 지원</span></footer>
+    </section>
+
+    <section id="game-screen" class="screen game-screen hidden" aria-label="원카드 게임판">
+      <header class="game-header">
+        <button id="exit-button" class="text-button" type="button"><span aria-hidden="true">←</span> 나가기</button>
+        <div class="round-info"><span id="difficulty-label">영리한 네오</span><small id="round-timer">00:00</small></div>
+        <div class="topbar-actions">
+          <button class="icon-button" data-open-modal="rules-modal" aria-label="게임 규칙">?</button>
+          <button id="game-sound-button" class="icon-button sound-button" aria-label="소리 켜기 또는 끄기">♪</button>
+        </div>
+      </header>
+
+      <div class="table" id="game-table">
+        <section class="opponent-zone" aria-label="AI 카드 영역">
+          <div class="player-meta opponent-meta">
+            <div class="avatar" id="ai-avatar">✦</div>
+            <div><strong id="ai-name">영리한 네오</strong><small id="ai-status">생각을 준비하고 있어요</small></div>
+            <span class="card-count"><b id="ai-card-count">7</b>장</span>
+          </div>
+          <div id="ai-hand" class="ai-hand" aria-label="상대방 카드 7장"></div>
+        </section>
+
+        <section class="center-zone" aria-label="카드 더미와 현재 카드">
+          <div id="turn-banner" class="turn-banner" role="status" aria-live="polite">내 차례예요</div>
+          <div class="piles">
+            <button id="draw-pile" class="draw-pile card-back" type="button" aria-label="카드 한 장 뽑기">
+              <span class="back-logo">ONE<b>!</b></span>
+              <small id="deck-count">37</small>
+            </button>
+            <div class="discard-wrap">
+              <div id="discard-pile" class="playing-card discard-card" aria-label="현재 카드"></div>
+              <span id="active-suit" class="active-suit hidden" aria-label="현재 지정 무늬"></span>
+            </div>
+          </div>
+          <p id="action-hint" class="action-hint">같은 무늬나 같은 숫자의 카드를 내세요</p>
+          <div id="attack-badge" class="attack-badge hidden" role="alert">공격 +<b>0</b></div>
+        </section>
+
+        <section class="player-zone" aria-label="내 카드 영역">
+          <div class="player-meta">
+            <div class="avatar player-avatar">ME</div>
+            <div><strong>나</strong><small id="player-status">낼 카드를 선택하세요</small></div>
+            <span class="card-count"><b id="player-card-count">7</b>장</span>
+          </div>
+          <div id="player-hand" class="player-hand" aria-label="내 카드"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="suit-picker" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="suit-title">
+    <div class="modal-card suit-modal-card">
+      <p class="step-label">WILD CARD</p>
+      <h2 id="suit-title">바꿀 무늬를 골라주세요</h2>
+      <div class="suit-grid">
+        <button data-suit="hearts" class="suit-option red"><span>♥</span>하트</button>
+        <button data-suit="diamonds" class="suit-option red"><span>♦</span>다이아</button>
+        <button data-suit="spades" class="suit-option"><span>♠</span>스페이드</button>
+        <button data-suit="clubs" class="suit-option"><span>♣</span>클로버</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="result-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+    <div class="modal-card result-card">
+      <div id="result-icon" class="result-icon">✦</div>
+      <p id="result-kicker" class="step-label">NICE PLAY</p>
+      <h2 id="result-title">당신의 승리!</h2>
+      <p id="result-description">깔끔한 마무리였어요.</p>
+      <div class="result-stats">
+        <div><small>플레이 시간</small><strong id="result-time">00:00</strong></div>
+        <div><small>사용한 카드</small><strong id="result-moves">0장</strong></div>
+      </div>
+      <button id="rematch-button" class="primary-button" type="button">같은 상대와 다시 하기</button>
+      <button id="change-ai-button" class="secondary-button" type="button">다른 상대 고르기</button>
+    </div>
+  </div>
+
+  <div id="rules-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+    <div class="modal-card rules-card">
+      <button class="modal-close" data-close-modal="rules-modal" aria-label="규칙 닫기">×</button>
+      <p class="step-label">HOW TO PLAY</p>
+      <h2 id="rules-title">원카드 규칙</h2>
+      <p class="rules-intro">현재 카드와 <strong>같은 무늬 또는 같은 숫자</strong>를 내고, 먼저 손패를 비우면 승리합니다.</p>
+      <div class="rule-list">
+        <div><span class="mini-card red">2</span><p><strong>공격 +2</strong><small>2 또는 A로 공격을 이어갈 수 있어요.</small></p></div>
+        <div><span class="mini-card">A</span><p><strong>공격 +3</strong><small>막지 못하면 누적된 만큼 뽑아요.</small></p></div>
+        <div><span class="mini-card">J</span><p><strong>건너뛰기</strong><small>상대 턴을 한 번 건너뜁니다.</small></p></div>
+        <div><span class="mini-card red">Q</span><p><strong>방향 전환</strong><small>2인 대전에서는 한 번 더 플레이해요.</small></p></div>
+        <div><span class="mini-card">K</span><p><strong>한 번 더</strong><small>카드를 낸 사람이 다시 플레이해요.</small></p></div>
+        <div><span class="mini-card red">7</span><p><strong>무늬 변경</strong><small>원하는 무늬로 흐름을 바꿉니다.</small></p></div>
+      </div>
+      <button class="primary-button" data-close-modal="rules-modal" type="button">확인했어요</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
