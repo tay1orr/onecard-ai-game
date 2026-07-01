@@ -470,7 +470,8 @@ begin
   v_rank := v_card->>'rank'; v_suit := v_card->>'suit';
 
   if v_room.attack_count > 0 then
-    if v_rank not in ('2', 'A', 'JOKER') then raise exception 'MUST_DEFEND_ATTACK'; end if;
+    if v_room.top_card->>'rank' = 'JOKER' and v_rank <> 'JOKER' then raise exception 'MUST_DEFEND_JOKER'; end if;
+    if v_room.top_card->>'rank' <> 'JOKER' and v_rank not in ('2', 'A', 'JOKER') then raise exception 'MUST_DEFEND_ATTACK'; end if;
   elsif not v_room.free_play and not (v_rank = 'JOKER' or v_suit = v_room.active_suit or v_rank = v_room.top_card->>'rank') then
     raise exception 'CARD_NOT_PLAYABLE';
   end if;

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createDeck, OneCardGame } from '../src/game-engine.js';
 import { chooseAiMove, chooseSuit } from '../src/ai-player.js';
 import { calculateFanTransform, calculateHandLayout } from '../src/2026-06-30-hand-layout.js';
+import { aiReactionDelay, chooseAiReaction } from '../src/2026-07-01-ai-reactions.js';
 
 function card(suit, rank) { return { id: `${suit}-${rank}`, suit, rank }; }
 
@@ -39,6 +40,9 @@ setState(game, { attack: 5, hands: [[card('hearts', '2'), card('clubs', 'A'), ca
 assert.deepEqual(game.playableCards(0).map((item) => item.rank).sort(), ['2', 'A', 'JOKER'], '공격 중에는 2, A, 조커만 허용');
 game.playCard(0, 'hearts-2');
 assert.equal(game.attackCount, 7, '공격이 누적되어야 함');
+
+setState(game, { top: card('joker', 'JOKER'), attack: 5, hands: [[card('hearts', '2'), card('clubs', 'A'), card('joker', 'JOKER')], [card('clubs', '3')]] });
+assert.deepEqual(game.playableCards(0).map((item) => item.rank), ['JOKER'], '조커 공격은 조커로만 방어할 수 있어야 함');
 
 setState(game, { top: card('diamonds', '6'), hands: [[card('joker', 'JOKER'), card('clubs', '3')], [card('clubs', '4')]] });
 game.playCard(0, 'joker-JOKER');
@@ -92,4 +96,9 @@ assert.equal(calculateFanTransform({ index: 3, cardCount: 7, compact: true }).y,
 assert.equal(calculateFanTransform({ index: 6, cardCount: 7, compact: true }).angle, 15, '모바일 마지막 카드는 오른쪽으로 펼쳐져야 함');
 assert.equal(calculateFanTransform({ index: 15, cardCount: 16, compact: true }).angle, 9, '많은 패는 부채 각도를 줄여야 함');
 
-console.log('원카드 규칙·레이아웃 테스트 26개 통과');
+assert.equal(chooseAiReaction('player-win', 'hard', () => 0.99), 'gg', '게임 종료에는 AI가 반드시 GG로 반응해야 함');
+assert.equal(chooseAiReaction({ type: 'player-emote', emote: 'lol' }, 'normal', () => 0), 'lol', '플레이어 스티커에 어울리는 답장을 선택해야 함');
+assert.equal(chooseAiReaction('player-attack', 'hard', () => 0.99), null, '냉철한 AI는 모든 행동에 과하게 반응하지 않아야 함');
+assert.ok(aiReactionDelay('easy', () => 0.5) < aiReactionDelay('hard', () => 0.5), '쉬운 AI가 어려운 AI보다 빠르게 반응해야 함');
+
+console.log('원카드 규칙·레이아웃·AI 반응 테스트 31개 통과');

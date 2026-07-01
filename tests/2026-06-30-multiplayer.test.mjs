@@ -123,6 +123,11 @@ test('조커 공격을 받은 뒤 공격자가 자유롭게 한 장을 내고 Q�
   assert.doesNotMatch(sql, /v_rank in \('J', 'Q', 'K'\)/);
 });
 
+test('온라인 조커 공격은 조커로만 방어하도록 서버가 강제한다', () => {
+  assert.match(sql, /v_room\.top_card->>'rank' = 'JOKER' and v_rank <> 'JOKER'/);
+  assert.match(sql, /MUST_DEFEND_JOKER/);
+});
+
 test('카드 기록과 커스텀 스티커 RPC는 참가자 확인·종류 제한·도배 방지를 포함한다', () => {
   assert.match(sql, /function public\.onecard_get_history\(p_room_id uuid\)/);
   assert.match(sql, /event_type = 'play' and e\.id > v_start_id/);

@@ -241,7 +241,9 @@ function renderGame(nextView) {
     ? nextView.winnerSeat === nextView.mySeat ? '내 승리!' : '상대 승리'
     : isMyTurn(nextView) ? '내 차례예요' : `${opponent.nickname}의 차례`;
   els['online-action-hint'].textContent = nextView.attackCount
-    ? `공격 +${nextView.attackCount} · 2, A, 조커로 방어하세요`
+    ? nextView.topCard.rank === 'JOKER'
+      ? `조커 공격 +${nextView.attackCount} · 조커로만 방어할 수 있어요`
+      : `공격 +${nextView.attackCount} · 2, A, 조커로 방어하세요`
     : nextView.freePlay
       ? '조커 공격 성공! 이번에는 원하는 카드 한 장을 낼 수 있어요'
       : `${suitName(nextView.activeSuit)} 또는 ${nextView.topCard.rank} 카드를 낼 수 있어요`;
@@ -275,7 +277,9 @@ function renderHand(nextView) {
     button.disabled = busy || startSequenceRunning || !isMyTurn(nextView) || nextView.status !== 'playing';
     button.addEventListener('click', () => {
       if (busy) return;
-      if (!playable) return showToast('지금은 낼 수 없는 카드예요');
+      if (!playable) return showToast(nextView.attackCount && nextView.topCard.rank === 'JOKER'
+        ? '조커 공격은 조커로만 막을 수 있어요'
+        : '지금은 낼 수 없는 카드예요');
       if (card.rank === '7') {
         pendingSeven = card.id;
         openSuitPicker();
@@ -316,7 +320,11 @@ function createCard(card, interactive) {
 }
 
 function isPlayable(card, nextView) {
-  if (nextView.attackCount > 0) return ['2','A','JOKER'].includes(card.rank);
+  if (nextView.attackCount > 0) {
+    return nextView.topCard.rank === 'JOKER'
+      ? card.rank === 'JOKER'
+      : ['2','A','JOKER'].includes(card.rank);
+  }
   if (nextView.freePlay) return true;
   return card.rank === 'JOKER' || card.suit === nextView.activeSuit || card.rank === nextView.topCard.rank;
 }
@@ -800,6 +808,7 @@ function friendlyError(message='') {
   if (message.includes('ROOM_FULL')) return '이미 두 명이 참가한 방이에요.';
   if (message.includes('STALE_VERSION')) return '상태가 갱신됐어요. 다시 시도해 주세요.';
   if (message.includes('NOT_YOUR_TURN')) return '지금은 내 차례가 아니에요.';
+  if (message.includes('MUST_DEFEND_JOKER')) return '조커 공격은 조커로만 막을 수 있어요.';
   if (message.includes('SUPABASE_NOT_CONFIGURED')) return 'Supabase 공개 설정을 먼저 입력해 주세요.';
   if (message.includes('EMOTE_RATE_LIMIT')) return '반응은 잠깐 쉬었다가 다시 보내 주세요.';
   if (message.includes('EMOTE_NOT_AVAILABLE')) return '게임 준비 후 반응을 보낼 수 있어요.';

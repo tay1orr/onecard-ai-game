@@ -7,6 +7,7 @@
   <meta name="description" content="설치 없이 즐기는 세련된 AI 원카드 게임">
   <title>ONE! — AI 원카드</title>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./2026-07-01-reactions.css">
 </head>
 <body>
   <div class="ambient ambient-a" aria-hidden="true"></div>
@@ -107,6 +108,14 @@
           </button>
         </aside>
 
+        <aside class="reaction-dock ai-reaction-dock" aria-label="AI에게 스티커 반응 보내기">
+          <button id="ai-reaction-toggle" class="reaction-toggle" type="button" aria-expanded="false"><span>ONE!</span><small>반응</small></button>
+          <div id="ai-reaction-picker" class="reaction-picker ai-reaction-picker hidden"></div>
+        </aside>
+        <div id="ai-reaction-bubble" class="reaction-bubble ai-reaction-bubble hidden" role="status" aria-live="polite">
+          <div id="ai-reaction-art"></div><strong id="ai-reaction-label"></strong><small id="ai-reaction-owner"></small>
+        </div>
+
         <section class="center-zone" aria-label="카드 더미와 현재 카드">
           <div id="turn-banner" class="turn-banner" role="status" aria-live="polite">내 차례예요</div>
           <div class="piles">
@@ -199,6 +208,7 @@
         <div><small>플레이 시간</small><strong id="result-time">00:00</strong></div>
         <div><small>사용한 카드</small><strong id="result-moves">0장</strong></div>
       </div>
+      <div class="result-reactions"><span>스티커 보내기</span><div id="ai-result-reaction-picker" class="result-reaction-picker"></div></div>
       <button id="rematch-button" class="primary-button" type="button">같은 상대와 다시 하기</button>
       <button id="change-ai-button" class="secondary-button" type="button">다른 상대 고르기</button>
     </div>
@@ -224,7 +234,7 @@
       <div class="rule-list">
         <div><span class="mini-card red">2</span><p><strong>공격 +2</strong><small>2, A, 조커로 공격을 이어갈 수 있어요.</small></p></div>
         <div><span class="mini-card">A</span><p><strong>공격 +3</strong><small>막지 못하면 누적된 만큼 뽑아요.</small></p></div>
-        <div><span class="mini-card joker-mini">★</span><p><strong>조커 공격 +5</strong><small>언제든 낼 수 있고 직전 무늬를 유지해요.</small></p></div>
+        <div><span class="mini-card joker-mini">★</span><p><strong>조커 공격 +5</strong><small>조커로만 방어할 수 있고 직전 무늬를 유지해요.</small></p></div>
         <div><span class="mini-card">J</span><p><strong>건너뛰기</strong><small>상대 턴을 한 번 건너뜁니다.</small></p></div>
         <div><span class="mini-card red">Q</span><p><strong>일반 카드</strong><small>2인 대전에서는 추가 효과가 없어요.</small></p></div>
         <div><span class="mini-card">K</span><p><strong>한 번 더</strong><small>카드를 낸 사람이 다시 플레이해요.</small></p></div>

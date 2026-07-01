@@ -6,6 +6,8 @@ import { createGameEffects } from './2026-06-30-effects.js';
 import { makeToyDraggable } from './2026-06-30-toy-drag.js';
 import { animateCardToPile } from './2026-06-30-card-motion.js';
 import { runDealAnimation } from './2026-06-30-deal-animation.js';
+import { REACTIONS, createReactionArtwork, createReactionButton, getReaction } from './2026-06-30-reactions.js';
+import { aiReactionDelay, chooseAiReaction } from './2026-07-01-ai-reactions.js';
 
 const DIFFICULTIES = {
   easy: { name: '느긋한 루미', icon: '☁', status: '느긋하게 패를 살펴보고 있어요', delay: 850 },
@@ -32,6 +34,10 @@ let drawRevealResolve = null;
 let drawRevealTimer = null;
 let cardAnimating = false;
 let oneCardEffectTimer = null;
+let reactionTimer = null;
+let reactionPickerTimer = null;
+let aiReactionTimer = null;
+let aiReactionCooldownUntil = 0;
 
 const DIE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
@@ -71,13 +77,16 @@ document.querySelectorAll('.sound-button').forEach((button) => button.addEventLi
 els['draw-pile'].addEventListener('click', playerDraw);
 els['discard-pile'].addEventListener('click', openHistory);
 els['exit-button'].addEventListener('click', goHome);
-els['rematch-button'].addEventListener('click', () => startGame(difficulty));
+els['rematch-button'].addEventListener('click', rematchWithReaction);
 els['change-ai-button'].addEventListener('click', goHome);
 els['peek-hand-button'].addEventListener('click', peekAtHand);
 els['return-to-suit-button'].addEventListener('click', returnToSuitPicker);
 els['cancel-seven-button'].addEventListener('click', cancelSevenSelection);
 els['roll-dice-button'].addEventListener('click', rollForFirstTurn);
 els['draw-reveal-skip'].addEventListener('click', finishDrawReveal);
+els['ai-reaction-toggle'].addEventListener('click', toggleAiReactionPicker);
+
+setupAiReactionPickers();
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
@@ -93,6 +102,8 @@ window.addEventListener('resize', () => {
 
 function startGame(selectedDifficulty) {
   clearTimeout(aiTimer);
+  clearTimeout(aiReactionTimer);
+  clearTimeout(reactionTimer);
   window.scrollTo(0, 0);
   difficulty = selectedDifficulty;
   game.reset(difficulty);
@@ -104,6 +115,9 @@ function startGame(selectedDifficulty) {
   diceRolling = false;
   drawAnimating = false;
   cardAnimating = false;
+  aiReactionCooldownUntil = 0;
+  hideAiReaction();
+  closeAiReactionPicker(true);
   clearTimeout(oneCardEffectTimer);
   effects.clear();
   toyControllers.forEach((controller) => controller.reset());
@@ -113,6 +127,7 @@ function startGame(selectedDifficulty) {
   els['home-screen'].classList.add('hidden');
   els['game-screen'].classList.remove('hidden');
   closeModal('result-modal');
+  els['rematch-button'].disabled = false;
   const profile = DIFFICULTIES[difficulty];
   els['difficulty-label'].textContent = profile.name;
   els['ai-name'].textContent = profile.name;
@@ -273,12 +288,107 @@ function finishDrawReveal() {
   }, 320);
 }
 
+function setupAiReactionPickers() {
+  [els['ai-reaction-picker'], els['ai-result-reaction-picker']].forEach((picker) => {
+    picker.replaceChildren();
+    REACTIONS.forEach((reaction) => {
+      const button = createReactionButton(reaction);
+      button.addEventListener('click', () => sendPlayerReaction(reaction.key));
+      picker.append(button);
+    });
+  });
+}
+
+function toggleAiReactionPicker() {
+  clearTimeout(reactionPickerTimer);
+  const picker = els['ai-reaction-picker'];
+  const willOpen = picker.classList.contains('hidden');
+  if (willOpen) {
+    picker.classList.remove('hidden');
+    els['ai-reaction-toggle'].setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(() => picker.classList.add('open'));
+  } else {
+    closeAiReactionPicker();
+  }
+}
+
+function closeAiReactionPicker(immediate = false) {
+  clearTimeout(reactionPickerTimer);
+  const picker = els['ai-reaction-picker'];
+  picker.classList.remove('open');
+  els['ai-reaction-toggle'].setAttribute('aria-expanded', 'false');
+  if (immediate) picker.classList.add('hidden');
+  else reactionPickerTimer = setTimeout(() => picker.classList.add('hidden'), 160);
+}
+
+function sendPlayerReaction(key) {
+  closeAiReactionPicker();
+  showAiReaction(key, false);
+  maybeAiReact({ type: 'player-emote', emote: key }, { force: true });
+}
+
+function maybeAiReact(context, { force = false, delay = null } = {}) {
+  if (!force && Date.now() < aiReactionCooldownUntil) return;
+  const key = chooseAiReaction(context, difficulty);
+  if (!key) return;
+  const waitFor = delay ?? aiReactionDelay(difficulty);
+  clearTimeout(aiReactionTimer);
+  aiReactionCooldownUntil = Date.now() + waitFor + 3400;
+  aiReactionTimer = setTimeout(() => {
+    if (els['game-screen'].classList.contains('hidden')) return;
+    showAiReaction(key, true);
+  }, waitFor);
+}
+
+function showAiReaction(key, isAi) {
+  const reaction = getReaction(key);
+  if (!reaction) return;
+  clearTimeout(reactionTimer);
+  const bubble = els['ai-reaction-bubble'];
+  els['ai-reaction-art'].replaceChildren(createReactionArtwork(reaction.key));
+  els['ai-reaction-label'].textContent = reaction.label;
+  els['ai-reaction-owner'].textContent = isAi ? `${DIFFICULTIES[difficulty].name}의 반응` : '내 반응';
+  bubble.className = `reaction-bubble ai-reaction-bubble reaction-${reaction.key} ${isAi ? 'theirs' : 'mine'}`;
+  requestAnimationFrame(() => bubble.classList.add('show'));
+  playSound(`reaction-${reaction.key}`);
+  reactionTimer = setTimeout(() => {
+    bubble.classList.remove('show');
+    setTimeout(() => bubble.classList.add('hidden'), 220);
+  }, 2600);
+}
+
+function hideAiReaction() {
+  const bubble = els['ai-reaction-bubble'];
+  bubble.classList.remove('show');
+  bubble.classList.add('hidden');
+}
+
+function reactToCard(result, isAi) {
+  const remaining = game.hands[isAi ? 1 : 0].length;
+  const owner = isAi ? 'ai' : 'player';
+  let context = null;
+  if (remaining === 1) context = `${owner}-onecard`;
+  else if (result.card.rank === 'JOKER') context = `${owner}-joker`;
+  else if (['2', 'A'].includes(result.card.rank)) context = `${owner}-attack`;
+  if (context) maybeAiReact(context);
+}
+
+function rematchWithReaction() {
+  els['rematch-button'].disabled = true;
+  maybeAiReact('rematch', { force: true, delay: 80 });
+  setTimeout(() => startGame(difficulty), 900);
+}
+
 function goHome() {
   clearTimeout(aiTimer);
+  clearTimeout(aiReactionTimer);
+  clearTimeout(reactionTimer);
   clearTimeout(oneCardEffectTimer);
   clearInterval(timerId);
   window.scrollTo(0, 0);
   effects.clear();
+  hideAiReaction();
+  closeAiReactionPicker(true);
   gameReady = false;
   pendingSeven = null;
   isPeekingHand = false;
@@ -300,7 +410,9 @@ function playerPlay(cardId) {
   const card = game.hands[0].find((item) => item.id === cardId);
   if (!card || !game.isPlayable(card)) {
     playSound('error');
-    showToast(game.attackCount ? '2, A, 조커로 막거나 카드를 뽑아야 해요' : '같은 무늬나 숫자의 카드를 골라주세요');
+    showToast(game.attackCount
+      ? game.topCard.rank === 'JOKER' ? '조커 공격은 조커로만 막을 수 있어요' : '2, A, 조커로 막거나 카드를 뽑아야 해요'
+      : '같은 무늬나 숫자의 카드를 골라주세요');
     return;
   }
   if (card.rank === '7') {
@@ -371,6 +483,7 @@ async function applyPlayerCard(cardId, suit = null) {
   if (result.type === 'win') return endGame(0);
   const hasSpecialEffect = announceSpecial(result);
   announceOneCardIfNeeded(0, hasSpecialEffect ? 2200 : 0);
+  reactToCard(result, false);
   if (game.currentPlayer === 1) scheduleAiTurn();
 }
 
@@ -385,6 +498,7 @@ async function playerDraw() {
   render();
   if (result.wasPenalty) {
     effects.play('impact', { symbol: `+${result.count}`, title: `${result.count}장 받기!`, subtitle: '공격을 막지 못했어요' });
+    maybeAiReact('player-penalty');
   } else {
     showToast('카드 1장을 뽑았어요');
   }
@@ -410,6 +524,7 @@ async function runAiTurn() {
     playSound('draw');
     if (result.wasPenalty) {
       effects.play('impact', { symbol: `+${result.count}`, title: `${result.count}장 받기!`, subtitle: `${DIFFICULTIES[difficulty].name}가 공격을 받았어요` });
+      maybeAiReact('ai-penalty');
     } else {
       showToast('상대가 카드 1장을 뽑았어요');
     }
@@ -434,6 +549,7 @@ async function runAiTurn() {
     if (result.type === 'win') { render(); return endGame(1); }
     const hasSpecialEffect = announceSpecial(result, true);
     announceOneCardIfNeeded(1, hasSpecialEffect ? 2200 : 0);
+    reactToCard(result, true);
   }
   render();
   if (game.currentPlayer === 1) scheduleAiTurn();
@@ -487,7 +603,9 @@ function render() {
     : playerTurn ? game.attackCount ? '공격을 막거나 카드를 뽑으세요' : game.freePlay ? '아무 카드나 한 장 낼 수 있어요' : '낼 카드를 선택하세요'
       : '상대의 선택을 기다리는 중';
   els['action-hint'].textContent = game.attackCount
-    ? `공격이 ${game.attackCount}장 누적됐어요 · 2, A, 조커로 방어하세요`
+    ? game.topCard.rank === 'JOKER'
+      ? `조커 공격이 ${game.attackCount}장 누적됐어요 · 조커로만 방어할 수 있어요`
+      : `공격이 ${game.attackCount}장 누적됐어요 · 2, A, 조커로 방어하세요`
     : game.freePlay ? '조커 보너스 · 이번 턴에는 아무 카드나 낼 수 있어요'
       : `${suitName(game.activeSuit)} 또는 ${game.topCard.rank} 카드를 낼 수 있어요`;
   els['deck-count'].textContent = game.drawPile.length;
@@ -665,6 +783,7 @@ function endGame(winner) {
   clearTimeout(aiTimer);
   clearTimeout(oneCardEffectTimer);
   const won = winner === 0;
+  maybeAiReact(won ? 'player-win' : 'ai-win', { force: true, delay: 260 });
   playSound(won ? 'win' : 'lose');
   els['result-icon'].textContent = won ? '✦' : '↻';
   els['result-kicker'].textContent = won ? 'NICE PLAY' : 'GOOD TRY';
@@ -673,7 +792,10 @@ function endGame(winner) {
   els['result-time'].textContent = formatTime(Date.now() - startedAt);
   els['result-moves'].textContent = `${moves}장`;
   saveRecord(won);
-  setTimeout(() => openModal('result-modal'), 450);
+  setTimeout(() => {
+    openModal('result-modal');
+    setTimeout(() => els['rematch-button'].focus(), 0);
+  }, 450);
 }
 
 function victoryMessage() {

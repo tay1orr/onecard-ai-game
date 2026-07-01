@@ -98,7 +98,11 @@ export class OneCardGame {
 
   isPlayable(card) {
     if (this.winner !== null) return false;
-    if (this.attackCount > 0) return ['2', 'A', 'JOKER'].includes(card.rank);
+    if (this.attackCount > 0) {
+      return this.topCard.rank === 'JOKER'
+        ? card.rank === 'JOKER'
+        : ['2', 'A', 'JOKER'].includes(card.rank);
+    }
     if (this.freePlay) return true;
     if (card.rank === 'JOKER') return true;
     if (card.suit === this.activeSuit) return true;
