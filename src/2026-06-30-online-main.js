@@ -522,7 +522,6 @@ async function renderLastEvent(event) {
     '2':['attack','+2','+2 공격!',`${owner} 공격을 보냈어요`],
     A:['attack','+3','+3 공격!',`${owner} 공격을 보냈어요`],
     J:['skip','≫','턴 스킵!',`${owner} 턴을 건너뜁니다`],
-    K:['skip','♛','한 번 더!',`${owner} 연속 플레이합니다`],
     '7':['suit',SUIT_SYMBOLS[event.payload.chosenSuit],`${suitName(event.payload.chosenSuit)}로 변경!`,`${owner} 무늬를 바꿨어요`],
     JOKER:['joker','★','JOKER +5',`${owner} 조커 공격을 보냈어요`],
   };

@@ -486,7 +486,7 @@ begin
 
   v_attack := v_room.attack_count + case v_rank when '2' then 2 when 'A' then 3 when 'JOKER' then 5 else 0 end;
   v_active_suit := case when v_rank = '7' then p_chosen_suit when v_rank = 'JOKER' then v_room.active_suit else v_suit end;
-  v_next_seat := case when v_rank in ('J', 'K') then v_seat else 1 - v_seat end;
+  v_next_seat := case when v_rank = 'J' then v_seat else 1 - v_seat end;
 
   update public.onecard_private_state
   set host_hand = case when v_seat = 0 then v_new_hand else host_hand end,
@@ -516,7 +516,7 @@ begin
   values (p_room_id, v_seat, 'play', jsonb_build_object(
     'card', v_card,
     'chosenSuit', case when v_rank = '7' then p_chosen_suit else null end,
-    'extraTurn', v_rank in ('J', 'K'),
+    'extraTurn', v_rank = 'J',
     'remaining', jsonb_array_length(v_new_hand),
     'attackCount', v_attack
   ), p_action_id);

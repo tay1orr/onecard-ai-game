@@ -60,8 +60,9 @@ game.playCard(0, 'clubs-3');
 assert.equal(game.freePlay, false, '자유 플레이는 한 번 행동하면 종료되어야 함');
 
 setState(game, { hands: [[card('hearts', 'K'), card('clubs', '3')], [card('clubs', '4')]] });
-game.playCard(0, 'hearts-K');
-assert.equal(game.currentPlayer, 0, 'K 이후 같은 플레이어 차례여야 함');
+const kingPlay = game.playCard(0, 'hearts-K');
+assert.equal(kingPlay.extraTurn, false, '2인 게임에서 K는 추가 효과가 없어야 함');
+assert.equal(game.currentPlayer, 1, 'K를 내면 일반 카드처럼 상대 차례가 되어야 함');
 
 setState(game, { hands: [[card('hearts', 'Q'), card('clubs', '3')], [card('clubs', '4')]] });
 const queenPlay = game.playCard(0, 'hearts-Q');

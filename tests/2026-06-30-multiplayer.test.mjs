@@ -122,12 +122,13 @@ test('같은 방 승패는 승리 시 누적되고 새 상대가 들어오면 �
   assert.match(sql, /host_wins = 0, guest_wins = 0/);
 });
 
-test('조커 공격을 받은 뒤 공격자가 자유롭게 한 장을 내고 Q는 일반 카드로 처리한다', () => {
+test('조커 공격 뒤 자유 내기를 지원하고 Q와 K는 2인전 일반 카드로 처리한다', () => {
   assert.match(sql, /add column if not exists free_play boolean not null default false/);
   assert.match(sql, /elsif not v_room\.free_play and not/);
   assert.match(sql, /free_play = v_room\.attack_count > 0 and v_room\.top_card->>'rank' = 'JOKER'/);
-  assert.match(sql, /v_next_seat := case when v_rank in \('J', 'K'\) then v_seat else 1 - v_seat end/);
-  assert.doesNotMatch(sql, /v_rank in \('J', 'Q', 'K'\)/);
+  assert.match(sql, /v_next_seat := case when v_rank = 'J' then v_seat else 1 - v_seat end/);
+  assert.match(sql, /'extraTurn', v_rank = 'J'/);
+  assert.doesNotMatch(sql, /v_rank in \('J', 'K'\)/);
 });
 
 test('온라인 조커 공격은 조커로만 방어하도록 서버가 강제한다', () => {

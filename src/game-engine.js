@@ -148,7 +148,7 @@ export class OneCardGame {
       return { type: 'win', player, card: { ...card }, winner: player };
     }
 
-    const extraTurn = ['J', 'K'].includes(card.rank);
+    const extraTurn = card.rank === 'J';
     if (!extraTurn) this.advanceTurn();
     return {
       type: 'play', player, card: { ...card }, extraTurn,
