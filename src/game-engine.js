@@ -41,7 +41,7 @@ export class OneCardGame {
   reset(difficulty = this.difficulty) {
     this.difficulty = VALID_DIFFICULTIES.has(difficulty) ? difficulty : 'normal';
     const deck = shuffled(createDeck(), this.random);
-    this.hands = [deck.splice(0, 7), deck.splice(0, 7)];
+    this.hands = [deck.splice(0, 5), deck.splice(0, 5)];
     this.discardPile = [];
     this.drawPile = deck;
     this.currentPlayer = 0;

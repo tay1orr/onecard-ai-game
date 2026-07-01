@@ -185,7 +185,23 @@ button.playing-card { cursor: pointer; }
 .playing-card.joker-card { color: #ffe47f; background: radial-gradient(circle at 50% 44%, #5d477f 0 16%, #201a33 17% 52%, #090b14 100%); border: 1px solid rgba(255,222,113,.72); box-shadow: 0 13px 30px rgba(0,0,0,.4), inset 0 0 24px rgba(167,117,255,.23); }
 .joker-card .card-corner { font-size: clamp(7px, .82vw, 10px); letter-spacing: -.06em; }
 .joker-card .card-corner i { color: #d5aeff; font-size: 1.2em; margin-top: 3px; }
-.joker-card .card-suit { color: #ffe272; font-size: calc(var(--card-w) * .5); text-shadow: 0 0 10px #a875ff, 0 0 24px rgba(255,214,105,.65); }
+.joker-card .joker-figure { inset: 17% 15% 14%; display: block; color: initial; font-size: initial; text-shadow: none; filter: drop-shadow(0 5px 8px rgba(0,0,0,.45)); }
+.jester-hat { position: absolute; left: 50%; top: 0; width: 82%; height: 43%; transform: translateX(-50%); }
+.jester-hat i { position: absolute; bottom: 0; width: 42%; height: 92%; clip-path: polygon(8% 6%,100% 30%,63% 100%,30% 82%); background: linear-gradient(145deg,#ef3f67,#9d204e); transform-origin: 70% 82%; }
+.jester-hat i::after { content:''; position:absolute; width:24%; aspect-ratio:1; left:0; top:0; border-radius:50%; background:#ffe27b; box-shadow:0 0 0 2px rgba(255,255,255,.16); }
+.jester-hat i:nth-child(1) { left:3%; transform:rotate(-18deg); }
+.jester-hat i:nth-child(2) { left:29%; height:100%; background:linear-gradient(145deg,#ffe06f,#d78c24); transform:rotate(3deg); }
+.jester-hat i:nth-child(2)::after { background:#ef4d75; }
+.jester-hat i:nth-child(3) { right:2%; background:linear-gradient(145deg,#916fff,#5232a5); transform:scaleX(-1) rotate(-18deg); }
+.jester-face { position:absolute; left:50%; top:32%; width:48%; height:40%; transform:translateX(-50%); border-radius:48% 48% 44% 44%; background:linear-gradient(145deg,#fff6df,#e7cda8); border:2px solid rgba(110,63,76,.72); box-shadow:inset -4px -4px 0 rgba(120,67,80,.12); }
+.jester-face::before { content:''; position:absolute; left:43%; top:38%; width:14%; height:20%; border-radius:60% 40% 55%; background:#d1846d; transform:rotate(12deg); }
+.jester-face i { position:absolute; top:28%; width:13%; height:11%; border-radius:50%; background:#2a1c32; }
+.jester-face i:first-child { left:22%; transform:rotate(10deg); }.jester-face i:nth-child(2) { right:22%; transform:rotate(-10deg); }
+.jester-face b { position:absolute; left:34%; bottom:17%; width:32%; height:14%; border-bottom:2px solid #8c3550; border-radius:0 0 50% 50%; }
+.jester-collar { position:absolute; left:50%; bottom:0; width:75%; height:30%; transform:translateX(-50%); }
+.jester-collar i { position:absolute; top:0; width:42%; height:88%; clip-path:polygon(50% 100%,0 0,100% 0); background:linear-gradient(160deg,#f14870,#98244e); }
+.jester-collar i:first-child { left:0; transform:rotate(12deg); }.jester-collar i:nth-child(2) { left:29%; background:linear-gradient(160deg,#ffd968,#d68b28); }.jester-collar i:nth-child(3) { right:0; background:linear-gradient(160deg,#8f70f7,#5033a1); transform:rotate(-12deg); }
+.jester-collar i::after { content:''; position:absolute; left:39%; bottom:2%; width:22%; aspect-ratio:1; border-radius:50%; background:#ffe37e; }
 .discard-card { transform: rotate(3deg); cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
 .discard-card:hover, .discard-card:focus-visible { transform: translateY(-5px) rotate(1deg); box-shadow: 0 18px 34px rgba(0,0,0,.36), 0 0 0 3px rgba(255,255,255,.12); }
 .discard-card::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: #d8d8e2; transform: rotate(-7deg); }

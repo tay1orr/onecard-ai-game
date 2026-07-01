@@ -22,6 +22,8 @@ const game = new OneCardGame({ random: () => 0.42 });
 
 assert.equal(createDeck().length, 54, '표준 카드 52장과 조커 2장을 생성해야 함');
 assert.equal(createDeck().filter((item) => item.rank === 'JOKER').length, 2, '조커는 정확히 2장이어야 함');
+assert.deepEqual(game.hands.map((hand) => hand.length), [5, 5], '양쪽 플레이어는 5장으로 시작해야 함');
+assert.equal(game.drawPile.length, 43, '5장씩 배분하고 시작 카드를 뺀 43장이 덱에 남아야 함');
 
 setState(game, { hands: [[card('hearts', '9'), card('clubs', '5'), card('spades', '7')], [card('clubs', '3')]] });
 assert.equal(game.playableCards(0).length, 2, '7도 같은 무늬가 아니면 낼 수 없어야 함');
@@ -84,16 +86,16 @@ const desktop16 = calculateHandLayout({ containerWidth: 900, horizontalPadding: 
 assert.equal(desktop16.scrolls, false, '데스크톱에서는 16장 양끝이 손패 영역 안에 들어와야 함');
 assert.equal(Math.round(desktop16.contentWidth), 900, '데스크톱 16장 너비가 컨테이너에 맞아야 함');
 
-const mobile7 = calculateHandLayout({ containerWidth: 366, horizontalPadding: 36, cardWidth: 72, cardCount: 7, compact: true });
-assert.equal(mobile7.scrolls, false, '모바일 7장은 스크롤 없이 양끝이 보여야 함');
+const mobile5 = calculateHandLayout({ containerWidth: 366, horizontalPadding: 36, cardWidth: 72, cardCount: 5, compact: true });
+assert.equal(mobile5.scrolls, false, '모바일 시작 패 5장은 스크롤 없이 양끝이 보여야 함');
 
 const mobile16 = calculateHandLayout({ containerWidth: 366, horizontalPadding: 36, cardWidth: 72, cardCount: 16, compact: true });
 assert.equal(mobile16.scrolls, true, '모바일 16장은 식별 가능한 간격으로 스크롤되어야 함');
 assert.equal(mobile16.step, 42, '모바일 다량 손패의 최소 노출 폭을 보장해야 함');
 
-assert.equal(calculateFanTransform({ index: 0, cardCount: 7, compact: true }).angle, -15, '모바일 첫 카드는 왼쪽으로 펼쳐져야 함');
-assert.equal(calculateFanTransform({ index: 3, cardCount: 7, compact: true }).y, -13, '모바일 가운데 카드는 가장 위로 올라와야 함');
-assert.equal(calculateFanTransform({ index: 6, cardCount: 7, compact: true }).angle, 15, '모바일 마지막 카드는 오른쪽으로 펼쳐져야 함');
+assert.equal(calculateFanTransform({ index: 0, cardCount: 5, compact: true }).angle, -15, '모바일 첫 카드는 왼쪽으로 펼쳐져야 함');
+assert.equal(calculateFanTransform({ index: 2, cardCount: 5, compact: true }).y, -13, '모바일 가운데 카드는 가장 위로 올라와야 함');
+assert.equal(calculateFanTransform({ index: 4, cardCount: 5, compact: true }).angle, 15, '모바일 마지막 카드는 오른쪽으로 펼쳐져야 함');
 assert.equal(calculateFanTransform({ index: 15, cardCount: 16, compact: true }).angle, 9, '많은 패는 부채 각도를 줄여야 함');
 
 assert.equal(chooseAiReaction('player-win', 'hard', () => 0.99), 'gg', '게임 종료에는 AI가 반드시 GG로 반응해야 함');
@@ -101,4 +103,4 @@ assert.equal(chooseAiReaction({ type: 'player-emote', emote: 'lol' }, 'normal', 
 assert.equal(chooseAiReaction('player-attack', 'hard', () => 0.99), null, '냉철한 AI는 모든 행동에 과하게 반응하지 않아야 함');
 assert.ok(aiReactionDelay('easy', () => 0.5) < aiReactionDelay('hard', () => 0.5), '쉬운 AI가 어려운 AI보다 빠르게 반응해야 함');
 
-console.log('원카드 규칙·레이아웃·AI 반응 테스트 31개 통과');
+console.log('원카드 규칙·레이아웃·AI 반응 테스트 33개 통과');

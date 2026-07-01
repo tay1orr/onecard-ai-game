@@ -333,27 +333,27 @@ begin
   select coalesce(jsonb_agg(card order by position), '[]'::jsonb)
   into v_host_hand
   from jsonb_array_elements(v_deck) with ordinality as d(card, position)
-  where position between 1 and 7;
+  where position between 1 and 5;
 
   select coalesce(jsonb_agg(card order by position), '[]'::jsonb)
   into v_guest_hand
   from jsonb_array_elements(v_deck) with ordinality as d(card, position)
-  where position between 8 and 14;
+  where position between 6 and 10;
 
   select card, position into v_top_card, v_top_position
   from jsonb_array_elements(v_deck) with ordinality as d(card, position)
-  where position > 14 and card->>'rank' not in ('A', '2', '7', 'J', 'Q', 'K', 'JOKER')
+  where position > 10 and card->>'rank' not in ('A', '2', '7', 'J', 'Q', 'K', 'JOKER')
   order by position limit 1;
   if v_top_card is null then
     select card, position into v_top_card, v_top_position
     from jsonb_array_elements(v_deck) with ordinality as d(card, position)
-    where position > 14 order by position limit 1;
+    where position > 10 order by position limit 1;
   end if;
 
   select coalesce(jsonb_agg(card order by position), '[]'::jsonb)
   into v_draw_pile
   from jsonb_array_elements(v_deck) with ordinality as d(card, position)
-  where position > 14 and position <> v_top_position;
+  where position > 10 and position <> v_top_position;
 
   update public.onecard_private_state
   set draw_pile = v_draw_pile,
@@ -366,7 +366,7 @@ begin
   update public.onecard_rooms
   set status = 'playing', current_seat = p_first_seat,
       active_suit = v_top_card->>'suit', attack_count = 0, free_play = false,
-      top_card = v_top_card, host_count = 7, guest_count = 7,
+      top_card = v_top_card, host_count = 5, guest_count = 5,
       winner_seat = null, dice_tie = false,
       host_ready = false, guest_ready = false,
       updated_at = now(), version = version + 1

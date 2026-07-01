@@ -9,7 +9,7 @@
 - 표준 52장과 조커 2장으로 구성된 원카드 규칙
 - 공격 누적, 턴 건너뛰기, 한 번 더, 무늬 변경
 - 직접 누르는 주사위 선공 결정과 동점 재경기
-- 셔플 후 양쪽에 7장씩 번갈아 나눠주는 시작 연출
+- 셔플 후 양쪽에 5장씩 번갈아 나눠주는 시작 연출
 - 뽑은 카드 중앙 공개·가로 슬라이드, 손패→더미 이동, 새 액션 우선 이펙트
 - 준비 완료 취소와 방 코드를 유지하는 온라인 재대결
 - 같은 방에서 재대결하는 동안 유지되는 HOST·GUEST 누적 승수
@@ -47,12 +47,13 @@ src/audio.js            설치 없는 Web Audio 효과음
 src/2026-06-30-hand-layout.js 손패 수와 화면 폭에 따른 간격 계산
 src/2026-06-30-effects.js 전체 화면 액션·원카드 파티클
 src/2026-06-30-card-motion.js 손패에서 버림 더미로 이동하는 카드 애니메이션
-src/2026-06-30-deal-animation.js 공통 셔플·14장 배분 애니메이션
+src/2026-06-30-deal-animation.js 공통 셔플·10장 배분 애니메이션
 src/2026-06-30-toy-drag.js 장난감 포인터·키보드 이동
 src/2026-06-30-multiplayer.js Supabase 인증·RPC·Realtime 연결
 src/2026-06-30-online-main.js 온라인 화면 흐름
 src/2026-06-30-reactions.js 오리지널 스티커 종류와 벡터형 화면 요소
 src/2026-07-01-ai-reactions.js 상황·난이도별 AI 스티커 선택
+src/2026-07-01-card-art.js AI·온라인 공용 광대 조커 그림
 supabase/2026-06-30-onecard-schema.sql 서버 권위형 게임 DB·RPC·RLS
 tests/                  게임 규칙 자동 테스트
 docs/                   Git·Vercel 인계 문서

@@ -9,7 +9,7 @@ function createBack() {
   return card;
 }
 
-export function createDealSequence(cardsPerPlayer = 7) {
+export function createDealSequence(cardsPerPlayer = 5) {
   return Array.from({ length: cardsPerPlayer * 2 }, (_, index) => ({
     index,
     toPlayer: index % 2 === 1,
@@ -40,7 +40,9 @@ export async function runDealAnimation({ playerCards = [], createCardFace, playS
   const flights = [];
   let playerIndex = 0;
 
-  for (const { index, toPlayer, slot } of createDealSequence()) {
+  const dealSequence = createDealSequence();
+  const centerSlot = (dealSequence.length / 2 - 1) / 2;
+  for (const { index, toPlayer, slot } of dealSequence) {
     let card;
     if (toPlayer && playerCards[playerIndex] && createCardFace) {
       card = createCardFace(playerCards[playerIndex]);
@@ -50,10 +52,10 @@ export async function runDealAnimation({ playerCards = [], createCardFace, playS
     card.setAttribute('aria-hidden', 'true');
     overlay.append(card);
 
-    const spread = (slot - 3) * (window.innerWidth <= 760 ? 12 : 18);
+    const spread = (slot - centerSlot) * (window.innerWidth <= 760 ? 12 : 18);
     const destinationY = toPlayer ? window.innerHeight * 0.36 : window.innerHeight * -0.34;
     const destinationX = spread;
-    const rotation = (slot - 3) * 2.5;
+    const rotation = (slot - centerSlot) * 2.5;
     const duration = reducedMotion ? 150 : 430;
     const animation = card.animate([
       { transform: 'translate3d(-50%, -50%, 0) scale(.82) rotate(0deg)', opacity: 0 },

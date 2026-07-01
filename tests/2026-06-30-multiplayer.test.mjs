@@ -57,10 +57,10 @@ test('카드 이동은 양쪽 카드 중심을 정확히 연결한다', () => {
   assert.ok(flight.arc >= 30 && flight.arc <= 76);
 });
 
-test('시작 배분은 상대와 나에게 번갈아 7장씩 나눈다', () => {
+test('시작 배분은 상대와 나에게 번갈아 5장씩 나눈다', () => {
   const sequence = createDealSequence();
-  assert.equal(sequence.length, 14);
-  assert.equal(sequence.filter((item) => item.toPlayer).length, 7);
+  assert.equal(sequence.length, 10);
+  assert.equal(sequence.filter((item) => item.toPlayer).length, 5);
   assert.deepEqual(sequence.slice(0, 4).map((item) => item.toPlayer), [false, true, false, true]);
 });
 
@@ -99,6 +99,13 @@ test('서버 SQL은 같은 숫자 7과 조커 공격 규칙을 지원한다', ()
   assert.match(sql, /v_rank = v_room\.top_card->>'rank'/);
   assert.match(sql, /when 'JOKER' then 5/);
   assert.match(sql, /p_chosen_suit is null/);
+});
+
+test('온라인 시작 패는 양쪽 5장이고 남은 덱은 11번째 카드부터 구성한다', () => {
+  assert.match(sql, /position between 1 and 5/);
+  assert.match(sql, /position between 6 and 10/);
+  assert.match(sql, /position > 10 and position <> v_top_position/);
+  assert.match(sql, /host_count = 5, guest_count = 5/);
 });
 
 test('서버 SQL은 준비 취소와 같은 방 재대결을 지원한다', () => {

@@ -8,6 +8,7 @@ import { animateCardToPile } from './2026-06-30-card-motion.js';
 import { runDealAnimation } from './2026-06-30-deal-animation.js';
 import { REACTIONS, createReactionArtwork, createReactionButton, getReaction } from './2026-06-30-reactions.js';
 import { aiReactionDelay, chooseAiReaction } from './2026-07-01-ai-reactions.js';
+import { createCardCenter } from './2026-07-01-card-art.js';
 
 const DIFFICULTIES = {
   easy: { name: '느긋한 루미', icon: '☁', status: '느긋하게 패를 살펴보고 있어요', delay: 850 },
@@ -769,9 +770,7 @@ function createCardElement(card, interactive) {
   const top = document.createElement('span');
   top.className = 'card-corner top';
   top.innerHTML = `<b>${isJoker ? 'JOKER' : card.rank}</b><i>${SUIT_SYMBOLS[card.suit]}</i>`;
-  const center = document.createElement('strong');
-  center.className = 'card-suit';
-  center.textContent = SUIT_SYMBOLS[card.suit];
+  const center = createCardCenter(card, SUIT_SYMBOLS[card.suit]);
   const bottom = top.cloneNode(true);
   bottom.classList.replace('top', 'bottom');
   element.append(top, center, bottom);
