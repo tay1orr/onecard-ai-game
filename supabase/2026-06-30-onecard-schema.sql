@@ -27,6 +27,9 @@ create table if not exists public.onecard_rooms (
   guest_count integer not null default 0 check (guest_count >= 0),
   host_wins integer not null default 0 check (host_wins >= 0),
   guest_wins integer not null default 0 check (guest_wins >= 0),
+  host_rating integer not null default 0 check (host_rating >= 0),
+  guest_rating integer not null default 0 check (guest_rating >= 0),
+  round_no bigint not null default 0 check (round_no >= 0),
   winner_seat smallint check (winner_seat in (0, 1)),
   version bigint not null default 0,
   created_at timestamptz not null default now(),
@@ -38,6 +41,9 @@ create table if not exists public.onecard_rooms (
 alter table public.onecard_rooms add column if not exists host_wins integer not null default 0 check (host_wins >= 0);
 alter table public.onecard_rooms add column if not exists guest_wins integer not null default 0 check (guest_wins >= 0);
 alter table public.onecard_rooms add column if not exists free_play boolean not null default false;
+alter table public.onecard_rooms add column if not exists host_rating integer not null default 0 check (host_rating >= 0);
+alter table public.onecard_rooms add column if not exists guest_rating integer not null default 0 check (guest_rating >= 0);
+alter table public.onecard_rooms add column if not exists round_no bigint not null default 0 check (round_no >= 0);
 
 create table if not exists public.onecard_private_state (
   room_id uuid primary key references public.onecard_rooms(id) on delete cascade,
@@ -184,6 +190,7 @@ begin
     'status', v_room.status,
     'mySeat', v_seat,
     'version', v_room.version,
+    'roundNo', v_room.round_no,
     'currentSeat', v_room.current_seat,
     'activeSuit', v_room.active_suit,
     'attackCount', v_room.attack_count,
@@ -198,6 +205,7 @@ begin
       'die', v_room.host_die,
       'count', v_room.host_count,
       'wins', v_room.host_wins,
+      'rating', v_room.host_rating,
       'connected', v_room.host_last_seen > now() - interval '35 seconds'
     ),
     'guest', case when v_room.guest_id is null then null else jsonb_build_object(
@@ -206,11 +214,35 @@ begin
       'die', v_room.guest_die,
       'count', v_room.guest_count,
       'wins', v_room.guest_wins,
+      'rating', v_room.guest_rating,
       'connected', v_room.guest_last_seen > now() - interval '35 seconds'
     ) end,
     'myHand', coalesce(v_hand, '[]'::jsonb),
     'lastEvent', v_event
   );
+end;
+$$;
+
+create or replace function public.onecard_set_rating(p_room_id uuid, p_rating integer)
+returns jsonb
+language plpgsql security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_room public.onecard_rooms%rowtype;
+  v_seat smallint;
+  v_rating integer := greatest(0, least(coalesce(p_rating, 0), 999999));
+begin
+  select * into v_room from public.onecard_rooms where id = p_room_id for update;
+  if not found or (v_room.host_id <> v_uid and v_room.guest_id is distinct from v_uid) then raise exception 'ROOM_NOT_FOUND'; end if;
+  v_seat := case when v_room.host_id = v_uid then 0 else 1 end;
+  update public.onecard_rooms
+  set host_rating = case when v_seat = 0 then v_rating else host_rating end,
+      guest_rating = case when v_seat = 1 then v_rating else guest_rating end,
+      updated_at = now(), version = version + 1
+  where id = p_room_id;
+  return public.onecard_get_view(p_room_id);
 end;
 $$;
 
@@ -365,6 +397,7 @@ begin
 
   update public.onecard_rooms
   set status = 'playing', current_seat = p_first_seat,
+      round_no = round_no + 1,
       active_suit = v_top_card->>'suit', attack_count = 0, free_play = false,
       top_card = v_top_card, host_count = 5, guest_count = 5,
       winner_seat = null, dice_tie = false,
@@ -747,6 +780,7 @@ begin
   elsif v_seat = 1 then
     update public.onecard_rooms
     set guest_id = null, guest_nickname = null, guest_ready = false, guest_die = null,
+        guest_rating = 0,
         host_ready = false, host_die = null, status = 'waiting', dice_tie = false,
         host_wins = 0, guest_wins = 0,
         updated_at = now(), version = version + 1
@@ -791,6 +825,7 @@ revoke execute on function public.onecard_leave_room(uuid) from public, anon;
 revoke execute on function public.onecard_request_rematch(uuid) from public, anon;
 revoke execute on function public.onecard_get_history(uuid) from public, anon;
 revoke execute on function public.onecard_send_emote(uuid, text) from public, anon;
+revoke execute on function public.onecard_set_rating(uuid, integer) from public, anon;
 
 grant execute on function public.onecard_get_view(uuid) to authenticated;
 grant execute on function public.onecard_create_room(text) to authenticated;
@@ -804,6 +839,7 @@ grant execute on function public.onecard_leave_room(uuid) to authenticated;
 grant execute on function public.onecard_request_rematch(uuid) to authenticated;
 grant execute on function public.onecard_get_history(uuid) to authenticated;
 grant execute on function public.onecard_send_emote(uuid, text) to authenticated;
+grant execute on function public.onecard_set_rating(uuid, integer) to authenticated;
 
 -- Realtime에서 방 상태와 공개 이벤트를 전달합니다. 이미 추가돼 있으면 오류 없이 넘어갑니다.
 do $$

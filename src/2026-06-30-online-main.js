@@ -10,6 +10,7 @@ import { animateCardToPile } from './2026-06-30-card-motion.js';
 import { runDealAnimation } from './2026-06-30-deal-animation.js';
 import { REACTIONS, createReactionArtwork, createReactionButton, getReaction } from './2026-06-30-reactions.js';
 import { createCardCenter } from './2026-07-01-card-art.js';
+import { loadPlayerProfile, playerStarsForPoints, recordMatchResult, starsText } from './2026-07-05-rating.js';
 
 const els = Object.fromEntries([...document.querySelectorAll('[id]')].map((element) => [element.id, element]));
 const effects = createGameEffects({
@@ -37,6 +38,10 @@ let lastDiceTie = false;
 let connectionPromise = null;
 let reactionTimer = null;
 let reactionSending = false;
+let playerProfile = loadPlayerProfile();
+let resultRevealTimer = null;
+let currentResultKey = '';
+const resultRatingCache = new Map();
 
 els['room-code-input'].addEventListener('input', () => {
   els['room-code-input'].value = normalizeRoomCode(els['room-code-input'].value);
@@ -90,7 +95,7 @@ if (!isSupabaseConfigured()) {
 async function initializeConnection() {
   try {
     await client.connect();
-    await client.restoreRoom();
+    await client.restoreRoom(playerProfile.points);
   } catch (error) {
     els['entry-error'].textContent = friendlyError(error.message);
     renderConnection('reconnecting');
@@ -114,8 +119,9 @@ async function runEntryAction(mode) {
   await perform(async () => {
     if (connectionPromise) await connectionPromise;
     else if (!client.supabase) await client.connect();
-    if (mode === 'create') await client.createRoom(nickname);
-    else await client.joinRoom(code, nickname);
+    playerProfile = loadPlayerProfile();
+    if (mode === 'create') await client.createRoom(nickname, playerProfile.points);
+    else await client.joinRoom(code, nickname, playerProfile.points);
   }, 'entry-error');
 }
 
@@ -218,7 +224,9 @@ function renderLobbySlot(element, player, isMine) {
   element.classList.toggle('me', isMine);
   element.classList.toggle('ready', Boolean(player?.ready));
   element.querySelector('strong').textContent = player?.nickname || '친구 대기 중';
-  element.querySelector('small').textContent = !player ? '방 코드를 알려주세요' : player.ready ? '준비 완료' : player.connected ? '접속됨 · 준비 전' : '재접속 대기 중';
+  element.querySelector('small').textContent = !player
+    ? '방 코드를 알려주세요'
+    : `${starsText(playerStarsForPoints(player.rating || 0))} · ${(player.rating || 0).toLocaleString('ko-KR')}점 · ${player.ready ? '준비 완료' : player.connected ? '준비 전' : '재접속 대기'}`;
 }
 
 function renderGame(nextView) {
@@ -230,6 +238,8 @@ function renderGame(nextView) {
   els['online-my-count'].textContent = mine.count;
   els['online-opponent-count'].textContent = opponent.count;
   els['online-opponent-status'].textContent = opponent.connected ? '온라인' : '재접속 대기 중';
+  els['online-opponent-rating'].textContent = `${starsText(playerStarsForPoints(opponent.rating || 0))} ${(opponent.rating || 0).toLocaleString('ko-KR')}점`;
+  els['online-my-rating'].textContent = `${starsText(playerStarsForPoints(mine.rating || 0))} ${(mine.rating || 0).toLocaleString('ko-KR')}점`;
   els['online-my-status'].textContent = isMyTurn(nextView)
     ? nextView.freePlay ? '내 차례 · 자유 카드' : '내 차례'
     : '상대 차례';
@@ -451,10 +461,9 @@ async function runOnlineStartSequence(nextView) {
   startSequenceRunning = true;
   deferredStartView = nextView;
   els['online-dice-status'].textContent = '두 주사위의 결과를 확인합니다!';
-  playSound('dice');
   await Promise.all([
-    animateOnlineDie(0, nextView.host?.die, true),
-    animateOnlineDie(1, nextView.guest?.die, true),
+    animateOnlineDie(0, nextView.host?.die),
+    animateOnlineDie(1, nextView.guest?.die),
   ]);
   const gameView = deferredStartView || nextView;
   const starter = gameView.currentSeat === 0 ? gameView.host.nickname : gameView.guest.nickname;
@@ -561,23 +570,58 @@ function playFinishEffect(nextView) {
 function renderOnlineResult(nextView) {
   const { mine, opponent } = getSeatView(nextView);
   const won = nextView.winnerSeat === nextView.mySeat;
+  const roundIdentity = Number.isInteger(nextView.roundNo)
+    ? `round:${nextView.roundNo}`
+    : `legacy-score:${nextView.host.wins ?? 0}:${nextView.guest.wins ?? 0}`;
+  const resultKey = `multi:${nextView.roomId}:${roundIdentity}`;
+  const finishedByLeave = nextView.lastEvent?.eventType === 'left';
+  const recordedResult = nextView.topCard ? recordMatchResult({
+    won,
+    opponentStars: playerStarsForPoints(opponent.rating || 0),
+    mode: 'multi',
+    matchId: resultKey,
+  }) : { profile: loadPlayerProfile(), delta: 0, duplicate: true };
+  if (!recordedResult.duplicate) resultRatingCache.set(resultKey, recordedResult);
+  const ratingResult = recordedResult.duplicate && resultRatingCache.has(resultKey)
+    ? resultRatingCache.get(resultKey)
+    : recordedResult;
+  playerProfile = ratingResult.profile;
   els['online-result-icon'].textContent = won ? '✦' : '↻';
   els['online-result-title'].textContent = won ? '내 승리!' : '상대 승리';
   els['online-result-description'].textContent = `현재 전적 ${mine.wins ?? 0}승 ${opponent.wins ?? 0}패 · ${won ? '같은 방에서 흐름을 이어가 보세요.' : '바로 다시 도전할 수 있어요.'}`;
+  els['online-result-final-card'].replaceChildren();
+  if (nextView.topCard) els['online-result-final-card'].append(createCard(nextView.topCard, false));
+  els['online-result-final-owner'].textContent = nextView.topCard
+    ? finishedByLeave ? '상대 퇴장으로 종료 · 마지막 필드 카드' : won ? '내가 낸 마지막 카드' : `${opponent.nickname}님이 낸 마지막 카드`
+    : '상대 퇴장으로 종료된 경기';
+  els['online-result-points-delta'].textContent = nextView.topCard ? `${ratingResult.delta > 0 ? '+' : ''}${ratingResult.delta}점` : '점수 변동 없음';
+  els['online-result-points-delta'].classList.toggle('lost', ratingResult.delta < 0);
+  els['online-result-current-points'].textContent = `현재 ${playerProfile.points.toLocaleString('ko-KR')}점 · ${starsText(playerStarsForPoints(playerProfile.points))}`;
   els['online-rematch-me'].textContent = mine.ready ? '나 · 재대결 신청' : '나 · 대기';
   els['online-rematch-opponent'].textContent = opponent.ready ? `${opponent.nickname} · 신청` : `${opponent.nickname} · 대기`;
   els['online-rematch-me'].classList.toggle('ready', mine.ready);
   els['online-rematch-opponent'].classList.toggle('ready', opponent.ready);
   els['online-rematch-button'].textContent = mine.ready ? '재대결 신청 취소' : '재대결 신청';
   els['online-rematch-button'].disabled = !opponent.connected;
-  els['online-result-modal'].classList.remove('hidden');
-  requestAnimationFrame(() => els['online-result-modal'].classList.add('open'));
+  if (!recordedResult.duplicate) client.setRating(playerProfile.points).catch(() => {});
+  if (currentResultKey !== resultKey) {
+    currentResultKey = resultKey;
+    clearTimeout(resultRevealTimer);
+    resultRevealTimer = setTimeout(() => {
+      els['online-result-modal'].classList.remove('hidden');
+      requestAnimationFrame(() => els['online-result-modal'].classList.add('open'));
+    }, 1150);
+  }
 }
 
 function closeOnlineResult() {
+  clearTimeout(resultRevealTimer);
   els['online-result-modal'].classList.remove('open');
   setTimeout(() => {
-    if (view?.status !== 'finished') els['online-result-modal'].classList.add('hidden');
+    if (view?.status !== 'finished') {
+      els['online-result-modal'].classList.add('hidden');
+      currentResultKey = '';
+    }
   }, 180);
 }
 

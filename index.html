@@ -27,7 +27,7 @@
         <div class="hero-copy">
           <p class="eyebrow">QUICK CARD BATTLE</p>
           <h1 id="home-title">한 장이 뒤집는<br><em>완벽한 역전.</em></h1>
-          <p class="hero-description">가볍게 시작하고, 영리하게 끝내세요.<br>나에게 맞는 AI를 골라 바로 대결할 수 있어요.</p>
+          <p class="hero-description">가볍게 시작하고, 영리하게 끝내세요.<br>점수에 맞는 상대를 만나거나 친구와 바로 대결하세요.</p>
         </div>
         <div class="hero-cards" aria-hidden="true">
           <div class="demo-card demo-card-one"><span>7</span><i>♥</i><strong>7</strong></div>
@@ -40,33 +40,27 @@
         <div class="section-heading">
           <div>
             <p class="step-label">STEP 01</p>
-            <h2 id="difficulty-title">상대를 선택하세요</h2>
+            <h2 id="difficulty-title">대전 방식을 선택하세요</h2>
           </div>
           <p id="record-summary" class="record-summary">첫 승리에 도전해 보세요</p>
         </div>
-        <div class="difficulty-grid">
-          <button class="difficulty-card" data-difficulty="easy">
-            <span class="difficulty-icon">☁</span>
-            <span class="difficulty-copy"><strong>느긋한 루미</strong><small>처음이라면 여기서 시작</small></span>
-            <span class="difficulty-badge">EASY</span>
-          </button>
-          <button class="difficulty-card recommended" data-difficulty="normal">
-            <span class="recommend-label">추천</span>
-            <span class="difficulty-icon">✦</span>
-            <span class="difficulty-copy"><strong>영리한 네오</strong><small>상황에 맞춰 카드를 선택</small></span>
-            <span class="difficulty-badge">NORMAL</span>
-          </button>
-          <button class="difficulty-card" data-difficulty="hard">
-            <span class="difficulty-icon">♛</span>
-            <span class="difficulty-copy"><strong>냉철한 아스트라</strong><small>패 흐름을 읽는 도전자</small></span>
-            <span class="difficulty-badge">HARD</span>
-          </button>
+        <div class="home-rating-card" aria-label="내 원카드 점수">
+          <div><small>MY RATING</small><strong id="home-rating-points">0점</strong></div>
+          <div class="home-rating-progress"><span id="home-rating-fill"></span></div>
+          <div><b id="home-rating-stars">★</b><small id="home-rating-next">다음 등급까지 500점</small></div>
         </div>
-        <a class="online-cta" href="./2026-06-30-online.html">
-          <span class="online-cta-icon">◎</span>
-          <span><strong>친구와 온라인 대전</strong><small>6자리 방 코드로 바로 초대하기</small></span>
-          <b>ONLINE →</b>
-        </a>
+        <div class="mode-grid">
+          <button id="ai-match-button" class="mode-card ai-mode" type="button">
+            <span class="mode-icon">✦</span>
+            <span><strong>AI 대전</strong><small>점수대별 1성~5성 상대 자동 매칭</small></span>
+            <b>MATCH →</b>
+          </button>
+          <a class="mode-card online-mode" href="./2026-06-30-online.html">
+            <span class="mode-icon">◎</span>
+            <span><strong>멀티 대전</strong><small>6자리 방 코드로 친구와 대결</small></span>
+            <b>ONLINE →</b>
+          </a>
+        </div>
       </section>
 
       <footer class="home-footer"><span>AI 대전</span><span>·</span><span>설치 없음</span><span>·</span><span>모바일 지원</span></footer>
@@ -167,11 +161,25 @@
     </div>
   </div>
 
+  <div id="matching-modal" class="modal matching-modal hidden" role="dialog" aria-modal="true" aria-labelledby="matching-title">
+    <div class="modal-card matching-card">
+      <p id="matching-kicker" class="step-label">AI MATCHING</p>
+      <h2 id="matching-title">상대를 찾고 있어요</h2>
+      <div id="matching-result" class="matching-result">
+        <span id="matching-icon" class="matching-icon">✦</span>
+        <strong id="matching-name">영리한 네오</strong>
+        <b id="matching-stars">★★★</b>
+        <small id="matching-reward">승리 +200점</small>
+      </div>
+      <div class="matching-player-info"><span>내 점수 <b id="matching-points">0점</b></span><small id="matching-probability">1성 55% · 2성 35% · 3성 10%</small></div>
+    </div>
+  </div>
+
   <div id="dice-modal" class="modal dice-modal hidden" role="dialog" aria-modal="true" aria-labelledby="dice-title">
     <div class="modal-card dice-modal-card">
       <p class="step-label">WHO GOES FIRST?</p>
       <h2 id="dice-title">주사위로 선공을 정해요</h2>
-      <p id="dice-status" class="dice-status">버튼을 누르면 둘 다 주사위를 굴립니다.</p>
+      <p id="dice-status" class="dice-status">먼저 내 주사위를 굴려 선공을 정해요.</p>
       <div class="dice-arena">
         <div class="dice-player mine">
           <span>나</span>
@@ -185,7 +193,7 @@
           <strong id="ai-die-result">-</strong>
         </div>
       </div>
-      <button id="roll-dice-button" class="primary-button dice-roll-button" type="button">주사위 굴리기</button>
+      <button id="roll-dice-button" class="primary-button dice-roll-button" type="button">내 주사위 굴리기</button>
     </div>
   </div>
 
@@ -204,10 +212,15 @@
       <p id="result-kicker" class="step-label">NICE PLAY</p>
       <h2 id="result-title">당신의 승리!</h2>
       <p id="result-description">깔끔한 마무리였어요.</p>
+      <div class="result-final-play">
+        <div id="result-final-card" class="result-final-card"></div>
+        <div><small>LAST PLAY</small><strong id="result-final-owner">내가 낸 마지막 카드</strong></div>
+      </div>
       <div class="result-stats">
         <div><small>플레이 시간</small><strong id="result-time">00:00</strong></div>
         <div><small>사용한 카드</small><strong id="result-moves">0장</strong></div>
       </div>
+      <div class="result-rating"><strong id="result-points-delta">+100점</strong><small id="result-current-points">현재 100점 · ★</small></div>
       <div class="result-reactions"><span>스티커 보내기</span><div id="ai-result-reaction-picker" class="result-reaction-picker"></div></div>
       <button id="rematch-button" class="primary-button" type="button">같은 상대와 다시 하기</button>
       <button id="change-ai-button" class="secondary-button" type="button">다른 상대 고르기</button>

@@ -3,8 +3,25 @@ import { createDeck, OneCardGame } from '../src/game-engine.js';
 import { chooseAiMove, chooseSuit } from '../src/ai-player.js';
 import { calculateFanTransform, calculateHandLayout } from '../src/2026-06-30-hand-layout.js';
 import { aiReactionDelay, chooseAiReaction } from '../src/2026-07-01-ai-reactions.js';
+import {
+  LEGACY_BACKUP_KEY,
+  LEGACY_RECORD_KEY,
+  PROFILE_KEY,
+  loadPlayerProfile,
+  matchmakingWeights,
+  recordMatchResult,
+  selectAiOpponent,
+} from '../src/2026-07-05-rating.js';
 
 function card(suit, rank) { return { id: `${suit}-${rank}`, suit, rank }; }
+
+function memoryStorage(initial = {}) {
+  const values = new Map(Object.entries(initial));
+  return {
+    getItem(key) { return values.has(key) ? values.get(key) : null; },
+    setItem(key, value) { values.set(key, String(value)); },
+  };
+}
 
 function setState(game, { player = 0, top = card('hearts', '5'), hands, attack = 0, requestedSuit = null, freePlay = false }) {
   game.currentPlayer = player;
@@ -104,4 +121,28 @@ assert.equal(chooseAiReaction({ type: 'player-emote', emote: 'lol' }, 'normal', 
 assert.equal(chooseAiReaction('player-attack', 'hard', () => 0.99), null, '냉철한 AI는 모든 행동에 과하게 반응하지 않아야 함');
 assert.ok(aiReactionDelay('easy', () => 0.5) < aiReactionDelay('hard', () => 0.5), '쉬운 AI가 어려운 AI보다 빠르게 반응해야 함');
 
-console.log('원카드 규칙·레이아웃·AI 반응 테스트 33개 통과');
+const legacyRaw = JSON.stringify({ wins: 12, games: 20, nickname: '기존 플레이어' });
+const legacyStorage = memoryStorage({ [LEGACY_RECORD_KEY]: legacyRaw });
+const migrated = loadPlayerProfile(legacyStorage);
+assert.deepEqual([migrated.wins, migrated.games, migrated.losses, migrated.points], [12, 20, 8, 0], '기존 승수와 판수를 그대로 이전해야 함');
+assert.equal(legacyStorage.getItem(LEGACY_BACKUP_KEY), legacyRaw, '이전 전 원본 기록을 정확히 백업해야 함');
+assert.deepEqual(JSON.parse(legacyStorage.getItem(LEGACY_RECORD_KEY)), { wins: 12, games: 20, nickname: '기존 플레이어' }, '기존 기록의 추가 필드까지 보존해야 함');
+assert.ok(legacyStorage.getItem(PROFILE_KEY), '새 프로필을 별도 키로 저장해야 함');
+
+const firstWin = recordMatchResult({ won: true, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-1' }, legacyStorage);
+assert.deepEqual([firstWin.delta, firstWin.profile.points, firstWin.profile.wins, firstWin.profile.games], [400, 400, 13, 21], '5성 승리는 기존 기록 위에 점수와 승리를 더해야 함');
+const duplicateWin = recordMatchResult({ won: true, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-1' }, legacyStorage);
+assert.deepEqual([duplicateWin.duplicate, duplicateWin.profile.wins, duplicateWin.profile.games], [true, 13, 21], '같은 경기 결과는 중복 반영하지 않아야 함');
+const fixedLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-2' }, legacyStorage);
+assert.deepEqual([fixedLoss.delta, fixedLoss.profile.points, fixedLoss.profile.games], [-50, 350, 22], '상대 등급과 무관하게 패배는 50점만 차감해야 함');
+assert.deepEqual(JSON.parse(legacyStorage.getItem(LEGACY_RECORD_KEY)), { wins: 13, games: 22, nickname: '기존 플레이어' }, '새 결과 반영 뒤에도 기존 키의 승수·판수와 추가 필드를 보존해야 함');
+
+const floorStorage = memoryStorage();
+const floorLoss = recordMatchResult({ won: false, opponentStars: 1, matchId: 'floor-loss' }, floorStorage);
+assert.equal(floorLoss.profile.points, 0, '점수는 0 아래로 내려가지 않아야 함');
+assert.equal(floorLoss.delta, 0, '0점에서 패배하면 실제 점수 변화도 0으로 표시해야 함');
+assert.deepEqual(matchmakingWeights(0), [55, 35, 10, 0, 0], '초기 점수대 매칭 확률을 적용해야 함');
+assert.deepEqual(matchmakingWeights(20000), [0, 0, 0, 30, 70], '2만점 이상은 4·5성만 매칭해야 함');
+assert.equal(selectAiOpponent(0, () => 0, [1, 1]).stars, 2, '같은 AI가 세 번 연속 걸리려 하면 다른 가능한 등급으로 바꿔야 함');
+
+console.log('원카드 규칙·레이아웃·AI 반응·기록 보존 테스트 46개 통과');

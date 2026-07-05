@@ -6,7 +6,7 @@ export const SUIT_SYMBOLS = {
   hearts: '♥', diamonds: '♦', spades: '♠', clubs: '♣', joker: '★',
 };
 
-const VALID_DIFFICULTIES = new Set(['easy', 'normal', 'hard']);
+const VALID_DIFFICULTIES = new Set(['easy', 'normal', 'hard', 'star1', 'star2', 'star3', 'star4', 'star5']);
 
 export function createDeck() {
   const standardCards = SUITS.flatMap((suit) => RANKS.map((rank) => ({

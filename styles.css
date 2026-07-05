@@ -78,6 +78,25 @@ button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset:
 .online-cta strong { font-size: 14px; }
 .online-cta small { color: var(--muted); font-size: 10px; }
 .online-cta > b { color: var(--green); font: 800 10px/1 'DM Sans', sans-serif; letter-spacing: .08em; }
+.home-rating-card { margin-bottom: 15px; padding: 17px 20px; display: grid; grid-template-columns: auto minmax(120px, 1fr) auto; align-items: center; gap: 18px; border: 1px solid rgba(255,255,255,.1); border-radius: 17px; background: rgba(18,22,39,.72); }
+.home-rating-card > div:first-child, .home-rating-card > div:last-child { display: flex; flex-direction: column; gap: 5px; }
+.home-rating-card > div:last-child { align-items: flex-end; }
+.home-rating-card small { color: var(--muted); font-size: 10px; }
+.home-rating-card strong { font: 800 22px/1 'DM Sans', sans-serif; }
+.home-rating-card b { color: #ffd66d; letter-spacing: 2px; }
+.home-rating-progress { height: 7px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.08); }
+.home-rating-progress span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--pink), #ffd66d); transition: width .5s ease; }
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.mode-card { min-height: 104px; padding: 20px; display: grid; grid-template-columns: 50px 1fr auto; align-items: center; gap: 15px; border: 1px solid var(--line); border-radius: 19px; color: #fff; text-align: left; text-decoration: none; cursor: pointer; background: var(--surface); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.mode-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,.3); box-shadow: 0 15px 35px rgba(0,0,0,.23); }
+.mode-card.ai-mode { border-color: rgba(255,77,116,.4); background: linear-gradient(135deg, rgba(255,77,116,.15), rgba(25,29,49,.86)); }
+.mode-card.online-mode { border-color: rgba(93,228,180,.3); background: linear-gradient(135deg, rgba(93,228,180,.11), rgba(25,29,49,.86)); }
+.mode-icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 15px; background: rgba(255,255,255,.08); color: var(--pink); font-size: 24px; }
+.online-mode .mode-icon, .online-mode > b { color: var(--green); }
+.mode-card > span:nth-child(2) { display: flex; flex-direction: column; gap: 5px; }
+.mode-card strong { font-size: 15px; }
+.mode-card small { color: var(--muted); font-size: 10px; }
+.mode-card > b { color: var(--pink); font: 800 10px/1 'DM Sans', sans-serif; letter-spacing: .08em; }
 .home-footer { display: flex; justify-content: center; gap: 10px; color: #666b80; font-size: 11px; letter-spacing: .06em; }
 
 .game-screen { max-width: 1320px; height: 100dvh; min-height: 650px; display: flex; flex-direction: column; padding-bottom: 0; }
@@ -251,6 +270,18 @@ button.playing-card { cursor: pointer; }
 .peek-cancel-button { border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--muted); }
 .peek-return-button { border: 0; background: linear-gradient(115deg, #ff5479, #ff925f); color: #fff; }
 .dice-modal-card { width: min(520px, 100%); text-align: center; overflow: hidden; }
+.matching-card { width: min(470px, 100%); text-align: center; overflow: hidden; }
+.matching-result { margin: 24px 0 20px; padding: 23px; display: flex; flex-direction: column; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 21px; background: rgba(9,12,25,.45); }
+.matching-result.tick { animation: matchTick .16s ease; }
+.matching-result.decided { border-color: rgba(255,214,109,.65); box-shadow: 0 0 34px rgba(255,214,109,.15); animation: matchDecided .6s ease; }
+.matching-icon { width: 65px; height: 65px; display: grid; place-items: center; border-radius: 20px; background: linear-gradient(145deg, rgba(255,77,116,.25), rgba(143,108,255,.2)); font-size: 31px; }
+.matching-result strong { font-size: 21px; }
+.matching-result b { color: #ffd66d; letter-spacing: 3px; }
+.matching-result small { color: var(--green); }
+.matching-player-info { display: flex; flex-direction: column; gap: 8px; color: var(--muted); font-size: 11px; }
+.matching-player-info span b { color: #fff; }
+@keyframes matchTick { 50% { transform: translateX(5px) scale(.985); filter: blur(.5px); } }
+@keyframes matchDecided { 40% { transform: scale(1.055); } }
 .dice-status { min-height: 25px; margin: 0 0 24px; color: var(--muted); font-size: 13px; }
 .dice-arena { display: grid; grid-template-columns: 1fr 42px 1fr; align-items: center; gap: 10px; margin: 8px 0 26px; }
 .dice-player { min-width: 0; padding: 18px 12px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.035); }
@@ -291,6 +322,16 @@ button.playing-card { cursor: pointer; }
 .result-stats div + div { border-left: 1px solid var(--line); }
 .result-stats small { color: var(--muted); font-size: 10px; }
 .result-stats strong { font: 700 19px/1 'DM Sans', sans-serif; }
+.result-final-play { margin: 19px auto 0; padding: 12px 15px; display: flex; align-items: center; justify-content: center; gap: 15px; width: fit-content; border: 1px solid var(--line); border-radius: 15px; background: rgba(8,11,23,.36); }
+.result-final-card .playing-card { width: 56px; height: 78px; min-width: 56px; font-size: 10px; pointer-events: none; }
+.result-final-card .card-center { transform: scale(.62); }
+.result-final-play > div:last-child { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.result-final-play small { color: var(--muted); font: 800 9px/1 'DM Sans', sans-serif; letter-spacing: .12em; }
+.result-final-play strong { font-size: 12px; }
+.result-rating { margin: -10px 0 20px; display: flex; flex-direction: column; gap: 5px; }
+.result-rating strong { color: var(--green); font: 900 25px/1 'DM Sans', sans-serif; }
+.result-rating strong.lost { color: #ff7895; }
+.result-rating small { color: var(--muted); }
 .history-card { width: min(510px, 100%); }
 .history-intro { margin: -3px 0 18px; color: var(--muted); font-size: 12px; }
 .history-list { max-height: min(430px, 52dvh); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin: 0 -5px 22px 0; padding-right: 5px; scrollbar-width: thin; scrollbar-color: #4a506d transparent; }
@@ -369,6 +410,10 @@ button.playing-card { cursor: pointer; }
   .difficulty-section { padding-top: 14px; }
   .difficulty-grid { grid-template-columns: 1fr; }
   .difficulty-card { min-height: 86px; padding: 15px 18px; }
+  .home-rating-card { grid-template-columns: 1fr auto; gap: 12px; }
+  .home-rating-progress { grid-column: 1 / -1; grid-row: 2; }
+  .mode-grid { grid-template-columns: 1fr; }
+  .mode-card { min-height: 88px; padding: 16px; }
   .online-cta { grid-template-columns: 42px 1fr; }
   .online-cta > b { display: none; }
   .difficulty-icon { width: 43px; height: 43px; }

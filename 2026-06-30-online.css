@@ -79,6 +79,8 @@ body:has(#online-game:not(.hidden)) .online-header { display:none; }
 .online-center-zone { position:relative; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .online-center-zone .turn-banner { margin-bottom:18px; }
 .online-player-zone .player-hand { width:min(900px,calc(100vw - 24px)); }
+.online-rating { display:block; margin-top:3px; color:#ffd66d; font:700 9px/1 'DM Sans',sans-serif; letter-spacing:.03em; }
+.online-result-rating { margin:14px 0 18px; }
 .online-game .table-toys { z-index:4; }
 .online-live-state { margin-left:auto; }
 .online-top-card, #online-top-card { cursor:pointer; }

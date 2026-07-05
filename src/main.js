@@ -9,19 +9,31 @@ import { runDealAnimation } from './2026-06-30-deal-animation.js';
 import { REACTIONS, createReactionArtwork, createReactionButton, getReaction } from './2026-06-30-reactions.js';
 import { aiReactionDelay, chooseAiReaction } from './2026-07-01-ai-reactions.js';
 import { createCardCenter } from './2026-07-01-card-art.js';
+import {
+  AI_OPPONENTS,
+  loadPlayerProfile,
+  matchmakingWeights,
+  ratingProgress,
+  recordMatchResult,
+  rememberAiOpponent,
+  rewardForStars,
+  selectAiOpponent,
+  starsText,
+} from './2026-07-05-rating.js';
 
-const DIFFICULTIES = {
-  easy: { name: '느긋한 루미', icon: '☁', status: '느긋하게 패를 살펴보고 있어요', delay: 850 },
-  normal: { name: '영리한 네오', icon: '✦', status: '좋은 수를 생각하고 있어요', delay: 1050 },
-  hard: { name: '냉철한 아스트라', icon: '♛', status: '다음 흐름까지 계산하고 있어요', delay: 1250 },
-};
+const DIFFICULTIES = Object.fromEntries(AI_OPPONENTS.map((opponent) => [opponent.key, opponent]));
 
 const els = Object.fromEntries([...document.querySelectorAll('[id]')].map((element) => [element.id, element]));
 const game = new OneCardGame();
-let difficulty = 'normal';
+let difficulty = 'star3';
+let playerProfile = loadPlayerProfile();
+let currentMatchId = '';
+let lastRatingResult = null;
+let matching = false;
 let startedAt = 0;
 let timerId = null;
 let aiTimer = null;
+let resultRevealTimer = null;
 let moves = 0;
 let pendingSeven = null;
 let toastTimer = null;
@@ -59,9 +71,7 @@ const effects = createGameEffects({
 const toyControllers = [...document.querySelectorAll('[data-toy]')]
   .map((button) => makeToyDraggable(button, els['game-table'], playWithToy));
 
-document.querySelectorAll('[data-difficulty]').forEach((button) => {
-  button.addEventListener('click', () => startGame(button.dataset.difficulty));
-});
+els['ai-match-button'].addEventListener('click', beginAiMatchmaking);
 document.querySelectorAll('[data-open-modal]').forEach((button) => {
   button.addEventListener('click', () => openModal(button.dataset.openModal));
 });
@@ -101,12 +111,57 @@ window.addEventListener('resize', () => {
   toyControllers.forEach((controller) => controller.reset());
 });
 
+async function beginAiMatchmaking() {
+  if (matching) return;
+  matching = true;
+  playerProfile = loadPlayerProfile();
+  const opponent = selectAiOpponent(playerProfile.points, Math.random, playerProfile.recentAiStars);
+  const weights = matchmakingWeights(playerProfile.points);
+  els['matching-kicker'].textContent = 'AI MATCHING';
+  els['matching-points'].textContent = `${playerProfile.points.toLocaleString('ko-KR')}점`;
+  els['matching-probability'].textContent = weights
+    .map((weight, index) => weight ? `${index + 1}성 ${weight}%` : '')
+    .filter(Boolean)
+    .join(' · ');
+  els['matching-result'].classList.remove('decided');
+  openModal('matching-modal');
+  playSound('card');
+
+  const sequence = Array.from({ length: 16 }, (_, index) => AI_OPPONENTS[(index + Math.floor(Math.random() * 5)) % 5]);
+  sequence.push(opponent);
+  for (let index = 0; index < sequence.length; index += 1) {
+    const candidate = sequence[index];
+    els['matching-icon'].textContent = candidate.icon;
+    els['matching-name'].textContent = candidate.name;
+    els['matching-stars'].textContent = starsText(candidate.stars);
+    els['matching-reward'].textContent = `승리 +${rewardForStars(candidate.stars)}점`;
+    els['matching-result'].classList.remove('tick');
+    void els['matching-result'].offsetWidth;
+    els['matching-result'].classList.add('tick');
+    playSound('card');
+    const progress = index / (sequence.length - 1);
+    await wait(50 + Math.round(progress ** 3 * 260));
+  }
+
+  els['matching-result'].classList.add('decided');
+  els['matching-kicker'].textContent = '상대 결정!';
+  playerProfile = rememberAiOpponent(playerProfile, opponent.stars);
+  await wait(1150);
+  closeModal('matching-modal');
+  matching = false;
+  await wait(220);
+  startGame(opponent.key);
+}
+
 function startGame(selectedDifficulty) {
   clearTimeout(aiTimer);
+  clearTimeout(resultRevealTimer);
   clearTimeout(aiReactionTimer);
   clearTimeout(reactionTimer);
   window.scrollTo(0, 0);
   difficulty = selectedDifficulty;
+  currentMatchId = `ai:${Date.now()}:${globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)}`;
+  lastRatingResult = null;
   game.reset(difficulty);
   moves = 0;
   pendingSeven = null;
@@ -149,8 +204,8 @@ function resetDiceModal() {
   els['ai-die'].textContent = DIE_FACES[0];
   els['player-die-result'].textContent = '-';
   els['ai-die-result'].textContent = '-';
-  els['dice-status'].textContent = '버튼을 누르면 둘 다 주사위를 굴립니다.';
-  els['roll-dice-button'].textContent = '주사위 굴리기';
+  els['dice-status'].textContent = '먼저 내 주사위를 굴려 선공을 정해요.';
+  els['roll-dice-button'].textContent = '내 주사위 굴리기';
   els['roll-dice-button'].disabled = false;
   els['dice-modal'].classList.remove('dice-tie', 'dice-decided');
 }
@@ -159,15 +214,16 @@ async function rollForFirstTurn() {
   if (diceRolling || gameReady) return;
   diceRolling = true;
   els['roll-dice-button'].disabled = true;
-  els['dice-status'].textContent = '데구르르… 누가 먼저 시작할까요?';
+  els['dice-status'].textContent = '내 주사위가 데구르르…';
   els['dice-modal'].classList.remove('dice-tie', 'dice-decided');
   const playerRoll = randomDie();
   const aiRoll = randomDie();
   playSound('dice');
-  await Promise.all([
-    animateDie(els['player-die'], els['player-die-result'], playerRoll, 920),
-    animateDie(els['ai-die'], els['ai-die-result'], aiRoll, 1060),
-  ]);
+  await animateDie(els['player-die'], els['player-die-result'], playerRoll, 920);
+  els['dice-status'].textContent = `나는 ${playerRoll}! 이제 ${DIFFICULTIES[difficulty].name}가 굴립니다.`;
+  await wait(420);
+  playSound('dice');
+  await animateDie(els['ai-die'], els['ai-die-result'], aiRoll, 1060);
 
   if (playerRoll === aiRoll) {
     els['dice-modal'].classList.add('dice-tie');
@@ -382,6 +438,7 @@ function rematchWithReaction() {
 
 function goHome() {
   clearTimeout(aiTimer);
+  clearTimeout(resultRevealTimer);
   clearTimeout(aiReactionTimer);
   clearTimeout(reactionTimer);
   clearTimeout(oneCardEffectTimer);
@@ -789,29 +846,42 @@ function endGame(winner) {
   els['result-description'].textContent = won ? victoryMessage() : '흐름을 다시 읽으면 다음 판은 달라질 거예요.';
   els['result-time'].textContent = formatTime(Date.now() - startedAt);
   els['result-moves'].textContent = `${moves}장`;
-  saveRecord(won);
-  setTimeout(() => {
+  els['result-final-card'].replaceChildren(createCardElement(game.topCard, false));
+  els['result-final-owner'].textContent = won ? '내가 낸 마지막 카드' : `${DIFFICULTIES[difficulty].name}가 낸 마지막 카드`;
+  lastRatingResult = recordMatchResult({
+    won,
+    opponentStars: DIFFICULTIES[difficulty].stars,
+    mode: 'ai',
+    matchId: currentMatchId,
+  });
+  playerProfile = lastRatingResult.profile;
+  els['result-points-delta'].textContent = `${lastRatingResult.delta > 0 ? '+' : ''}${lastRatingResult.delta}점`;
+  els['result-points-delta'].classList.toggle('lost', lastRatingResult.delta < 0);
+  els['result-current-points'].textContent = `현재 ${playerProfile.points.toLocaleString('ko-KR')}점 · ${starsText(ratingProgress(playerProfile.points).stars)}`;
+  resultRevealTimer = setTimeout(() => {
     openModal('result-modal');
     setTimeout(() => els['rematch-button'].focus(), 0);
-  }, 450);
+  }, 1150);
 }
 
 function victoryMessage() {
-  if (difficulty === 'hard') return '아스트라의 계산을 멋지게 넘어섰어요.';
+  if (DIFFICULTIES[difficulty].stars >= 4) return `${DIFFICULTIES[difficulty].name}의 계산을 멋지게 넘어섰어요.`;
   if (moves <= 8) return '군더더기 없는 빠른 승리였어요.';
   return '마지막까지 흐름을 놓치지 않았네요.';
 }
 
-function saveRecord(won) {
-  const record = JSON.parse(localStorage.getItem('onecard-record') || '{"wins":0,"games":0}');
-  record.games += 1;
-  if (won) record.wins += 1;
-  localStorage.setItem('onecard-record', JSON.stringify(record));
-}
-
 function updateRecord() {
-  const record = JSON.parse(localStorage.getItem('onecard-record') || '{"wins":0,"games":0}');
-  els['record-summary'].textContent = record.games ? `누적 ${record.wins}승 · ${record.games}게임` : '첫 승리에 도전해 보세요';
+  playerProfile = loadPlayerProfile();
+  const progress = ratingProgress(playerProfile.points);
+  els['record-summary'].textContent = playerProfile.games
+    ? `누적 ${playerProfile.wins}승 · ${playerProfile.games}게임`
+    : '첫 승리에 도전해 보세요';
+  els['home-rating-points'].textContent = `${playerProfile.points.toLocaleString('ko-KR')}점`;
+  els['home-rating-stars'].textContent = starsText(progress.stars);
+  els['home-rating-fill'].style.width = `${Math.round(progress.ratio * 100)}%`;
+  els['home-rating-next'].textContent = progress.target
+    ? `다음 등급까지 ${progress.remaining.toLocaleString('ko-KR')}점`
+    : '최고 점수 구간에 도달했어요';
 }
 
 function updateTimer() {

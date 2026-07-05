@@ -147,11 +147,41 @@ test('카드 기록과 커스텀 스티커 RPC는 참가자 확인·종류 제�
 
 test('새로고침하면 익명 세션과 활성 방을 복원하고 주사위 결과를 보여준 뒤 시작한다', () => {
   assert.match(multiplayerClient, /persistSession: true/);
-  assert.match(multiplayerClient, /async restoreRoom\(\)/);
+  assert.match(multiplayerClient, /async restoreRoom\(rating = 0\)/);
   assert.match(multiplayerClient, /onecard-active-room-v1/);
   assert.match(onlineMain, /await wait\(1350\)/);
   assert.match(onlineMain, /client\.getHistory\(\)/);
   assert.match(onlineMain, /client\.sendEmote\(key\)/);
+});
+
+test('멀티 대전은 상대 점수를 공유하고 결과를 한 번만 개인 점수에 반영한다', () => {
+  assert.match(sql, /add column if not exists host_rating integer not null default 0/);
+  assert.match(sql, /function public\.onecard_set_rating\(p_room_id uuid, p_rating integer\)/);
+  assert.match(sql, /'rating', v_room\.host_rating/);
+  assert.match(multiplayerClient, /onecard_set_rating/);
+  assert.match(onlineMain, /recordMatchResult\(/);
+  assert.match(sql, /add column if not exists round_no bigint not null default 0/);
+  assert.match(sql, /'roundNo', v_room\.round_no/);
+  assert.match(sql, /round_no = round_no \+ 1/);
+  assert.match(onlineMain, /round:\$\{nextView\.roundNo\}/);
+  assert.doesNotMatch(onlineMain, /const resultKey = `multi:\$\{nextView\.roomId\}:\$\{nextView\.host\.wins/);
+});
+
+test('게임 시작 전 이미 나온 상대 주사위를 강제로 다시 돌리지 않는다', () => {
+  assert.match(onlineMain, /animateOnlineDie\(0, nextView\.host\?\.die\)/);
+  assert.match(onlineMain, /animateOnlineDie\(1, nextView\.guest\?\.die\)/);
+  assert.doesNotMatch(onlineMain, /animateOnlineDie\(0, nextView\.host\?\.die, true\)/);
+});
+
+test('AI 결과창 예약은 홈으로 나갈 때 취소된다', () => {
+  assert.match(aiMain, /let resultRevealTimer = null/);
+  assert.match(aiMain, /function goHome\(\)[\s\S]*?clearTimeout\(resultRevealTimer\)/);
+  assert.match(aiMain, /resultRevealTimer = setTimeout\(\(\) =>/);
+});
+
+test('멀티 기권 종료는 마지막 필드 카드를 승자의 카드로 오인하지 않는다', () => {
+  assert.match(onlineMain, /finishedByLeave = nextView\.lastEvent\?\.eventType === 'left'/);
+  assert.match(onlineMain, /상대 퇴장으로 종료 · 마지막 필드 카드/);
 });
 
 console.log(`멀티플레이 도우미·보안 테스트 ${passed}개 통과`);

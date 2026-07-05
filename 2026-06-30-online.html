@@ -91,7 +91,7 @@
 
       <div id="online-table" class="online-table">
         <section class="online-opponent-zone">
-          <div class="player-meta"><div class="avatar">●</div><div><strong id="online-opponent-name">상대</strong><small id="online-opponent-status">연결 중</small></div><span class="card-count"><b id="online-opponent-count">0</b>장</span></div>
+          <div class="player-meta"><div class="avatar">●</div><div><strong id="online-opponent-name">상대</strong><small id="online-opponent-status">연결 중</small><span id="online-opponent-rating" class="online-rating">★ 0점</span></div><span class="card-count"><b id="online-opponent-count">0</b>장</span></div>
           <div id="online-opponent-hand" class="ai-hand"></div>
         </section>
 
@@ -120,7 +120,7 @@
         </section>
 
         <section class="online-player-zone">
-          <div class="player-meta"><div class="avatar player-avatar">ME</div><div><strong id="online-my-name">나</strong><small id="online-my-status">대기 중</small></div><span class="card-count"><b id="online-my-count">0</b>장</span></div>
+          <div class="player-meta"><div class="avatar player-avatar">ME</div><div><strong id="online-my-name">나</strong><small id="online-my-status">대기 중</small><span id="online-my-rating" class="online-rating">★ 0점</span></div><span class="card-count"><b id="online-my-count">0</b>장</span></div>
           <div id="online-player-hand" class="player-hand"></div>
         </section>
       </div>
@@ -139,6 +139,11 @@
       <p class="step-label">MATCH COMPLETE</p>
       <h2 id="online-result-title">게임 종료</h2>
       <p id="online-result-description">같은 방에서 바로 한 판 더 할 수 있어요.</p>
+      <div class="result-final-play">
+        <div id="online-result-final-card" class="result-final-card"></div>
+        <div><small>LAST PLAY</small><strong id="online-result-final-owner">마지막 카드</strong></div>
+      </div>
+      <div class="result-rating online-result-rating"><strong id="online-result-points-delta">+100점</strong><small id="online-result-current-points">현재 100점 · ★</small></div>
       <div class="rematch-state">
         <span><b id="online-rematch-me">나 · 대기</b><small>내 상태</small></span>
         <i>↻</i>

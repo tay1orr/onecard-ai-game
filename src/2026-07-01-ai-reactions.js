@@ -1,4 +1,7 @@
-const DIFFICULTY_MULTIPLIER = Object.freeze({ easy: 1.15, normal: 1, hard: 0.82 });
+const DIFFICULTY_MULTIPLIER = Object.freeze({
+  easy: 1.15, normal: 1, hard: 0.82,
+  star1: 1.15, star2: 1.07, star3: 1, star4: 0.9, star5: 0.82,
+});
 
 const REACTION_RULES = Object.freeze({
   'player-attack': { chance: 0.62, options: ['oops', 'fire'] },
@@ -38,6 +41,7 @@ export function chooseAiReaction(context, difficulty = 'normal', random = Math.r
 }
 
 export function aiReactionDelay(difficulty = 'normal', random = Math.random) {
-  const base = difficulty === 'easy' ? 620 : difficulty === 'hard' ? 900 : 760;
+  const tier = difficulty.startsWith('star') ? Number(difficulty.at(-1)) : difficulty === 'easy' ? 1 : difficulty === 'hard' ? 5 : 3;
+  const base = 550 + tier * 70;
   return base + Math.floor(random() * 420);
 }
