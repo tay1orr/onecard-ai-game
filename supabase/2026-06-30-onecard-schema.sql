@@ -263,7 +263,11 @@ declare
   v_seat smallint;
   v_card_back text := coalesce(p_card_back, 'back-classic');
 begin
-  if v_card_back not in ('back-classic', 'back-strawberry-milk', 'back-star-candy', 'back-space-whale', 'back-dream-kingdom') then
+  if v_card_back not in (
+    'back-classic', 'back-strawberry-milk', 'back-star-candy', 'back-space-whale', 'back-dream-kingdom',
+    'back-antique-atlas', 'back-bauhaus', 'back-jade-rune', 'back-brass-orbit',
+    'back-monochrome-wave', 'back-antique-library'
+  ) then
     v_card_back := 'back-classic';
   end if;
   select * into v_room from public.onecard_rooms where id = p_room_id for update;

@@ -212,7 +212,8 @@ test('멀티 대전은 상대 점수를 공유하고 결과를 한 번만 개인
 test('멀티 대전은 허용된 카드 뒷면 스킨만 상대에게 공유한다', () => {
   assert.match(sql, /add column if not exists host_card_back text not null default 'back-classic'/);
   assert.match(sql, /function public\.onecard_set_card_back\(p_room_id uuid, p_card_back text\)/);
-  assert.match(sql, /v_card_back not in \('back-classic', 'back-strawberry-milk', 'back-star-candy', 'back-space-whale', 'back-dream-kingdom'\)/);
+  assert.match(sql, /'back-antique-atlas', 'back-bauhaus', 'back-jade-rune', 'back-brass-orbit'/);
+  assert.match(sql, /'back-monochrome-wave', 'back-antique-library'/);
   assert.match(sql, /'cardBack', v_room\.host_card_back/);
   assert.match(multiplayerClient, /onecard_set_card_back/);
   assert.match(onlineMain, /renderOpponentHand\(opponent\.count, opponent\.cardBack\)/);
@@ -233,6 +234,13 @@ test('AI 결과창 예약은 홈으로 나갈 때 취소된다', () => {
 test('멀티 기권 종료는 마지막 필드 카드를 승자의 카드로 오인하지 않는다', () => {
   assert.match(onlineMain, /finishedByLeave = nextView\.lastEvent\?\.eventType === 'left'/);
   assert.match(onlineMain, /상대 퇴장으로 종료 · 마지막 필드 카드/);
+});
+
+test('AI와 멀티 결과창은 승리한 경우에만 장착한 대형 승리 연출을 재생한다', () => {
+  assert.match(aiHtml, /class="victory-stage"/);
+  assert.match(onlineHtml, /class="victory-stage"/);
+  assert.match(aiMain, /classList\.toggle\('victory-earned', won\)/);
+  assert.match(onlineMain, /classList\.toggle\('victory-earned', won\)/);
 });
 
 console.log(`멀티플레이 도우미·보안 테스트 ${passed}개 통과`);

@@ -597,6 +597,7 @@ function renderOnlineResult(nextView) {
     ? resultRatingCache.get(resultKey)
     : recordedResult;
   playerProfile = ratingResult.profile;
+  els['online-result-modal'].classList.toggle('victory-earned', won);
   els['online-result-icon'].textContent = won ? '✦' : '↻';
   els['online-result-title'].textContent = won ? '내 승리!' : '상대 승리';
   els['online-result-description'].textContent = `현재 전적 ${mine.wins ?? 0}승 ${opponent.wins ?? 0}패 · ${won ? '같은 방에서 흐름을 이어가 보세요.' : '바로 다시 도전할 수 있어요.'}`;

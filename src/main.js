@@ -1036,6 +1036,7 @@ function endGame(winner) {
   clearTimeout(aiTimer);
   clearTimeout(oneCardEffectTimer);
   const won = winner === 0;
+  els['result-modal'].classList.toggle('victory-earned', won);
   maybeAiReact(won ? 'player-win' : 'ai-win', { force: true, delay: 260 });
   playSound(won ? 'win' : 'lose');
   els['result-icon'].textContent = won ? '✦' : '↻';

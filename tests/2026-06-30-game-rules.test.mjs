@@ -173,9 +173,33 @@ const cosmeticLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai
 assert.deepEqual([cosmeticLoss.profile.points, cosmeticLoss.profile.peakPoints], [1750, 1800], '패배해 현재 점수가 내려가도 역대 최고 점수는 유지해야 함');
 assert.equal(cosmeticLoss.profile.equipped.cardBack, 'back-strawberry-milk', '점수가 내려가도 이미 해금하고 장착한 스킨은 유지해야 함');
 assert.equal(nextCosmeticUnlock(20000), null, '2만점에서는 모든 꾸미기 해금이 완료되어야 함');
-assert.equal(newlyUnlockedCosmetics(19999, 20000).length, 7, '2만점 달성 시 꿈빛 왕국 풀 세트 7종을 함께 해금해야 함');
+assert.equal(newlyUnlockedCosmetics(19999, 20000).length, 6, '2만점 달성 시 꿈빛 왕국 풀 세트 6종을 함께 해금해야 함');
 assert.equal(COSMETICS.filter((item) => item.concept).length >= 9, true, '서로 다른 신규 콘셉트 꾸미기가 충분히 제공되어야 함');
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-neon-arcade'), true, '네온 아케이드 카드 앞면을 제공해야 함');
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-dessert-cafe'), true, '디저트 카페 카드 앞면을 제공해야 함');
+assert.equal(cosmeticsForSlot('pile').length, 0, '더미 꾸밈 아이템은 모두 제거되어야 함');
+assert.equal(Object.hasOwn(DEFAULT_EQUIPPED, 'pile'), false, '장착 정보에 더미 슬롯을 새로 저장하지 않아야 함');
+assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-royal-tarot'), true, '카드 전체를 바꾸는 왕실 타로 앞면을 제공해야 함');
+assert.equal(cosmeticsForSlot('cardBack').some((item) => item.id === 'back-antique-library'), true, '카드 전체를 바꾸는 고서관 뒷면을 제공해야 함');
+assert.equal(cosmeticsForSlot('victory').some((item) => item.id === 'victory-dual-fireworks'), true, '양쪽 폭죽 승리 연출을 제공해야 함');
 
-console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 61개 통과');
+const preservedCosmeticStorage = memoryStorage({
+  [PROFILE_KEY]: JSON.stringify({
+    points: 12345,
+    peakPoints: 14000,
+    wins: 44,
+    games: 70,
+    equipped: { ...DEFAULT_EQUIPPED, pile: 'pile-moon-jelly', cardBack: 'back-antique-atlas' },
+  }),
+  [LEGACY_RECORD_KEY]: JSON.stringify({ wins: 44, games: 70 }),
+});
+const preservedCosmeticProfile = loadPlayerProfile(preservedCosmeticStorage);
+assert.deepEqual(
+  [preservedCosmeticProfile.points, preservedCosmeticProfile.peakPoints, preservedCosmeticProfile.wins, preservedCosmeticProfile.games],
+  [12345, 14000, 44, 70],
+  '꾸밈 목록 변경 후에도 기존 점수·최고점수·승수·판수를 보존해야 함',
+);
+assert.equal(preservedCosmeticProfile.equipped.cardBack, 'back-antique-atlas', '해금한 새 카드 뒷면 장착 상태를 보존해야 함');
+assert.equal(Object.hasOwn(preservedCosmeticProfile.equipped, 'pile'), false, '예전 더미 장착값은 기록을 건드리지 않고 정규화 과정에서만 제외해야 함');
+
+console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 69개 통과');
