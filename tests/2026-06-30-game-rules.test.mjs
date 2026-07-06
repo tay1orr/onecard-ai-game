@@ -15,7 +15,10 @@ import {
 } from '../src/2026-07-05-rating.js';
 import {
   COSMETICS,
+  COSMETIC_SETS,
   DEFAULT_EQUIPPED,
+  cosmeticSetForItem,
+  cosmeticSetProgress,
   cosmeticsForSlot,
   newlyUnlockedCosmetics,
   nextCosmeticUnlock,
@@ -182,6 +185,13 @@ assert.equal(Object.hasOwn(DEFAULT_EQUIPPED, 'pile'), false, '장착 정보에 �
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-royal-tarot'), true, '카드 전체를 바꾸는 왕실 타로 앞면을 제공해야 함');
 assert.equal(cosmeticsForSlot('cardBack').some((item) => item.id === 'back-antique-library'), true, '카드 전체를 바꾸는 고서관 뒷면을 제공해야 함');
 assert.equal(cosmeticsForSlot('victory').some((item) => item.id === 'victory-dual-fireworks'), true, '양쪽 폭죽 승리 연출을 제공해야 함');
+const roseSet = COSMETIC_SETS.find((set) => set.id === 'rose-conservatory');
+assert.equal(roseSet.itemIds.length, 5, '장미 온실은 배경·앞면·뒷면·효과·승리 연출 5종 세트여야 함');
+assert.deepEqual(cosmeticSetProgress(roseSet, 10000), { unlocked: 2, total: 5 }, '1만점에서는 장미 온실 배경과 앞면까지 해금되어야 함');
+assert.deepEqual(cosmeticSetProgress(roseSet, 10900), { unlocked: 5, total: 5 }, '10,900점에서는 장미 온실 5종이 모두 해금되어야 함');
+assert.equal(['table-rose-conservatory', 'back-rose-arbor', 'effect-rose-petal-storm', 'victory-rose-grand-bloom'].every((id) => COSMETICS.some((item) => item.id === id)), true, '장미 온실의 네 가지 신규 아이템이 모두 있어야 함');
+assert.equal(cosmeticSetForItem('face-rose-tea')?.id, 'rose-conservatory', '장미 티파티 앞면은 장미 온실 세트로 표시되어야 함');
+assert.equal(normalizeEquipped({ cardBack: 'back-rose-arbor' }, 14000).cardBack, 'back-rose-arbor', '해금한 장미 뒷면은 정상 장착되어야 함');
 
 const preservedCosmeticStorage = memoryStorage({
   [PROFILE_KEY]: JSON.stringify({
@@ -202,4 +212,4 @@ assert.deepEqual(
 assert.equal(preservedCosmeticProfile.equipped.cardBack, 'back-antique-atlas', '해금한 새 카드 뒷면 장착 상태를 보존해야 함');
 assert.equal(Object.hasOwn(preservedCosmeticProfile.equipped, 'pile'), false, '예전 더미 장착값은 기록을 건드리지 않고 정규화 과정에서만 제외해야 함');
 
-console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 69개 통과');
+console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 75개 통과');

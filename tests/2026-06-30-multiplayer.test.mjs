@@ -214,6 +214,7 @@ test('멀티 대전은 허용된 카드 뒷면 스킨만 상대에게 공유한�
   assert.match(sql, /function public\.onecard_set_card_back\(p_room_id uuid, p_card_back text\)/);
   assert.match(sql, /'back-antique-atlas', 'back-bauhaus', 'back-jade-rune', 'back-brass-orbit'/);
   assert.match(sql, /'back-monochrome-wave', 'back-antique-library'/);
+  assert.match(sql, /'back-rose-arbor'/);
   assert.match(sql, /'cardBack', v_room\.host_card_back/);
   assert.match(multiplayerClient, /onecard_set_card_back/);
   assert.match(onlineMain, /renderOpponentHand\(opponent\.count, opponent\.cardBack\)/);
@@ -238,9 +239,12 @@ test('멀티 기권 종료는 마지막 필드 카드를 승자의 카드로 오
 
 test('AI와 멀티 결과창은 승리한 경우에만 장착한 대형 승리 연출을 재생한다', () => {
   assert.match(aiHtml, /class="victory-stage"/);
+  assert.match(aiHtml, /class="preview-victory-stage"/);
   assert.match(onlineHtml, /class="victory-stage"/);
   assert.match(aiMain, /classList\.toggle\('victory-earned', won\)/);
   assert.match(onlineMain, /classList\.toggle\('victory-earned', won\)/);
+  assert.match(cosmeticsCss, /\.skin-victory-fireworks \.victory-earned\.open \.victory-stage i/);
+  assert.doesNotMatch(cosmeticsCss, /\.skin-victory-fireworks \.victory-stage i \{/);
 });
 
 console.log(`멀티플레이 도우미·보안 테스트 ${passed}개 통과`);

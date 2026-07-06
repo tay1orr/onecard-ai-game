@@ -25,6 +25,8 @@ import {
   COSMETICS,
   COSMETIC_SLOTS,
   cosmeticById,
+  cosmeticSetForItem,
+  cosmeticSetProgress,
   cosmeticsForSlot,
   equippedClassNames,
   nextCosmeticUnlock,
@@ -518,6 +520,7 @@ function renderCosmeticsModal() {
     const unlocked = item.threshold <= peak;
     const equipped = playerProfile.equipped?.[item.slot] === item.id;
     const selected = previewCosmeticId === item.id;
+    const itemSet = cosmeticSetForItem(item.id);
     const slotName = COSMETIC_SLOTS.find((slot) => slot.key === item.slot)?.name || item.slot;
     const button = document.createElement('button');
     button.type = 'button';
@@ -528,7 +531,7 @@ function renderCosmeticsModal() {
     const stateLabel = selected
       ? equipped ? '✓ 현재 장착 · 미리보기' : unlocked ? '● 미리보기 중' : `● 미리보기 중 · ${item.threshold.toLocaleString('ko-KR')}점 잠금`
       : equipped ? '✓ 현재 장착' : unlocked ? '눌러서 미리보기' : `🔒 ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
-    button.innerHTML = `<span class="cosmetic-item-meta"><em>${slotName}</em>${item.concept ? `<i>${item.concept}</i>` : ''}</span><span class="cosmetic-item-icon">${item.icon}</span><strong>${item.name}</strong><small>${item.description}</small><b>${stateLabel}</b>`;
+    button.innerHTML = `<span class="cosmetic-item-meta"><em>${slotName}</em>${itemSet || item.concept ? `<i>${itemSet?.name || item.concept}</i>` : ''}</span><span class="cosmetic-item-icon">${item.icon}</span><strong>${item.name}</strong><small>${item.description}</small><b>${stateLabel}</b>`;
     button.addEventListener('click', () => {
       previewCosmeticId = item.id;
       cosmeticPreviewMode = item.slot === 'effect' ? 'effect' : item.slot === 'victory' ? 'victory' : 'normal';
@@ -568,6 +571,10 @@ function renderCosmeticPreview() {
 
   const unlocked = item.threshold <= (playerProfile.peakPoints || 0);
   const equipped = playerProfile.equipped?.[item.slot] === item.id;
+  const itemSet = cosmeticSetForItem(item.id);
+  const setProgress = cosmeticSetProgress(itemSet, playerProfile.peakPoints);
+  els['cosmetic-preview-set'].classList.toggle('hidden', !itemSet);
+  els['cosmetic-preview-set'].textContent = itemSet ? `${itemSet.icon} ${itemSet.name} ${setProgress.unlocked}/${setProgress.total}` : '';
   els['cosmetic-preview-status'].textContent = unlocked ? equipped ? '미리보기 · 현재 장착' : '미리보기 · 장착 가능' : `미리보기 · ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
   els['cosmetic-preview-name'].textContent = item.name;
   const slotName = COSMETIC_SLOTS.find((slot) => slot.key === item.slot)?.name || item.slot;
@@ -591,7 +598,7 @@ function replayCosmeticPreview() {
   root.classList.add('preview-playing');
   const item = cosmeticById(previewCosmeticId);
   playSound(item?.slot === 'victory' || item?.legendary ? 'win' : 'action');
-  cosmeticPreviewTimer = setTimeout(() => root.classList.remove('preview-playing'), 1200);
+  cosmeticPreviewTimer = setTimeout(() => root.classList.remove('preview-playing'), item?.slot === 'victory' ? 3000 : 1400);
 }
 
 function setCosmeticPreviewMode(mode) {

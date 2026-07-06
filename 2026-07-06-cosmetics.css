@@ -334,10 +334,11 @@ body.skin-table-aquarium .ambient-b { background:#1658b9; opacity:.3; }
 .cosmetic-preview-heading > div:first-child { min-width:0; display:flex; flex-direction:column; gap:3px; }
 .cosmetic-preview-heading small { color:#ffd66d; font:900 8px/1 'DM Sans',sans-serif; letter-spacing:.13em; }
 .cosmetic-preview-heading strong { overflow:hidden; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
+.cosmetic-preview-set { max-width:145px; overflow:hidden; padding:5px 8px; border:1px solid rgba(255,197,214,.3); border-radius:99px; color:#ffd8e3; background:rgba(99,33,57,.42); font-size:8px; font-weight:900; text-overflow:ellipsis; white-space:nowrap; }
 .cosmetic-preview-modes { display:flex; gap:4px; padding:3px; border:1px solid rgba(255,255,255,.09); border-radius:11px; background:rgba(7,9,20,.34); }
 .cosmetic-preview-modes button { min-width:43px; height:27px; padding:0 8px; border:0; border-radius:8px; color:#9fa4bf; background:transparent; cursor:pointer; font-size:9px; font-weight:800; }
 .cosmetic-preview-modes button.active { color:#171827; background:#ffd66d; box-shadow:0 5px 13px rgba(255,200,75,.18); }
-.cosmetic-preview-result.result-card { flex:1 1 auto; min-height:245px; grid-row:auto; border:1px solid rgba(255,255,255,.08); background:#101427; }
+.cosmetic-preview-result.result-card { flex:1 1 auto; min-height:245px; grid-row:auto; overflow:visible; border:1px solid rgba(255,255,255,.08); background:#101427; }
 .cosmetic-preview-board.table { --card-w:74px; --card-h:104px; width:100%; height:100%; min-height:245px; border-radius:15px; transition:filter .28s ease,opacity .28s ease,transform .28s ease; }
 .cosmetic-preview-board.table::before { width:82%; height:70%; }
 .cosmetic-preview-back { left:11%; top:27%; }
@@ -498,7 +499,7 @@ body.skin-table-aquarium .ambient-b { background:#1658b9; opacity:.3; }
 }
 
 /* P0/P1 보정: 미리보기 요소의 실제 크기와 버튼 공간을 확정한다. */
-.cosmetic-preview { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto auto; align-items:stretch; }
+.cosmetic-preview { position:relative; display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto auto; align-items:stretch; }
 .cosmetic-preview-result.result-card { min-height:0; height:100%; }
 .cosmetic-preview-board.table { min-height:0; height:100%; }
 .cosmetic-preview-card { width:var(--card-w); height:var(--card-h); }
@@ -590,18 +591,18 @@ body.skin-table-aquarium .ambient-b { background:#1658b9; opacity:.3; }
 .victory-stage i:nth-child(6n+1) { --c:#ff547a; }.victory-stage i:nth-child(6n+2) { --c:#ffd966; }.victory-stage i:nth-child(6n+3) { --c:#6ff0cc; }.victory-stage i:nth-child(6n+4) { --c:#73c9ff; }.victory-stage i:nth-child(6n+5) { --c:#b99aff; }.victory-stage i:nth-child(6n) { --c:#fff; }
 .victory-stage i:nth-child(1),.victory-stage i:nth-child(13) { --x:-8vw;--y:-24vh; }.victory-stage i:nth-child(2),.victory-stage i:nth-child(14) { --x:2vw;--y:-31vh; }.victory-stage i:nth-child(3),.victory-stage i:nth-child(15) { --x:12vw;--y:-22vh; }.victory-stage i:nth-child(4),.victory-stage i:nth-child(16) { --x:18vw;--y:-9vh; }.victory-stage i:nth-child(5),.victory-stage i:nth-child(17) { --x:13vw;--y:7vh; }.victory-stage i:nth-child(6),.victory-stage i:nth-child(18) { --x:4vw;--y:17vh; }.victory-stage i:nth-child(7),.victory-stage i:nth-child(19) { --x:-7vw;--y:13vh; }.victory-stage i:nth-child(8),.victory-stage i:nth-child(20) { --x:-15vw;--y:4vh; }.victory-stage i:nth-child(9),.victory-stage i:nth-child(21) { --x:-18vw;--y:-11vh; }.victory-stage i:nth-child(10),.victory-stage i:nth-child(22) { --x:-14vw;--y:-20vh; }.victory-stage i:nth-child(11),.victory-stage i:nth-child(23) { --x:7vw;--y:-15vh; }.victory-stage i:nth-child(12),.victory-stage i:nth-child(24) { --x:16vw;--y:14vh; }
 
-.skin-victory-fireworks .victory-stage i { left:17%; top:48%; width:10px; height:10px; border-radius:50%; background:var(--c); box-shadow:0 0 15px var(--c); animation:victory-firework 1.55s cubic-bezier(.12,.72,.2,1) calc((var(--i,0))*35ms) both; }
-.skin-victory-fireworks .victory-stage i:nth-child(n+13) { left:83%; animation-delay:.28s; }
-.skin-victory-fireworks .victory-stage i:nth-child(3n) { width:18px; height:5px; border-radius:99px; }
-.skin-victory-confetti .victory-stage i { left:3%; bottom:7%; width:10px; height:25px; border-radius:2px; background:var(--c); animation:victory-confetti-left 1.8s cubic-bezier(.13,.77,.22,1) both; }
-.skin-victory-confetti .victory-stage i:nth-child(n+13) { left:auto; right:3%; animation-name:victory-confetti-right; animation-delay:.16s; }
-.skin-victory-confetti .victory-stage i:nth-child(3n) { border-radius:50%; height:12px; }
-.skin-victory-celestial .victory-stage i,.skin-victory-dream .victory-stage i { left:50%; top:50%; width:18px; height:18px; background:var(--c); clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,2% 35%,39% 35%); filter:drop-shadow(0 0 9px var(--c)); animation:victory-celestial 1.7s cubic-bezier(.12,.76,.22,1) both; }
-.skin-victory-neon .victory-stage { background:repeating-linear-gradient(100deg,transparent 0 10%,rgba(71,244,255,.11) 11%,transparent 12% 20%); }
-.skin-victory-neon .victory-stage i,.skin-victory-arcade .victory-stage i { left:50%; top:50%; width:14px; height:14px; background:var(--c); box-shadow:0 0 16px var(--c); animation:victory-pixel 1.45s steps(8,end) both; }
-.skin-victory-cherry .victory-stage i { left:2%; bottom:0; width:20px; height:14px; border-radius:80% 10% 80% 10%; background:linear-gradient(145deg,#ffd3e4,#ff72ad); filter:drop-shadow(0 0 6px rgba(255,137,183,.45)); animation:victory-petal-left 2.2s ease-out both; }
-.skin-victory-cherry .victory-stage i:nth-child(n+13) { left:auto; right:2%; animation-name:victory-petal-right; }
-.skin-victory-cotton .victory-stage i { left:50%; top:50%; width:42px; height:42px; border-radius:50%; background:var(--c); filter:blur(2px); animation:victory-cotton-cloud 1.8s ease-out both; }
+.skin-victory-fireworks .victory-earned.open .victory-stage i { left:17%; top:48%; width:10px; height:10px; border-radius:50%; background:var(--c); box-shadow:0 0 15px var(--c); animation:victory-firework 1.9s cubic-bezier(.12,.72,.2,1) both; }
+.skin-victory-fireworks .victory-earned.open .victory-stage i:nth-child(n+13) { left:83%; animation-delay:.28s; }
+.skin-victory-fireworks .victory-earned.open .victory-stage i:nth-child(3n) { width:18px; height:5px; border-radius:99px; }
+.skin-victory-confetti .victory-earned.open .victory-stage i { left:3%; bottom:7%; width:10px; height:25px; border-radius:2px; background:var(--c); animation:victory-confetti-left 2.2s cubic-bezier(.13,.77,.22,1) both; }
+.skin-victory-confetti .victory-earned.open .victory-stage i:nth-child(n+13) { left:auto; right:3%; animation-name:victory-confetti-right; animation-delay:.16s; }
+.skin-victory-confetti .victory-earned.open .victory-stage i:nth-child(3n) { border-radius:50%; height:12px; }
+.skin-victory-celestial .victory-earned.open .victory-stage i,.skin-victory-dream .victory-earned.open .victory-stage i { left:50%; top:50%; width:18px; height:18px; background:var(--c); clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,2% 35%,39% 35%); filter:drop-shadow(0 0 9px var(--c)); animation:victory-celestial 2.15s cubic-bezier(.12,.76,.22,1) both; }
+.skin-victory-neon .victory-earned.open .victory-stage { background:repeating-linear-gradient(100deg,transparent 0 10%,rgba(71,244,255,.11) 11%,transparent 12% 20%); }
+.skin-victory-neon .victory-earned.open .victory-stage i,.skin-victory-arcade .victory-earned.open .victory-stage i { left:50%; top:50%; width:14px; height:14px; background:var(--c); box-shadow:0 0 16px var(--c); animation:victory-pixel 1.9s steps(10,end) both; }
+.skin-victory-cherry .victory-earned.open .victory-stage i { left:2%; bottom:0; width:20px; height:14px; border-radius:80% 10% 80% 10%; background:linear-gradient(145deg,#ffd3e4,#ff72ad); filter:drop-shadow(0 0 6px rgba(255,137,183,.45)); animation:victory-petal-left 2.65s ease-out both; }
+.skin-victory-cherry .victory-earned.open .victory-stage i:nth-child(n+13) { left:auto; right:2%; animation-name:victory-petal-right; }
+.skin-victory-cotton .victory-earned.open .victory-stage i { left:50%; top:50%; width:42px; height:42px; border-radius:50%; background:var(--c); filter:blur(2px); animation:victory-cotton-cloud 2.25s ease-out both; }
 
 .skin-victory-fireworks .cosmetic-preview-particles i { background:var(--color,#ffd66d) !important; border-radius:50%; box-shadow:0 0 14px currentColor; }
 .skin-victory-confetti .cosmetic-preview-particles i { width:7px; height:17px; border-radius:1px; }
@@ -642,4 +643,61 @@ body.skin-table-aquarium .ambient-b { background:#1658b9; opacity:.3; }
 #online-opponent-hand .card-back.skin-back-wave::after { content:'≋'; color:#f4f4f4; font-size:19px; }
 #online-opponent-hand .card-back.skin-back-library { border-color:#c9984e !important; background-color:#4a1821 !important; background-image:linear-gradient(90deg,rgba(255,255,255,.04),transparent 12% 88%,rgba(0,0,0,.18)),repeating-linear-gradient(0deg,transparent 0 7px,rgba(215,166,87,.05) 8px 9px),linear-gradient(145deg,#6d2730,#260f1a) !important; }
 #online-opponent-hand .card-back.skin-back-library::before { content:''; position:absolute; inset:14%; border:2px solid #d5a653; transform:rotate(45deg); }
+
+/* 장미 온실 세트 */
+body.skin-table-rose .ambient-a { background:#d03b65; opacity:.28; }
+body.skin-table-rose .ambient-b { background:#7bbd79; opacity:.2; }
+.skin-table-rose .table,.skin-table-rose .online-table,#cosmetic-preview.skin-table-rose .table { background:radial-gradient(circle at 12% 18%,rgba(255,198,213,.23) 0 3%,transparent 4%),radial-gradient(circle at 88% 76%,rgba(255,198,213,.18) 0 4%,transparent 5%),repeating-linear-gradient(90deg,rgba(236,215,170,.06) 0 2px,transparent 2px 58px),linear-gradient(145deg,#173c35,#301d32 52%,#491f35); box-shadow:inset 0 0 90px rgba(5,15,14,.5),0 24px 80px rgba(27,7,19,.34); }
+.skin-table-rose .table::before,.skin-table-rose .online-table::before,#cosmetic-preview.skin-table-rose .table::before { border:7px double rgba(226,194,132,.23); background:radial-gradient(ellipse,rgba(80,128,88,.25),rgba(60,24,47,.34) 70%); box-shadow:inset 0 0 0 2px rgba(255,237,196,.07),inset 0 0 60px rgba(7,31,26,.32); }
+.skin-table-rose .table::after,.skin-table-rose .online-table::after,#cosmetic-preview.skin-table-rose .table::after { content:'❦   ●   ❧        ❦   ●   ❧'; position:absolute; inset:5% -4% auto; z-index:1; color:#e58aa5; font:900 clamp(17px,3vw,34px)/1 Georgia,serif; text-align:center; text-shadow:0 0 10px rgba(239,91,133,.4); letter-spacing:.08em; pointer-events:none; animation:rose-canopy-sway 5.5s ease-in-out infinite; }
+
+.skin-face-rose .playing-card:not(.joker-card),#cosmetic-preview.skin-face-rose .playing-card:not(.joker-card) { color:#263b2d; border:4px solid #7c2947; background:radial-gradient(circle at 7% 8%,#ffd1da 0 4%,#b72e57 5% 8%,transparent 9%),radial-gradient(circle at 93% 10%,#ffd1da 0 4%,#b72e57 5% 8%,transparent 9%),radial-gradient(circle at 8% 90%,#ffd1da 0 4%,#a8254c 5% 9%,transparent 10%),radial-gradient(circle at 92% 89%,#ffd1da 0 4%,#a8254c 5% 9%,transparent 10%),repeating-radial-gradient(ellipse at 0 50%,rgba(51,104,66,.82) 0 3px,transparent 4px 15px),repeating-radial-gradient(ellipse at 100% 50%,rgba(51,104,66,.82) 0 3px,transparent 4px 15px),linear-gradient(145deg,#fff9e9,#eddbc0); box-shadow:0 13px 29px rgba(49,17,30,.4),inset 0 0 0 3px #d7b473,inset 0 0 0 8px rgba(89,126,74,.22); }
+.skin-face-rose .playing-card:not(.joker-card):not(.discard-card)::before { content:''; position:absolute; inset:4% 5%; border:3px double rgba(74,111,62,.72); border-radius:42% 42% 24% 24%; box-shadow:inset 8px 0 0 rgba(137,37,70,.08),inset -8px 0 0 rgba(137,37,70,.08); }
+.skin-face-rose .playing-card:not(.joker-card):not(.discard-card)::after { content:'❦'; position:absolute; left:50%; bottom:6%; transform:translateX(-50%); color:#8f274b; font:900 calc(var(--card-w,90px) * .24)/1 Georgia,serif; text-shadow:-18px -20px 0 rgba(56,111,69,.38),18px -20px 0 rgba(56,111,69,.38); }
+.skin-face-rose .card-corner { z-index:4; min-width:26%; padding:4px; border-radius:9px; color:#7e1f43; background:rgba(255,249,233,.8); box-shadow:0 2px 8px rgba(62,28,31,.13); text-shadow:none; }
+
+.skin-back-rose .card-back,.card-back.skin-back-rose,#cosmetic-preview.skin-back-rose .card-back { border:5px double #e2bb74; background-color:#3f1730; background-image:radial-gradient(circle at 14% 14%,#e24c72 0 4%,#7f193d 5% 8%,transparent 9%),radial-gradient(circle at 86% 14%,#e24c72 0 4%,#7f193d 5% 8%,transparent 9%),radial-gradient(circle at 14% 86%,#e24c72 0 4%,#7f193d 5% 8%,transparent 9%),radial-gradient(circle at 86% 86%,#e24c72 0 4%,#7f193d 5% 8%,transparent 9%),repeating-linear-gradient(45deg,rgba(102,151,91,.17) 0 2px,transparent 2px 18px),linear-gradient(145deg,#5d1f3e,#172d29); box-shadow:0 14px 30px rgba(0,0,0,.44),inset 0 0 0 4px rgba(237,199,126,.13); }
+.skin-back-rose .card-back::before,.card-back.skin-back-rose::before,#cosmetic-preview.skin-back-rose .card-back::before { content:''; position:absolute; inset:11%; border:3px solid #719166; border-radius:50% 50% 24% 24%; box-shadow:inset 0 0 0 4px rgba(225,185,112,.16),0 0 15px rgba(220,84,124,.24); }
+.skin-back-rose .card-back::after,.card-back.skin-back-rose::after,#cosmetic-preview.skin-back-rose .card-back::after { content:'✿'; width:38%; aspect-ratio:1; display:grid; place-items:center; border:3px double #f2d28f; border-radius:50%; color:#ffe0e8; background:radial-gradient(circle,#e96989,#871e43 67%); font-size:calc(var(--card-w,90px) * .22); text-shadow:0 0 10px #fff; }
+
+.skin-effect-rose .effect-particles i,#cosmetic-preview.skin-effect-rose .effect-particles i { width:22px; height:15px; border-radius:85% 12% 85% 12%; background:linear-gradient(145deg,#ffd1dc,#d82e62); box-shadow:0 0 12px rgba(232,68,111,.45); }
+.skin-effect-rose .effect-particles i:nth-child(3n) { width:10px; height:24px; background:linear-gradient(#8ac079,#2d724a); }
+.skin-effect-rose .effect-message strong { color:#ffd3df; text-shadow:0 0 12px #bf2d5b,0 7px 0 #5c1837; }
+
+.skin-victory-rose .result-card,#cosmetic-preview.skin-victory-rose .result-card { border-color:rgba(238,190,124,.5); background:radial-gradient(circle at 50% -20%,rgba(235,74,117,.3),transparent 44%),linear-gradient(145deg,#431c35,#152c29); box-shadow:0 30px 110px rgba(193,37,84,.28),inset 0 0 65px rgba(104,171,105,.09); }
+.skin-victory-rose .result-card::before { content:'❦  GRAND ROSE BLOOM  ❧'; display:block; margin:0 0 14px; color:#ffd7df; font:900 10px/1 Georgia,serif; letter-spacing:.12em; text-shadow:0 0 12px rgba(236,79,121,.5); }
+.skin-victory-rose .result-icon,.skin-victory-rose .cosmetic-preview-victory-badge { color:#fff2d7; background:radial-gradient(circle,#ff9bb7,#a51f4c 63%,#4e1731 66%); border:4px double #f0c879; box-shadow:0 0 34px rgba(239,73,120,.52),0 10px 30px rgba(0,0,0,.3); }
+.skin-victory-rose .victory-earned.open .victory-stage i { left:2%; bottom:0; width:24px; height:17px; border-radius:85% 12% 85% 12%; background:linear-gradient(145deg,#ffd1dc,#d82e62); filter:drop-shadow(0 0 7px rgba(235,71,115,.6)); animation:victory-rose-left 2.9s cubic-bezier(.12,.7,.2,1) both; }
+.skin-victory-rose .victory-earned.open .victory-stage i:nth-child(n+13) { left:auto; right:2%; animation-name:victory-rose-right; }
+.skin-victory-rose .victory-earned.open .victory-stage i:nth-child(4n) { width:16px; height:30px; background:linear-gradient(145deg,#9bc986,#34724a); }
+
+#online-opponent-hand .card-back.skin-back-rose { border-color:#e2bb74 !important; background-color:#3f1730 !important; background-image:radial-gradient(circle at 14% 14%,#e24c72 0 4%,#7f193d 5% 8%,transparent 9%),radial-gradient(circle at 86% 86%,#e24c72 0 4%,#7f193d 5% 8%,transparent 9%),repeating-linear-gradient(45deg,rgba(102,151,91,.17) 0 2px,transparent 2px 18px),linear-gradient(145deg,#5d1f3e,#172d29) !important; }
+#online-opponent-hand .card-back.skin-back-rose::before { content:''; position:absolute; inset:11%; border:2px solid #719166; border-radius:50% 50% 24% 24%; }
+
+/* 승리 미리보기 전용 무대 */
+.preview-victory-stage { position:absolute; inset:-6% -4%; z-index:14; overflow:visible; pointer-events:none; opacity:0; }
+.preview-victory-stage i { --vx:0px; --vy:-108px; --vr:280deg; position:absolute; left:50%; top:50%; width:12px; height:12px; border-radius:50%; color:#ffd66d; background:#ffd66d; opacity:0; box-shadow:0 0 12px currentColor; }
+.preview-victory-stage i:nth-child(1),.preview-victory-stage i:nth-child(13) { --vx:-148px;--vy:-82px; }.preview-victory-stage i:nth-child(2),.preview-victory-stage i:nth-child(14) { --vx:-104px;--vy:-119px; }.preview-victory-stage i:nth-child(3),.preview-victory-stage i:nth-child(15) { --vx:-48px;--vy:-132px; }.preview-victory-stage i:nth-child(4),.preview-victory-stage i:nth-child(16) { --vx:22px;--vy:-128px; }.preview-victory-stage i:nth-child(5),.preview-victory-stage i:nth-child(17) { --vx:92px;--vy:-110px; }.preview-victory-stage i:nth-child(6),.preview-victory-stage i:nth-child(18) { --vx:145px;--vy:-70px; }.preview-victory-stage i:nth-child(7),.preview-victory-stage i:nth-child(19) { --vx:154px;--vy:28px; }.preview-victory-stage i:nth-child(8),.preview-victory-stage i:nth-child(20) { --vx:100px;--vy:94px; }.preview-victory-stage i:nth-child(9),.preview-victory-stage i:nth-child(21) { --vx:34px;--vy:112px; }.preview-victory-stage i:nth-child(10),.preview-victory-stage i:nth-child(22) { --vx:-40px;--vy:108px; }.preview-victory-stage i:nth-child(11),.preview-victory-stage i:nth-child(23) { --vx:-108px;--vy:84px; }.preview-victory-stage i:nth-child(12),.preview-victory-stage i:nth-child(24) { --vx:-154px;--vy:24px; }
+.preview-victory-stage i:nth-child(5n+1) { color:#ff5c89; background:#ff5c89; }.preview-victory-stage i:nth-child(5n+2) { color:#ffd96b; background:#ffd96b; }.preview-victory-stage i:nth-child(5n+3) { color:#70efd0; background:#70efd0; }.preview-victory-stage i:nth-child(5n+4) { color:#7dcfff; background:#7dcfff; }.preview-victory-stage i:nth-child(5n) { color:#c4a2ff; background:#c4a2ff; }
+.preview-mode-victory.preview-playing .preview-victory-stage { opacity:1; }
+.preview-mode-victory.preview-playing .preview-victory-stage i { animation:preview-victory-burst 2.55s cubic-bezier(.13,.72,.22,1) both; }
+.preview-mode-victory.preview-playing .preview-victory-stage i:nth-child(n+13) { animation-delay:.18s; }
+.skin-victory-confetti .preview-victory-stage i { width:8px; height:21px; border-radius:2px; }
+.skin-victory-celestial .preview-victory-stage i,.skin-victory-dream .preview-victory-stage i { width:18px; height:18px; clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,2% 35%,39% 35%); }
+.skin-victory-neon .preview-victory-stage i,.skin-victory-arcade .preview-victory-stage i { border-radius:1px; box-shadow:0 0 17px currentColor; }
+.skin-victory-cherry .preview-victory-stage i,.skin-victory-rose .preview-victory-stage i { width:20px; height:14px; border-radius:85% 12% 85% 12%; background:linear-gradient(145deg,#ffd1dc,#d82e62); }
+.skin-victory-cotton .preview-victory-stage i { width:30px; height:30px; filter:blur(2px); }
+.skin-victory-fireworks .preview-victory-stage i:nth-child(3n) { width:20px; height:5px; border-radius:99px; }
+.skin-victory-classic .preview-victory-stage i { width:7px; height:18px; border-radius:2px; }
+
+@keyframes preview-victory-burst { 0% { opacity:0; transform:translate(0,45px) scale(.15) rotate(0); } 16% { opacity:1; } 72% { opacity:1; } 100% { opacity:0; transform:translate(var(--vx),var(--vy)) scale(.7) rotate(var(--vr)); } }
+@keyframes victory-rose-left { 0% { opacity:0; transform:translate(-8vw,10vh) rotate(-60deg) scale(.15); } 18% { opacity:1; } 75% { opacity:1; } 100% { opacity:0; transform:translate(calc(50vw + var(--x)),var(--y)) rotate(520deg) scale(1.1); } }
+@keyframes victory-rose-right { 0% { opacity:0; transform:translate(8vw,10vh) rotate(60deg) scale(.15); } 18% { opacity:1; } 75% { opacity:1; } 100% { opacity:0; transform:translate(calc(-50vw + var(--x)),var(--y)) rotate(-520deg) scale(1.1); } }
+@keyframes rose-canopy-sway { 0%,100% { transform:translateX(-1%) rotate(-1deg); } 50% { transform:translateX(1%) rotate(1deg); } }
+
+@media (max-width:700px) {
+  .cosmetic-preview-set { position:absolute; left:9px; top:38px; z-index:20; max-width:130px; font-size:7px; }
+  .preview-victory-stage { transform:scale(.78); transform-origin:center; }
+}
+#online-opponent-hand .card-back.skin-back-rose::after { content:'✿'; width:34%; aspect-ratio:1; display:grid; place-items:center; border:2px double #f2d28f; border-radius:50%; color:#ffe0e8; background:#a51f4c; font-size:12px; }
 #online-opponent-hand .card-back.skin-back-library::after { content:'Ⅱ'; color:#f4d98b; font:900 15px/1 Georgia,serif; }

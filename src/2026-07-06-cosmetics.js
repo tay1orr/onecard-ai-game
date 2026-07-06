@@ -35,7 +35,11 @@ export const COSMETICS = Object.freeze([
   { id: 'table-deep-aquarium', slot: 'table', threshold: 9000, name: '심해 수족관', icon: '🐠', description: '물결과 산호 그림자가 흐르는 푸른 심해 테이블', cssClass: 'skin-table-aquarium', concept: '심해 수족관' },
   { id: 'face-stone-tablet', slot: 'cardFace', threshold: 9200, name: '태양신 석판', icon: '◇', description: '깎인 모서리와 룬 문양이 새겨진 고대 석판 카드', cssClass: 'skin-face-stone', concept: '고대 신전' },
   { id: 'back-jade-rune', slot: 'cardBack', threshold: 9600, name: '옥빛 봉인문', icon: '◇', description: '비취 결정과 고대 봉인선이 빛나는 뒷면', cssClass: 'skin-back-jade', concept: '고대 신전' },
-  { id: 'face-rose-tea', slot: 'cardFace', threshold: 10000, name: '장미 티파티', icon: '🌹', description: '크림 종이와 장미 문양 카드', cssClass: 'skin-face-rose' },
+  { id: 'table-rose-conservatory', slot: 'table', threshold: 9800, name: '장미 온실', icon: '❦', description: '유리 온실과 금빛 격자 사이로 장미 덩굴이 자라는 테이블', cssClass: 'skin-table-rose', concept: '장미 온실' },
+  { id: 'face-rose-tea', slot: 'cardFace', threshold: 10000, name: '장미 티파티', icon: '🌹', description: '카드 가장자리를 입체 장미와 덩굴이 완전히 휘감은 앞면', cssClass: 'skin-face-rose', concept: '장미 온실' },
+  { id: 'back-rose-arbor', slot: 'cardBack', threshold: 10300, name: '비밀 장미 아치', icon: '❧', description: '대칭 덩굴과 붉은 장미 봉인이 새겨진 정원 아치 뒷면', cssClass: 'skin-back-rose', concept: '장미 온실' },
+  { id: 'effect-rose-petal-storm', slot: 'effect', threshold: 10600, name: '장미 꽃잎 폭풍', icon: '❀', description: '카드를 낼 때 꽃잎과 금빛 잎사귀가 크게 소용돌이쳐요', cssClass: 'skin-effect-rose', concept: '장미 온실' },
+  { id: 'victory-rose-grand-bloom', slot: 'victory', threshold: 10900, name: '그랜드 로즈 블룸', icon: '🌹', description: '좌우 덩굴이 자라 중앙의 거대한 장미와 꽃잎 폭죽으로 완성돼요', cssClass: 'skin-victory-rose', concept: '장미 온실' },
   { id: 'effect-pixel-combo', slot: 'effect', threshold: 11000, name: '픽셀 콤보!', icon: '⚡', description: '8비트 블록과 네온 스캔라인이 터지는 효과', cssClass: 'skin-effect-pixel', concept: '네온 아케이드' },
   { id: 'face-glass-modern', slot: 'cardFace', threshold: 11800, name: '모던 글라스', icon: 'A', description: '반투명 유리층과 얇은 빛 테두리의 현대 카드', cssClass: 'skin-face-glass', concept: '모던 스튜디오' },
   { id: 'victory-celestial-burst', slot: 'victory', threshold: 12500, name: '초신성 피날레', icon: '✦', description: '중앙의 별이 커진 뒤 수십 개의 별빛으로 폭발해요', cssClass: 'skin-victory-celestial', concept: '우주 극장' },
@@ -62,12 +66,30 @@ export const COSMETICS = Object.freeze([
   { id: 'victory-dream-kingdom', slot: 'victory', threshold: 20000, name: '꿈빛 대관식', icon: '👑', description: '전설 등급 왕관 승리 연출', cssClass: 'skin-victory-dream', legendary: true },
 ]);
 
+export const COSMETIC_SETS = Object.freeze([
+  { id: 'rose-conservatory', name: '장미 온실 세트', icon: '🌹', itemIds: ['table-rose-conservatory', 'face-rose-tea', 'back-rose-arbor', 'effect-rose-petal-storm', 'victory-rose-grand-bloom'] },
+  { id: 'dessert-cafe', name: '딸기 디저트 카페 세트', icon: '🍰', itemIds: ['table-dessert-cafe', 'charm-cafe-bear', 'face-dessert-cafe'] },
+  { id: 'ancient-temple', name: '고대 신전 세트', icon: '◇', itemIds: ['face-stone-tablet', 'back-jade-rune'] },
+  { id: 'neon-arcade', name: '네온 아케이드 세트', icon: '👾', itemIds: ['face-neon-arcade', 'effect-pixel-combo', 'charm-ufo-pet', 'victory-high-score'] },
+  { id: 'dream-kingdom', name: '꿈빛 왕국 세트', icon: '👑', itemIds: ['table-dream-kingdom', 'back-dream-kingdom', 'face-dream-kingdom', 'effect-dream-kingdom', 'charm-dream-kingdom', 'victory-dream-kingdom'] },
+]);
+
 export const DEFAULT_EQUIPPED = Object.freeze(Object.fromEntries(
   COSMETIC_SLOTS.map(({ key }) => [key, COSMETICS.find((item) => item.slot === key && item.threshold === 0).id]),
 ));
 
 export function cosmeticById(id) {
   return COSMETICS.find((item) => item.id === id) || null;
+}
+
+export function cosmeticSetForItem(itemId) {
+  return COSMETIC_SETS.find((set) => set.itemIds.includes(itemId)) || null;
+}
+
+export function cosmeticSetProgress(set, peakPoints) {
+  const itemIds = set?.itemIds || [];
+  const unlocked = itemIds.filter((id) => (cosmeticById(id)?.threshold ?? Number.POSITIVE_INFINITY) <= Math.max(0, Number(peakPoints) || 0)).length;
+  return { unlocked, total: itemIds.length };
 }
 
 export function cosmeticsForSlot(slot) {

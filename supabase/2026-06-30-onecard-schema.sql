@@ -266,7 +266,7 @@ begin
   if v_card_back not in (
     'back-classic', 'back-strawberry-milk', 'back-star-candy', 'back-space-whale', 'back-dream-kingdom',
     'back-antique-atlas', 'back-bauhaus', 'back-jade-rune', 'back-brass-orbit',
-    'back-monochrome-wave', 'back-antique-library'
+    'back-monochrome-wave', 'back-antique-library', 'back-rose-arbor'
   ) then
     v_card_back := 'back-classic';
   end if;

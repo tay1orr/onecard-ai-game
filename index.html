@@ -253,6 +253,7 @@
         <section id="cosmetic-preview" class="cosmetic-preview" aria-label="꾸미기 미리보기" aria-live="polite">
           <div class="cosmetic-preview-heading">
             <div><small>LIVE PREVIEW</small><strong>게임에서 이렇게 보여요</strong></div>
+            <span id="cosmetic-preview-set" class="cosmetic-preview-set hidden"></span>
             <div class="cosmetic-preview-modes" role="group" aria-label="미리보기 장면">
               <button class="active" data-cosmetic-preview-mode="normal" type="button" aria-pressed="true">일반</button>
               <button data-cosmetic-preview-mode="effect" type="button" aria-pressed="false">효과</button>
@@ -260,6 +261,11 @@
             </div>
           </div>
           <div id="cosmetic-preview-result" class="result-card cosmetic-preview-result">
+            <div class="preview-victory-stage" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
             <div class="result-icon cosmetic-preview-victory-badge" aria-hidden="true">✦<small>WIN</small></div>
             <div id="cosmetic-preview-board" class="table cosmetic-preview-board">
               <div class="effect-particles cosmetic-preview-particles" aria-hidden="true">
