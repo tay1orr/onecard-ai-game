@@ -41,6 +41,7 @@ let lastRatingResult = null;
 let matching = false;
 let activeCosmeticSlot = 'all';
 let previewCosmeticId = null;
+let cosmeticPreviewMode = 'normal';
 let startedAt = 0;
 let timerId = null;
 let aiTimer = null;
@@ -105,6 +106,9 @@ els['result-home-button'].addEventListener('click', goHome);
 els['cosmetics-button'].addEventListener('click', openCosmetics);
 els['cosmetic-preview-replay'].addEventListener('click', replayCosmeticPreview);
 els['cosmetic-preview-equip'].addEventListener('click', equipPreviewedCosmetic);
+document.querySelectorAll('[data-cosmetic-preview-mode]').forEach((button) => {
+  button.addEventListener('click', () => setCosmeticPreviewMode(button.dataset.cosmeticPreviewMode));
+});
 els['reduced-effects-button'].addEventListener('click', toggleReducedEffects);
 els['peek-hand-button'].addEventListener('click', peekAtHand);
 els['return-to-suit-button'].addEventListener('click', returnToSuitPicker);
@@ -523,6 +527,7 @@ function renderCosmeticsModal() {
     button.innerHTML = `<span class="cosmetic-item-meta"><em>${slotName}</em>${item.concept ? `<i>${item.concept}</i>` : ''}</span><span class="cosmetic-item-icon">${item.icon}</span><strong>${item.name}</strong><small>${item.description}</small><b>${equipped ? '장착 중' : unlocked ? '미리보기' : `미리보기 · ${item.threshold.toLocaleString('ko-KR')}점`}</b>`;
     button.addEventListener('click', () => {
       previewCosmeticId = item.id;
+      cosmeticPreviewMode = item.slot === 'effect' ? 'effect' : item.slot === 'victory' ? 'victory' : 'normal';
       renderCosmeticsModal();
       replayCosmeticPreview();
     });
@@ -534,20 +539,12 @@ function renderCosmeticsModal() {
 
 function equipCosmetic(item) {
   if (!item || item.threshold > (playerProfile.peakPoints || 0)) return;
-  const equipped = { ...playerProfile.equipped };
-  if (item.legendary) {
-    COSMETICS.filter((candidate) => candidate.legendary).forEach((candidate) => {
-      equipped[candidate.slot] = candidate.id;
-    });
-  } else {
-    equipped[item.slot] = item.id;
-  }
-  playerProfile.equipped = equipped;
+  playerProfile.equipped = { ...playerProfile.equipped, [item.slot]: item.id };
   playerProfile = savePlayerProfile(playerProfile);
   applyEquippedCosmetics();
   renderCosmeticsModal();
   playSound('card');
-  showToast(item.legendary ? '꿈빛 왕국 풀 세트 장착 완료!' : `${item.name} 장착 완료!`);
+  showToast(`${item.name} 장착 완료!`);
 }
 
 function renderCosmeticPreview() {
@@ -558,14 +555,7 @@ function renderCosmeticPreview() {
   if (!item) return;
   previewCosmeticId = item.id;
 
-  const previewEquipped = { ...playerProfile.equipped };
-  if (item.legendary) {
-    COSMETICS.filter((candidate) => candidate.legendary).forEach((candidate) => {
-      previewEquipped[candidate.slot] = candidate.id;
-    });
-  } else {
-    previewEquipped[item.slot] = item.id;
-  }
+  const previewEquipped = { ...playerProfile.equipped, [item.slot]: item.id };
 
   const root = els['cosmetic-preview'];
   const allClasses = COSMETICS.map((candidate) => candidate.cssClass).filter(Boolean);
@@ -573,19 +563,16 @@ function renderCosmeticPreview() {
   root.classList.add(...equippedClassNames(previewEquipped));
 
   const unlocked = item.threshold <= (playerProfile.peakPoints || 0);
-  const equipped = item.legendary
-    ? COSMETICS.filter((candidate) => candidate.legendary).every((candidate) => playerProfile.equipped?.[candidate.slot] === candidate.id)
-    : playerProfile.equipped?.[item.slot] === item.id;
+  const equipped = playerProfile.equipped?.[item.slot] === item.id;
   els['cosmetic-preview-status'].textContent = unlocked ? equipped ? '장착 중' : '해금 완료' : `잠금 · ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
-  els['cosmetic-preview-name'].textContent = item.legendary ? '꿈빛 왕국 풀 세트' : item.name;
+  els['cosmetic-preview-name'].textContent = item.name;
   const slotName = COSMETIC_SLOTS.find((slot) => slot.key === item.slot)?.name || item.slot;
-  els['cosmetic-preview-description'].textContent = item.legendary
-    ? '전설 아이템 하나를 고르면 일곱 부위가 함께 미리 보여요.'
-    : `${slotName} · ${item.description}`;
+  els['cosmetic-preview-description'].textContent = `${slotName} · ${item.description}`;
   els['cosmetic-preview-equip'].disabled = !unlocked || equipped;
   els['cosmetic-preview-equip'].textContent = !unlocked
     ? `${item.threshold.toLocaleString('ko-KR')}점에 해금`
-    : equipped ? '장착 중' : item.legendary ? '풀 세트 장착' : '장착하기';
+    : equipped ? '장착 중' : '이 아이템 장착';
+  renderCosmeticPreviewMode();
 }
 
 function equipPreviewedCosmetic() {
@@ -601,6 +588,24 @@ function replayCosmeticPreview() {
   const item = cosmeticById(previewCosmeticId);
   playSound(item?.slot === 'victory' || item?.legendary ? 'win' : 'action');
   cosmeticPreviewTimer = setTimeout(() => root.classList.remove('preview-playing'), 1200);
+}
+
+function setCosmeticPreviewMode(mode) {
+  if (!['normal', 'effect', 'victory'].includes(mode)) return;
+  cosmeticPreviewMode = mode;
+  renderCosmeticPreviewMode();
+  if (mode !== 'normal') replayCosmeticPreview();
+}
+
+function renderCosmeticPreviewMode() {
+  const root = els['cosmetic-preview'];
+  root.classList.remove('preview-mode-normal', 'preview-mode-effect', 'preview-mode-victory');
+  root.classList.add(`preview-mode-${cosmeticPreviewMode}`);
+  document.querySelectorAll('[data-cosmetic-preview-mode]').forEach((button) => {
+    const active = button.dataset.cosmeticPreviewMode === cosmeticPreviewMode;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
 }
 
 function toggleReducedEffects() {

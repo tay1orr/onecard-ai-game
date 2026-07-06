@@ -244,41 +244,56 @@
         <div><small>역대 최고 점수</small><strong id="cosmetics-peak-points">0점</strong></div>
         <div><small id="cosmetics-next-copy">다음 보상까지 300점</small><div class="cosmetics-progress"><span id="cosmetics-progress-fill"></span></div></div>
       </div>
-      <section id="cosmetic-preview" class="cosmetic-preview" aria-label="꾸미기 미리보기" aria-live="polite">
-        <div id="cosmetic-preview-result" class="result-card cosmetic-preview-result">
-          <div class="result-icon cosmetic-preview-victory-badge" aria-hidden="true">✦<small>WIN</small></div>
-          <div id="cosmetic-preview-board" class="table cosmetic-preview-board">
-            <div class="effect-particles cosmetic-preview-particles" aria-hidden="true">
-              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <div class="cosmetics-workspace">
+        <section id="cosmetic-preview" class="cosmetic-preview" aria-label="꾸미기 미리보기" aria-live="polite">
+          <div class="cosmetic-preview-heading">
+            <div><small>LIVE PREVIEW</small><strong>게임에서 이렇게 보여요</strong></div>
+            <div class="cosmetic-preview-modes" role="group" aria-label="미리보기 장면">
+              <button class="active" data-cosmetic-preview-mode="normal" type="button" aria-pressed="true">일반</button>
+              <button data-cosmetic-preview-mode="effect" type="button" aria-pressed="false">효과</button>
+              <button data-cosmetic-preview-mode="victory" type="button" aria-pressed="false">승리</button>
             </div>
-            <div id="cosmetic-preview-back" class="card-back cosmetic-preview-card cosmetic-preview-back" aria-hidden="true">
-              <span class="back-logo">ONE<b>!</b></span>
-            </div>
-            <span class="cosmetic-card-caption cosmetic-back-caption" aria-hidden="true">뒷면</span>
-            <div id="cosmetic-preview-face" class="playing-card red-card cosmetic-preview-card cosmetic-preview-face" aria-hidden="true">
-              <span class="card-corner top"><b>A</b><i>♥</i></span>
-              <span class="cosmetic-preview-heart">♥</span>
-              <span class="card-corner bottom"><b>A</b><i>♥</i></span>
-            </div>
-            <span class="cosmetic-card-caption cosmetic-face-caption" aria-hidden="true">내가 보는 앞면</span>
-            <div class="draw-pile card-back cosmetic-preview-pile" aria-hidden="true"><span class="back-logo">ONE<b>!</b></span></div>
-            <div class="cosmetic-preview-charm" aria-hidden="true"><span class="star-body">★</span></div>
           </div>
-        </div>
-        <div class="cosmetic-preview-copy">
-          <span id="cosmetic-preview-status">장착 중</span>
-          <strong id="cosmetic-preview-name">미드나잇 테이블</strong>
-          <small id="cosmetic-preview-description">차분한 기본 게임 테이블</small>
-        </div>
-        <div class="cosmetic-preview-actions">
-          <button id="cosmetic-preview-replay" class="secondary-button" type="button">효과 재생</button>
-          <button id="cosmetic-preview-equip" class="primary-button" type="button">장착하기</button>
-        </div>
-      </section>
-      <div id="cosmetics-tabs" class="cosmetics-tabs" role="tablist" aria-label="꾸미기 종류"></div>
-      <div id="cosmetics-grid" class="cosmetics-grid" aria-live="polite"></div>
-      <button id="reduced-effects-button" class="effects-toggle" type="button" aria-pressed="false"><span>✨</span><span><strong>화려한 효과</strong><small>파티클과 큰 연출을 사용해요</small></span><b>ON</b></button>
-      <button class="secondary-button" data-close-modal="cosmetics-modal" type="button">완료</button>
+          <div id="cosmetic-preview-result" class="result-card cosmetic-preview-result">
+            <div class="result-icon cosmetic-preview-victory-badge" aria-hidden="true">✦<small>WIN</small></div>
+            <div id="cosmetic-preview-board" class="table cosmetic-preview-board">
+              <div class="effect-particles cosmetic-preview-particles" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <div id="cosmetic-preview-back" class="card-back cosmetic-preview-card cosmetic-preview-back" aria-hidden="true">
+                <span class="back-logo">ONE<b>!</b></span>
+              </div>
+              <span class="cosmetic-card-caption cosmetic-back-caption" aria-hidden="true">카드 뒷면</span>
+              <div id="cosmetic-preview-face" class="playing-card red-card cosmetic-preview-card cosmetic-preview-face" aria-hidden="true">
+                <span class="card-corner top"><b>A</b><i>♥</i></span>
+                <span class="cosmetic-preview-heart">♥</span>
+                <span class="card-corner bottom"><b>A</b><i>♥</i></span>
+              </div>
+              <span class="cosmetic-card-caption cosmetic-face-caption" aria-hidden="true">내가 보는 앞면</span>
+              <div class="draw-pile card-back cosmetic-preview-pile" aria-hidden="true"><span class="back-logo">ONE<b>!</b></span></div>
+              <div class="cosmetic-preview-charm" aria-hidden="true"><span class="star-body">★</span></div>
+            </div>
+          </div>
+          <div class="cosmetic-preview-copy">
+            <span id="cosmetic-preview-status">장착 중</span>
+            <strong id="cosmetic-preview-name">미드나잇 테이블</strong>
+            <small id="cosmetic-preview-description">차분한 기본 게임 테이블</small>
+          </div>
+          <div class="cosmetic-preview-actions">
+            <button id="cosmetic-preview-replay" class="secondary-button" type="button">연출 다시 보기</button>
+            <button id="cosmetic-preview-equip" class="primary-button" type="button">장착하기</button>
+          </div>
+        </section>
+        <section class="cosmetics-browser" aria-label="꾸미기 아이템 목록">
+          <div class="cosmetics-browser-heading"><strong>아이템 선택</strong><small>잠긴 아이템도 눌러서 미리 볼 수 있어요.</small></div>
+          <div id="cosmetics-tabs" class="cosmetics-tabs" role="tablist" aria-label="꾸미기 종류"></div>
+          <div id="cosmetics-grid" class="cosmetics-grid" aria-live="polite"></div>
+        </section>
+      </div>
+      <div class="cosmetics-footer">
+        <button id="reduced-effects-button" class="effects-toggle" type="button" aria-pressed="false"><span>✨</span><span><strong>화려한 효과</strong><small>파티클과 큰 연출을 사용해요</small></span><b>ON</b></button>
+        <button class="secondary-button cosmetics-done-button" data-close-modal="cosmetics-modal" type="button">완료</button>
+      </div>
     </div>
   </div>
 
