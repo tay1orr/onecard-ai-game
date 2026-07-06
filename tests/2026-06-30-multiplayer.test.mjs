@@ -247,4 +247,30 @@ test('AI와 멀티 결과창은 승리한 경우에만 장착한 대형 승리 �
   assert.doesNotMatch(cosmeticsCss, /\.skin-victory-fireworks \.victory-stage i \{/);
 });
 
+test('승리 연출은 실제 게임과 미리보기에서 각각 48개 파티클을 사용한다', () => {
+  const particleCount = (html, className) => {
+    const stage = html.match(new RegExp(`<div class="${className}"[^>]*>([\\s\\S]*?)<\\/div>`))?.[1] ?? '';
+    return stage.match(/<i><\/i>/g)?.length ?? 0;
+  };
+  assert.equal(particleCount(aiHtml, 'victory-stage'), 48);
+  assert.equal(particleCount(aiHtml, 'preview-victory-stage'), 48);
+  assert.equal(particleCount(onlineHtml, 'victory-stage'), 48);
+  assert.match(cosmeticsCss, /\.victory-stage i:nth-child\(n\+33\) \{ display:none; \}/);
+  assert.match(cosmeticsCss, /\.preview-victory-stage i:nth-child\(n\+33\) \{ display:none; \}/);
+});
+
+test('불꽃·색종이·네온·솜사탕·하이스코어는 서로 다른 전용 연출을 사용한다', () => {
+  assert.match(cosmeticsCss, /animation:victory-firework-shell/);
+  assert.match(cosmeticsCss, /animation:victory-confetti-left/);
+  assert.match(cosmeticsCss, /animation:victory-neon-equalizer/);
+  assert.match(cosmeticsCss, /animation:victory-cotton-left/);
+  assert.match(cosmeticsCss, /animation:victory-highscore-burst/);
+  assert.match(cosmeticsCss, /animation:preview-firework-shell/);
+  assert.match(cosmeticsCss, /animation:preview-confetti-left/);
+  assert.match(cosmeticsCss, /animation:preview-neon-equalizer/);
+  assert.match(cosmeticsCss, /animation:preview-cotton-left/);
+  assert.match(cosmeticsCss, /animation:preview-highscore-burst/);
+  assert.doesNotMatch(cosmeticsCss, /skin-victory-neon[^\n]+skin-victory-arcade[^\n]+animation/);
+});
+
 console.log(`멀티플레이 도우미·보안 테스트 ${passed}개 통과`);

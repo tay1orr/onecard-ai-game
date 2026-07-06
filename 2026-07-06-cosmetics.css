@@ -584,43 +584,91 @@ body.skin-table-aquarium .ambient-b { background:#1658b9; opacity:.3; }
 .skin-face-tarot .card-corner { font-family:Georgia,serif; }
 
 /* 대형 승리 레이어 */
-.victory-stage { position:absolute; inset:0; z-index:1; overflow:hidden; pointer-events:none; opacity:0; }
+.victory-stage { position:absolute; inset:0; z-index:1; overflow:hidden; pointer-events:none; opacity:0; isolation:isolate; }
 .result-modal.victory-earned.open .victory-stage,#result-modal.victory-earned.open .victory-stage,#online-result-modal.victory-earned.open .victory-stage { opacity:1; }
 .victory-earned .result-card { z-index:2; }
+.victory-stage::before,.victory-stage::after { position:absolute; display:block; pointer-events:none; opacity:0; }
 .victory-stage i { position:absolute; display:block; opacity:0; }
 .victory-stage i:nth-child(6n+1) { --c:#ff547a; }.victory-stage i:nth-child(6n+2) { --c:#ffd966; }.victory-stage i:nth-child(6n+3) { --c:#6ff0cc; }.victory-stage i:nth-child(6n+4) { --c:#73c9ff; }.victory-stage i:nth-child(6n+5) { --c:#b99aff; }.victory-stage i:nth-child(6n) { --c:#fff; }
-.victory-stage i:nth-child(1),.victory-stage i:nth-child(13) { --x:-8vw;--y:-24vh; }.victory-stage i:nth-child(2),.victory-stage i:nth-child(14) { --x:2vw;--y:-31vh; }.victory-stage i:nth-child(3),.victory-stage i:nth-child(15) { --x:12vw;--y:-22vh; }.victory-stage i:nth-child(4),.victory-stage i:nth-child(16) { --x:18vw;--y:-9vh; }.victory-stage i:nth-child(5),.victory-stage i:nth-child(17) { --x:13vw;--y:7vh; }.victory-stage i:nth-child(6),.victory-stage i:nth-child(18) { --x:4vw;--y:17vh; }.victory-stage i:nth-child(7),.victory-stage i:nth-child(19) { --x:-7vw;--y:13vh; }.victory-stage i:nth-child(8),.victory-stage i:nth-child(20) { --x:-15vw;--y:4vh; }.victory-stage i:nth-child(9),.victory-stage i:nth-child(21) { --x:-18vw;--y:-11vh; }.victory-stage i:nth-child(10),.victory-stage i:nth-child(22) { --x:-14vw;--y:-20vh; }.victory-stage i:nth-child(11),.victory-stage i:nth-child(23) { --x:7vw;--y:-15vh; }.victory-stage i:nth-child(12),.victory-stage i:nth-child(24) { --x:16vw;--y:14vh; }
+.victory-stage i:nth-child(12n+1) { --x:-8vw;--y:-24vh;--lane:7%; }.victory-stage i:nth-child(12n+2) { --x:2vw;--y:-31vh;--lane:15%; }.victory-stage i:nth-child(12n+3) { --x:12vw;--y:-22vh;--lane:23%; }.victory-stage i:nth-child(12n+4) { --x:18vw;--y:-9vh;--lane:31%; }.victory-stage i:nth-child(12n+5) { --x:13vw;--y:7vh;--lane:39%; }.victory-stage i:nth-child(12n+6) { --x:4vw;--y:17vh;--lane:47%; }.victory-stage i:nth-child(12n+7) { --x:-7vw;--y:13vh;--lane:55%; }.victory-stage i:nth-child(12n+8) { --x:-15vw;--y:4vh;--lane:63%; }.victory-stage i:nth-child(12n+9) { --x:-18vw;--y:-11vh;--lane:71%; }.victory-stage i:nth-child(12n+10) { --x:-14vw;--y:-20vh;--lane:79%; }.victory-stage i:nth-child(12n+11) { --x:7vw;--y:-15vh;--lane:87%; }.victory-stage i:nth-child(12n) { --x:16vw;--y:14vh;--lane:95%; }
 
-.skin-victory-fireworks .victory-earned.open .victory-stage i { left:17%; top:48%; width:10px; height:10px; border-radius:50%; background:var(--c); box-shadow:0 0 15px var(--c); animation:victory-firework 1.9s cubic-bezier(.12,.72,.2,1) both; }
-.skin-victory-fireworks .victory-earned.open .victory-stage i:nth-child(n+13) { left:83%; animation-delay:.28s; }
-.skin-victory-fireworks .victory-earned.open .victory-stage i:nth-child(3n) { width:18px; height:5px; border-radius:99px; }
-.skin-victory-confetti .victory-earned.open .victory-stage i { left:3%; bottom:7%; width:10px; height:25px; border-radius:2px; background:var(--c); animation:victory-confetti-left 2.2s cubic-bezier(.13,.77,.22,1) both; }
-.skin-victory-confetti .victory-earned.open .victory-stage i:nth-child(n+13) { left:auto; right:3%; animation-name:victory-confetti-right; animation-delay:.16s; }
-.skin-victory-confetti .victory-earned.open .victory-stage i:nth-child(3n) { border-radius:50%; height:12px; }
+/* 트윈 불꽃축제: 네 번의 독립 포화와 발사 궤적 */
+.skin-victory-fireworks .victory-earned.open .victory-stage::before,.skin-victory-fireworks .victory-earned.open .victory-stage::after { content:''; left:22%; bottom:-8%; width:4px; height:48%; border-radius:99px; background:linear-gradient(transparent,#fff7b0 66%,#ff657f); box-shadow:0 0 14px #ffd96b; animation:victory-firework-rocket 1.15s ease-out .05s both; }
+.skin-victory-fireworks .victory-earned.open .victory-stage::after { left:auto; right:22%; animation-delay:.38s; }
+.skin-victory-fireworks .victory-earned.open .victory-stage i { left:22%; top:42%; width:12px; height:12px; border-radius:50%; background:var(--c); box-shadow:0 0 20px var(--c),0 0 4px #fff; animation:victory-firework-shell 3.15s cubic-bezier(.12,.72,.2,1) both; }
+.skin-victory-fireworks .victory-earned.open .victory-stage i:nth-child(n+13) { left:78%; top:38%; animation-delay:.34s; }
+.skin-victory-fireworks .victory-earned.open .victory-stage i:nth-child(n+25) { left:50%; top:24%; animation-delay:.7s; }
+.skin-victory-fireworks .victory-earned.open .victory-stage i:nth-child(n+37) { left:50%; top:56%; animation-delay:1.02s; }
+.skin-victory-fireworks .victory-earned.open .victory-stage i:nth-child(4n) { width:24px; height:5px; border-radius:99px; }
+
+/* 더블 색종이 대포: 좌우 포물선 발사 후 낙하 */
+.skin-victory-confetti .victory-earned.open .victory-stage::before,.skin-victory-confetti .victory-earned.open .victory-stage::after { content:''; left:2%; bottom:3%; width:62px; height:38px; border:4px solid #ffd877; border-radius:12px 22px 8px 8px; background:linear-gradient(145deg,#ff5c8d,#8e4dce); box-shadow:0 0 24px rgba(255,88,153,.55); transform:rotate(24deg); animation:victory-cannon-recoil .75s cubic-bezier(.2,.8,.3,1) both; }
+.skin-victory-confetti .victory-earned.open .victory-stage::after { left:auto; right:2%; transform:rotate(-24deg); }
+.skin-victory-confetti .victory-earned.open .victory-stage i { left:4%; bottom:7%; width:11px; height:28px; border-radius:2px; background:var(--c); box-shadow:0 0 8px var(--c); animation:victory-confetti-left 3.35s cubic-bezier(.13,.77,.22,1) both; }
+.skin-victory-confetti .victory-earned.open .victory-stage i:nth-child(n+25) { left:auto; right:4%; animation-name:victory-confetti-right; animation-delay:.12s; }
+.skin-victory-confetti .victory-earned.open .victory-stage i:nth-child(3n) { width:18px; height:9px; border-radius:50%; }
+.skin-victory-confetti .victory-earned.open .victory-stage i:nth-child(4n) { width:7px; height:38px; border-radius:99px; }
+
 .skin-victory-celestial .victory-earned.open .victory-stage i,.skin-victory-dream .victory-earned.open .victory-stage i { left:50%; top:50%; width:18px; height:18px; background:var(--c); clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,2% 35%,39% 35%); filter:drop-shadow(0 0 9px var(--c)); animation:victory-celestial 2.15s cubic-bezier(.12,.76,.22,1) both; }
-.skin-victory-neon .victory-earned.open .victory-stage { background:repeating-linear-gradient(100deg,transparent 0 10%,rgba(71,244,255,.11) 11%,transparent 12% 20%); }
-.skin-victory-neon .victory-earned.open .victory-stage i,.skin-victory-arcade .victory-earned.open .victory-stage i { left:50%; top:50%; width:14px; height:14px; background:var(--c); box-shadow:0 0 16px var(--c); animation:victory-pixel 1.9s steps(10,end) both; }
+
+/* 네온 콘서트: 교차 레이저와 네 번의 이퀄라이저 파동 */
+.skin-victory-neon .victory-earned.open .victory-stage { background:repeating-linear-gradient(0deg,transparent 0 32px,rgba(79,240,255,.08) 33px 34px),radial-gradient(ellipse at 50% 100%,rgba(255,63,190,.18),transparent 58%); }
+.skin-victory-neon .victory-earned.open .victory-stage::before,.skin-victory-neon .victory-earned.open .victory-stage::after { content:''; left:18%; top:-28%; width:10px; height:155%; background:linear-gradient(transparent,#4af4ff 20% 78%,transparent); box-shadow:0 0 20px #4af4ff,0 0 48px rgba(74,244,255,.75); transform-origin:50% 0; animation:victory-neon-laser-left 2.85s ease-in-out both; }
+.skin-victory-neon .victory-earned.open .victory-stage::after { left:auto; right:18%; background:linear-gradient(transparent,#ff48c4 20% 78%,transparent); box-shadow:0 0 20px #ff48c4,0 0 48px rgba(255,72,196,.7); animation-name:victory-neon-laser-right; }
+.skin-victory-neon .victory-earned.open .victory-stage i { left:var(--lane); bottom:3%; width:10px; height:62px; border-radius:3px 3px 0 0; background:linear-gradient(#d9ffff,var(--c)); box-shadow:0 0 18px var(--c); transform-origin:50% 100%; animation:victory-neon-equalizer 2.85s ease-in-out both; }
+.skin-victory-neon .victory-earned.open .victory-stage i:nth-child(n+13) { animation-delay:.18s; }.skin-victory-neon .victory-earned.open .victory-stage i:nth-child(n+25) { animation-delay:.36s; }.skin-victory-neon .victory-earned.open .victory-stage i:nth-child(n+37) { animation-delay:.54s; }
+
 .skin-victory-cherry .victory-earned.open .victory-stage i { left:2%; bottom:0; width:20px; height:14px; border-radius:80% 10% 80% 10%; background:linear-gradient(145deg,#ffd3e4,#ff72ad); filter:drop-shadow(0 0 6px rgba(255,137,183,.45)); animation:victory-petal-left 2.65s ease-out both; }
-.skin-victory-cherry .victory-earned.open .victory-stage i:nth-child(n+13) { left:auto; right:2%; animation-name:victory-petal-right; }
-.skin-victory-cotton .victory-earned.open .victory-stage i { left:50%; top:50%; width:42px; height:42px; border-radius:50%; background:var(--c); filter:blur(2px); animation:victory-cotton-cloud 2.25s ease-out both; }
+.skin-victory-cherry .victory-earned.open .victory-stage i:nth-child(n+25) { left:auto; right:2%; animation-name:victory-petal-right; }
+
+/* 솜사탕 폭죽: 결과창을 가리지 않는 양쪽 구름 은행 */
+.skin-victory-cotton .victory-earned.open .victory-stage::before,.skin-victory-cotton .victory-earned.open .victory-stage::after { content:''; left:-7%; bottom:-16%; width:42%; aspect-ratio:1.25; border-radius:50%; background:radial-gradient(circle at 28% 45%,#ffd3e8 0 22%,transparent 23%),radial-gradient(circle at 56% 30%,#cabfff 0 27%,transparent 28%),radial-gradient(circle at 72% 62%,#a9e6ff 0 25%,transparent 26%); filter:blur(3px) drop-shadow(0 0 24px rgba(255,165,215,.55)); animation:victory-cotton-bank 3.15s ease-out both; }
+.skin-victory-cotton .victory-earned.open .victory-stage::after { left:auto; right:-7%; transform:scaleX(-1); }
+.skin-victory-cotton .victory-earned.open .victory-stage i { left:20%; bottom:7%; width:34px; height:34px; border-radius:50%; background:var(--c); filter:blur(2px); box-shadow:0 0 18px var(--c); animation:victory-cotton-left 3.05s ease-out both; }
+.skin-victory-cotton .victory-earned.open .victory-stage i:nth-child(n+25) { left:80%; animation-name:victory-cotton-right; }
+.skin-victory-cotton .victory-earned.open .victory-stage i:nth-child(3n) { width:54px; height:54px; }.skin-victory-cotton .victory-earned.open .victory-stage i:nth-child(4n) { width:22px; height:22px; }
+
+/* 하이 스코어: 상단 전광판, 점수 폭발, 픽셀 코인 비 */
+.skin-victory-arcade .victory-earned.open .victory-stage { background:repeating-linear-gradient(0deg,transparent 0 7px,rgba(86,239,255,.055) 8px 9px); }
+.skin-victory-arcade .victory-earned.open .victory-stage::before { content:'★  NEW HIGH SCORE  ★'; left:50%; top:6%; width:min(520px,82vw); padding:12px 18px; border:3px solid #5bf1ff; border-radius:8px; color:#fff67b; background:#11173b; box-shadow:8px 8px 0 #ff4bb4,0 0 34px rgba(91,241,255,.55); font:900 clamp(16px,3vw,28px)/1 monospace; letter-spacing:.1em; text-align:center; transform:translateX(-50%); animation:victory-scoreboard-drop .75s steps(8,end) both; }
+.skin-victory-arcade .victory-earned.open .victory-stage::after { content:'1UP  ×  999'; left:50%; top:17%; color:#78ff9e; font:900 clamp(13px,2.2vw,21px)/1 monospace; letter-spacing:.16em; text-shadow:0 0 13px #54ff83; transform:translateX(-50%); animation:victory-score-blink 2.8s steps(2,end) both; }
+.skin-victory-arcade .victory-earned.open .victory-stage i { left:50%; top:25%; width:13px; height:13px; border-radius:2px; background:var(--c); box-shadow:0 0 15px var(--c); animation:victory-highscore-burst 2.9s steps(14,end) both; }
+.skin-victory-arcade .victory-earned.open .victory-stage i:nth-child(n+25) { left:var(--lane); top:-8%; animation-name:victory-score-rain; animation-delay:.38s; }
+.skin-victory-arcade .victory-earned.open .victory-stage i:nth-child(5n) { width:30px; height:12px; background:#fff36d; box-shadow:4px 4px 0 #ff4bb4,0 0 12px #fff36d; }
 
 .skin-victory-fireworks .cosmetic-preview-particles i { background:var(--color,#ffd66d) !important; border-radius:50%; box-shadow:0 0 14px currentColor; }
 .skin-victory-confetti .cosmetic-preview-particles i { width:7px; height:17px; border-radius:1px; }
 .skin-victory-celestial .cosmetic-preview-particles i { clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,2% 35%,39% 35%); }
 .skin-victory-cherry .cosmetic-preview-particles i { border-radius:80% 10% 80% 10%; background:#ff8db9 !important; }
 
-@keyframes victory-firework { 0% { opacity:0; transform:translate(0,40vh) scale(.2); } 26% { opacity:1; transform:translate(0,0) scale(.45); } 100% { opacity:0; transform:translate(var(--x),var(--y)) rotate(240deg) scale(1.15); } }
-@keyframes victory-confetti-left { 0% { opacity:0; transform:translate(-5vw,12vh) rotate(0); } 20% { opacity:1; } 100% { opacity:0; transform:translate(calc(25vw + var(--x)),calc(-45vh + var(--y))) rotate(680deg); } }
-@keyframes victory-confetti-right { 0% { opacity:0; transform:translate(5vw,12vh) rotate(0); } 20% { opacity:1; } 100% { opacity:0; transform:translate(calc(-25vw - var(--x)),calc(-45vh + var(--y))) rotate(-680deg); } }
+@keyframes victory-firework-rocket { 0% { opacity:0; transform:translateY(18vh) scaleY(.2); } 20% { opacity:1; } 100% { opacity:0; transform:translateY(-58vh) scaleY(1.1); } }
+@keyframes victory-firework-shell { 0%,24% { opacity:0; transform:translate(0,38vh) scale(.1); } 30% { opacity:1; transform:translate(0,0) scale(.35); } 76% { opacity:1; } 100% { opacity:0; transform:translate(var(--x),var(--y)) rotate(390deg) scale(1.3); } }
+@keyframes victory-cannon-recoil { 0% { opacity:0; translate:0 28px; } 25% { opacity:1; translate:0 0; } 55% { rotate:-8deg; } 100% { opacity:1; translate:0 6px; } }
+@keyframes victory-confetti-left { 0% { opacity:0; transform:translate(-7vw,13vh) rotate(0); } 12% { opacity:1; } 50% { opacity:1; transform:translate(calc(31vw + var(--x)),calc(-58vh + var(--y))) rotate(540deg); } 100% { opacity:0; transform:translate(calc(46vw + var(--x)),calc(16vh + var(--y))) rotate(1080deg); } }
+@keyframes victory-confetti-right { 0% { opacity:0; transform:translate(7vw,13vh) rotate(0); } 12% { opacity:1; } 50% { opacity:1; transform:translate(calc(-31vw - var(--x)),calc(-58vh + var(--y))) rotate(-540deg); } 100% { opacity:0; transform:translate(calc(-46vw - var(--x)),calc(16vh + var(--y))) rotate(-1080deg); } }
 @keyframes victory-celestial { 0% { opacity:0; transform:translate(-50%,-50%) scale(.05) rotate(0); } 18% { opacity:1; } 100% { opacity:0; transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(1.4) rotate(420deg); } }
-@keyframes victory-pixel { 0% { opacity:0; transform:translate(-50%,-50%) scale(3); } 25% { opacity:1; } 100% { opacity:0; transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(180deg); } }
+@keyframes victory-neon-laser-left { 0% { opacity:0; transform:rotate(-38deg) scaleY(.2); } 18% { opacity:.9; } 48% { transform:rotate(34deg) scaleY(1); } 76% { opacity:.85; transform:rotate(-18deg); } 100% { opacity:0; transform:rotate(22deg); } }
+@keyframes victory-neon-laser-right { 0% { opacity:0; transform:rotate(38deg) scaleY(.2); } 18% { opacity:.9; } 48% { transform:rotate(-34deg) scaleY(1); } 76% { opacity:.85; transform:rotate(18deg); } 100% { opacity:0; transform:rotate(-22deg); } }
+@keyframes victory-neon-equalizer { 0% { opacity:0; transform:scaleY(.05); } 16% { opacity:1; transform:scaleY(1.7); } 34% { transform:scaleY(.45); } 54% { transform:scaleY(2.4); } 72% { transform:scaleY(.7); } 88% { opacity:1; transform:scaleY(1.45); } 100% { opacity:0; transform:scaleY(.1) translateY(-22vh); } }
 @keyframes victory-petal-left { 0% { opacity:0; transform:translate(-10vw,10vh) rotate(0); } 20% { opacity:1; } 100% { opacity:0; transform:translate(calc(48vw + var(--x)),calc(-55vh + var(--y))) rotate(760deg); } }
 @keyframes victory-petal-right { 0% { opacity:0; transform:translate(10vw,10vh) rotate(0); } 20% { opacity:1; } 100% { opacity:0; transform:translate(calc(-48vw - var(--x)),calc(-55vh + var(--y))) rotate(-760deg); } }
-@keyframes victory-cotton-cloud { 0% { opacity:0; transform:translate(-50%,-50%) scale(.1); } 35% { opacity:.85; } 100% { opacity:0; transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(2.5); } }
+@keyframes victory-cotton-bank { 0% { opacity:0; transform:translateY(30%) scale(.55); } 28% { opacity:.92; } 74% { opacity:.72; transform:translateY(-8%) scale(1.16); } 100% { opacity:0; transform:translateY(-24%) scale(1.34); } }
+@keyframes victory-cotton-left { 0% { opacity:0; transform:translate(-12vw,18vh) scale(.15); } 24% { opacity:.88; } 72% { opacity:.72; } 100% { opacity:0; transform:translate(calc(24vw + var(--x)),calc(-52vh + var(--y))) scale(1.9); } }
+@keyframes victory-cotton-right { 0% { opacity:0; transform:translate(12vw,18vh) scale(.15); } 24% { opacity:.88; } 72% { opacity:.72; } 100% { opacity:0; transform:translate(calc(-24vw - var(--x)),calc(-52vh + var(--y))) scale(1.9); } }
+@keyframes victory-scoreboard-drop { 0% { opacity:0; transform:translate(-50%,-90px) scaleX(.4); } 65% { opacity:1; transform:translate(-50%,8px) scaleX(1.04); } 100% { opacity:1; transform:translateX(-50%); } }
+@keyframes victory-score-blink { 0%,18%,36%,54%,72% { opacity:0; } 10%,28%,46%,64%,100% { opacity:1; } }
+@keyframes victory-highscore-burst { 0%,20% { opacity:0; transform:translate(-50%,-50%) scale(3); } 28% { opacity:1; transform:translate(-50%,-50%) scale(.7); } 76% { opacity:1; } 100% { opacity:0; transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(270deg); } }
+@keyframes victory-score-rain { 0% { opacity:0; transform:translateY(-10vh) rotate(0); } 20% { opacity:1; } 76% { opacity:1; } 100% { opacity:0; transform:translateY(108vh) rotate(540deg); } }
 
 @media (max-width:700px) {
-  .victory-stage i:nth-child(n+17) { display:none; }
+  .victory-stage i:nth-child(n+33) { display:none; }
   .victory-stage i { transform-origin:center; }
+  .skin-victory-confetti .victory-earned.open .victory-stage i:nth-child(n+17) { left:auto; right:4%; animation-name:victory-confetti-right; }
+  .skin-victory-cherry .victory-earned.open .victory-stage i:nth-child(n+17) { left:auto; right:2%; animation-name:victory-petal-right; }
+  .skin-victory-cotton .victory-earned.open .victory-stage i:nth-child(n+17) { left:80%; animation-name:victory-cotton-right; }
+  .skin-victory-rose .victory-earned.open .victory-stage i:nth-child(n+17) { left:auto; right:2%; animation-name:victory-rose-right; }
+  .skin-victory-arcade .victory-earned.open .victory-stage::before { top:4%; width:88vw; font-size:14px; }
+  .skin-victory-arcade .victory-earned.open .victory-stage::after { top:13%; }
 }
 
 .reduced-effects .victory-stage { display:none !important; }
@@ -668,36 +716,85 @@ body.skin-table-rose .ambient-b { background:#7bbd79; opacity:.2; }
 .skin-victory-rose .result-card::before { content:'❦  GRAND ROSE BLOOM  ❧'; display:block; margin:0 0 14px; color:#ffd7df; font:900 10px/1 Georgia,serif; letter-spacing:.12em; text-shadow:0 0 12px rgba(236,79,121,.5); }
 .skin-victory-rose .result-icon,.skin-victory-rose .cosmetic-preview-victory-badge { color:#fff2d7; background:radial-gradient(circle,#ff9bb7,#a51f4c 63%,#4e1731 66%); border:4px double #f0c879; box-shadow:0 0 34px rgba(239,73,120,.52),0 10px 30px rgba(0,0,0,.3); }
 .skin-victory-rose .victory-earned.open .victory-stage i { left:2%; bottom:0; width:24px; height:17px; border-radius:85% 12% 85% 12%; background:linear-gradient(145deg,#ffd1dc,#d82e62); filter:drop-shadow(0 0 7px rgba(235,71,115,.6)); animation:victory-rose-left 2.9s cubic-bezier(.12,.7,.2,1) both; }
-.skin-victory-rose .victory-earned.open .victory-stage i:nth-child(n+13) { left:auto; right:2%; animation-name:victory-rose-right; }
+.skin-victory-rose .victory-earned.open .victory-stage i:nth-child(n+25) { left:auto; right:2%; animation-name:victory-rose-right; }
 .skin-victory-rose .victory-earned.open .victory-stage i:nth-child(4n) { width:16px; height:30px; background:linear-gradient(145deg,#9bc986,#34724a); }
 
 #online-opponent-hand .card-back.skin-back-rose { border-color:#e2bb74 !important; background-color:#3f1730 !important; background-image:radial-gradient(circle at 14% 14%,#e24c72 0 4%,#7f193d 5% 8%,transparent 9%),radial-gradient(circle at 86% 86%,#e24c72 0 4%,#7f193d 5% 8%,transparent 9%),repeating-linear-gradient(45deg,rgba(102,151,91,.17) 0 2px,transparent 2px 18px),linear-gradient(145deg,#5d1f3e,#172d29) !important; }
 #online-opponent-hand .card-back.skin-back-rose::before { content:''; position:absolute; inset:11%; border:2px solid #719166; border-radius:50% 50% 24% 24%; }
 
 /* 승리 미리보기 전용 무대 */
-.preview-victory-stage { position:absolute; inset:-6% -4%; z-index:14; overflow:visible; pointer-events:none; opacity:0; }
-.preview-victory-stage i { --vx:0px; --vy:-108px; --vr:280deg; position:absolute; left:50%; top:50%; width:12px; height:12px; border-radius:50%; color:#ffd66d; background:#ffd66d; opacity:0; box-shadow:0 0 12px currentColor; }
-.preview-victory-stage i:nth-child(1),.preview-victory-stage i:nth-child(13) { --vx:-148px;--vy:-82px; }.preview-victory-stage i:nth-child(2),.preview-victory-stage i:nth-child(14) { --vx:-104px;--vy:-119px; }.preview-victory-stage i:nth-child(3),.preview-victory-stage i:nth-child(15) { --vx:-48px;--vy:-132px; }.preview-victory-stage i:nth-child(4),.preview-victory-stage i:nth-child(16) { --vx:22px;--vy:-128px; }.preview-victory-stage i:nth-child(5),.preview-victory-stage i:nth-child(17) { --vx:92px;--vy:-110px; }.preview-victory-stage i:nth-child(6),.preview-victory-stage i:nth-child(18) { --vx:145px;--vy:-70px; }.preview-victory-stage i:nth-child(7),.preview-victory-stage i:nth-child(19) { --vx:154px;--vy:28px; }.preview-victory-stage i:nth-child(8),.preview-victory-stage i:nth-child(20) { --vx:100px;--vy:94px; }.preview-victory-stage i:nth-child(9),.preview-victory-stage i:nth-child(21) { --vx:34px;--vy:112px; }.preview-victory-stage i:nth-child(10),.preview-victory-stage i:nth-child(22) { --vx:-40px;--vy:108px; }.preview-victory-stage i:nth-child(11),.preview-victory-stage i:nth-child(23) { --vx:-108px;--vy:84px; }.preview-victory-stage i:nth-child(12),.preview-victory-stage i:nth-child(24) { --vx:-154px;--vy:24px; }
+.preview-victory-stage { position:absolute; inset:-6% -4%; z-index:14; overflow:visible; pointer-events:none; opacity:0; isolation:isolate; }
+.preview-victory-stage::before,.preview-victory-stage::after { position:absolute; display:block; pointer-events:none; opacity:0; }
+.preview-victory-stage i { --vx:0px;--vy:-108px;--vr:280deg;--lane:50%; position:absolute; left:50%; top:50%; width:12px; height:12px; border-radius:50%; color:#ffd66d; background:#ffd66d; opacity:0; box-shadow:0 0 12px currentColor; }
+.preview-victory-stage i:nth-child(12n+1) { --vx:-148px;--vy:-82px;--lane:5%; }.preview-victory-stage i:nth-child(12n+2) { --vx:-104px;--vy:-119px;--lane:13%; }.preview-victory-stage i:nth-child(12n+3) { --vx:-48px;--vy:-132px;--lane:21%; }.preview-victory-stage i:nth-child(12n+4) { --vx:22px;--vy:-128px;--lane:29%; }.preview-victory-stage i:nth-child(12n+5) { --vx:92px;--vy:-110px;--lane:37%; }.preview-victory-stage i:nth-child(12n+6) { --vx:145px;--vy:-70px;--lane:45%; }.preview-victory-stage i:nth-child(12n+7) { --vx:154px;--vy:28px;--lane:53%; }.preview-victory-stage i:nth-child(12n+8) { --vx:100px;--vy:94px;--lane:61%; }.preview-victory-stage i:nth-child(12n+9) { --vx:34px;--vy:112px;--lane:69%; }.preview-victory-stage i:nth-child(12n+10) { --vx:-40px;--vy:108px;--lane:77%; }.preview-victory-stage i:nth-child(12n+11) { --vx:-108px;--vy:84px;--lane:85%; }.preview-victory-stage i:nth-child(12n) { --vx:-154px;--vy:24px;--lane:93%; }
 .preview-victory-stage i:nth-child(5n+1) { color:#ff5c89; background:#ff5c89; }.preview-victory-stage i:nth-child(5n+2) { color:#ffd96b; background:#ffd96b; }.preview-victory-stage i:nth-child(5n+3) { color:#70efd0; background:#70efd0; }.preview-victory-stage i:nth-child(5n+4) { color:#7dcfff; background:#7dcfff; }.preview-victory-stage i:nth-child(5n) { color:#c4a2ff; background:#c4a2ff; }
 .preview-mode-victory.preview-playing .preview-victory-stage { opacity:1; }
-.preview-mode-victory.preview-playing .preview-victory-stage i { animation:preview-victory-burst 2.55s cubic-bezier(.13,.72,.22,1) both; }
-.preview-mode-victory.preview-playing .preview-victory-stage i:nth-child(n+13) { animation-delay:.18s; }
-.skin-victory-confetti .preview-victory-stage i { width:8px; height:21px; border-radius:2px; }
+.preview-mode-victory.preview-playing .preview-victory-stage i { animation:preview-victory-burst 2.75s cubic-bezier(.13,.72,.22,1) both; }
+.preview-mode-victory.preview-playing .preview-victory-stage i:nth-child(n+25) { animation-delay:.15s; }
+
+/* 미리보기에서도 각 승리 연출이 완전히 다른 움직임을 갖는다. */
+.preview-mode-victory.preview-playing.skin-victory-fireworks .preview-victory-stage::before,.preview-mode-victory.preview-playing.skin-victory-fireworks .preview-victory-stage::after { content:''; left:24%; bottom:-8%; width:3px; height:72%; border-radius:99px; background:linear-gradient(transparent,#fff5a0 65%,#ff668d); box-shadow:0 0 10px #ffd96b; animation:preview-firework-rocket .85s ease-out both; }
+.preview-mode-victory.preview-playing.skin-victory-fireworks .preview-victory-stage::after { left:auto; right:24%; animation-delay:.28s; }
+.preview-mode-victory.preview-playing.skin-victory-fireworks .preview-victory-stage i { left:24%; top:60%; width:9px; height:9px; border-radius:50%; animation:preview-firework-shell 3.15s cubic-bezier(.13,.72,.22,1) both; }
+.preview-mode-victory.preview-playing.skin-victory-fireworks .preview-victory-stage i:nth-child(n+13) { left:76%; top:57%; animation-delay:.28s; }.preview-mode-victory.preview-playing.skin-victory-fireworks .preview-victory-stage i:nth-child(n+25) { left:50%; top:34%; animation-delay:.58s; }.preview-mode-victory.preview-playing.skin-victory-fireworks .preview-victory-stage i:nth-child(n+37) { left:50%; top:70%; animation-delay:.84s; }
+.skin-victory-fireworks .preview-victory-stage i:nth-child(4n) { width:19px; height:4px; border-radius:99px; }
+
+.preview-mode-victory.preview-playing.skin-victory-confetti .preview-victory-stage::before,.preview-mode-victory.preview-playing.skin-victory-confetti .preview-victory-stage::after { content:''; left:-1%; bottom:-3%; width:38px; height:25px; border:3px solid #ffd877; border-radius:8px 14px 5px 5px; background:linear-gradient(145deg,#ff5c8d,#8e4dce); transform:rotate(24deg); animation:preview-cannon-recoil .7s ease-out both; }
+.preview-mode-victory.preview-playing.skin-victory-confetti .preview-victory-stage::after { left:auto; right:-1%; transform:rotate(-24deg); }
+.preview-mode-victory.preview-playing.skin-victory-confetti .preview-victory-stage i { left:1%; top:auto; bottom:0; width:8px; height:21px; border-radius:2px; animation:preview-confetti-left 3.3s cubic-bezier(.13,.77,.22,1) both; }
+.preview-mode-victory.preview-playing.skin-victory-confetti .preview-victory-stage i:nth-child(n+25) { left:auto; right:1%; animation-name:preview-confetti-right; animation-delay:.1s; }
+.skin-victory-confetti .preview-victory-stage i:nth-child(3n) { width:14px; height:7px; border-radius:50%; }.skin-victory-confetti .preview-victory-stage i:nth-child(4n) { width:6px; height:28px; border-radius:99px; }
+
 .skin-victory-celestial .preview-victory-stage i,.skin-victory-dream .preview-victory-stage i { width:18px; height:18px; clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 94%,50% 72%,21% 94%,32% 57%,2% 35%,39% 35%); }
-.skin-victory-neon .preview-victory-stage i,.skin-victory-arcade .preview-victory-stage i { border-radius:1px; box-shadow:0 0 17px currentColor; }
+
+.preview-mode-victory.preview-playing.skin-victory-neon .preview-victory-stage { background:repeating-linear-gradient(0deg,transparent 0 18px,rgba(72,239,255,.09) 19px 20px); }
+.preview-mode-victory.preview-playing.skin-victory-neon .preview-victory-stage::before,.preview-mode-victory.preview-playing.skin-victory-neon .preview-victory-stage::after { content:''; left:18%; top:-38%; width:6px; height:185%; background:linear-gradient(transparent,#4af4ff 24% 78%,transparent); box-shadow:0 0 13px #4af4ff; transform-origin:50% 0; animation:preview-neon-laser-left 2.9s ease-in-out both; }
+.preview-mode-victory.preview-playing.skin-victory-neon .preview-victory-stage::after { left:auto; right:18%; background:linear-gradient(transparent,#ff48c4 24% 78%,transparent); box-shadow:0 0 13px #ff48c4; animation-name:preview-neon-laser-right; }
+.preview-mode-victory.preview-playing.skin-victory-neon .preview-victory-stage i { left:var(--lane); top:auto; bottom:-2%; width:7px; height:38px; border-radius:2px 2px 0 0; box-shadow:0 0 13px currentColor; transform-origin:50% 100%; animation:preview-neon-equalizer 2.9s ease-in-out both; }
+.preview-mode-victory.preview-playing.skin-victory-neon .preview-victory-stage i:nth-child(n+13) { animation-delay:.14s; }.preview-mode-victory.preview-playing.skin-victory-neon .preview-victory-stage i:nth-child(n+25) { animation-delay:.28s; }.preview-mode-victory.preview-playing.skin-victory-neon .preview-victory-stage i:nth-child(n+37) { animation-delay:.42s; }
+
 .skin-victory-cherry .preview-victory-stage i,.skin-victory-rose .preview-victory-stage i { width:20px; height:14px; border-radius:85% 12% 85% 12%; background:linear-gradient(145deg,#ffd1dc,#d82e62); }
-.skin-victory-cotton .preview-victory-stage i { width:30px; height:30px; filter:blur(2px); }
-.skin-victory-fireworks .preview-victory-stage i:nth-child(3n) { width:20px; height:5px; border-radius:99px; }
+
+.preview-mode-victory.preview-playing.skin-victory-cotton .preview-victory-stage::before,.preview-mode-victory.preview-playing.skin-victory-cotton .preview-victory-stage::after { content:''; left:-7%; bottom:-24%; width:48%; aspect-ratio:1.3; border-radius:50%; background:radial-gradient(circle at 28% 45%,#ffd3e8 0 22%,transparent 23%),radial-gradient(circle at 56% 30%,#cabfff 0 27%,transparent 28%),radial-gradient(circle at 72% 62%,#a9e6ff 0 25%,transparent 26%); filter:blur(2px); animation:preview-cotton-bank 3.1s ease-out both; }
+.preview-mode-victory.preview-playing.skin-victory-cotton .preview-victory-stage::after { left:auto; right:-7%; transform:scaleX(-1); }
+.preview-mode-victory.preview-playing.skin-victory-cotton .preview-victory-stage i { left:20%; top:auto; bottom:-3%; width:25px; height:25px; filter:blur(1.5px); animation:preview-cotton-left 3.05s ease-out both; }
+.preview-mode-victory.preview-playing.skin-victory-cotton .preview-victory-stage i:nth-child(n+25) { left:80%; animation-name:preview-cotton-right; }.skin-victory-cotton .preview-victory-stage i:nth-child(3n) { width:38px; height:38px; }
+
+.preview-mode-victory.preview-playing.skin-victory-arcade .preview-victory-stage { background:repeating-linear-gradient(0deg,transparent 0 5px,rgba(86,239,255,.07) 6px 7px); }
+.preview-mode-victory.preview-playing.skin-victory-arcade .preview-victory-stage::before { content:'★  HI-SCORE  999999  ★'; left:50%; top:2%; width:72%; padding:7px 8px; border:2px solid #5bf1ff; border-radius:4px; color:#fff36d; background:#11173b; box-shadow:5px 5px 0 #ff4bb4,0 0 18px rgba(91,241,255,.55); font:900 10px/1 monospace; letter-spacing:.06em; text-align:center; transform:translateX(-50%); animation:preview-scoreboard-drop .7s steps(7,end) both; }
+.preview-mode-victory.preview-playing.skin-victory-arcade .preview-victory-stage::after { content:'1UP × 999'; left:50%; top:25%; color:#78ff9e; font:900 9px/1 monospace; text-shadow:0 0 8px #54ff83; transform:translateX(-50%); animation:preview-score-blink 2.8s steps(2,end) both; }
+.preview-mode-victory.preview-playing.skin-victory-arcade .preview-victory-stage i { left:50%; top:32%; width:9px; height:9px; border-radius:1px; box-shadow:0 0 12px currentColor; animation:preview-highscore-burst 2.9s steps(12,end) both; }
+.preview-mode-victory.preview-playing.skin-victory-arcade .preview-victory-stage i:nth-child(n+25) { left:var(--lane); top:-8%; animation-name:preview-score-rain; animation-delay:.35s; }.skin-victory-arcade .preview-victory-stage i:nth-child(5n) { width:22px; height:8px; background:#fff36d; box-shadow:3px 3px 0 #ff4bb4; }
+
 .skin-victory-classic .preview-victory-stage i { width:7px; height:18px; border-radius:2px; }
 
 @keyframes preview-victory-burst { 0% { opacity:0; transform:translate(0,45px) scale(.15) rotate(0); } 16% { opacity:1; } 72% { opacity:1; } 100% { opacity:0; transform:translate(var(--vx),var(--vy)) scale(.7) rotate(var(--vr)); } }
+@keyframes preview-firework-rocket { 0% { opacity:0; transform:translateY(30px) scaleY(.2); } 20% { opacity:1; } 100% { opacity:0; transform:translateY(-155px) scaleY(1.1); } }
+@keyframes preview-firework-shell { 0%,24% { opacity:0; transform:translateY(90px) scale(.1); } 31% { opacity:1; transform:translate(0) scale(.35); } 76% { opacity:1; } 100% { opacity:0; transform:translate(var(--vx),var(--vy)) rotate(390deg) scale(1.2); } }
+@keyframes preview-cannon-recoil { 0% { opacity:0; translate:0 18px; } 28% { opacity:1; translate:0 0; } 58% { rotate:-7deg; } 100% { opacity:1; translate:0 4px; } }
+@keyframes preview-confetti-left { 0% { opacity:0; transform:translate(-24px,28px) rotate(0); } 12% { opacity:1; } 48% { opacity:1; transform:translate(calc(125px + var(--vx)),calc(-95px + var(--vy))) rotate(520deg); } 100% { opacity:0; transform:translate(calc(215px + var(--vx)),calc(80px + var(--vy))) rotate(1040deg); } }
+@keyframes preview-confetti-right { 0% { opacity:0; transform:translate(24px,28px) rotate(0); } 12% { opacity:1; } 48% { opacity:1; transform:translate(calc(-125px - var(--vx)),calc(-95px + var(--vy))) rotate(-520deg); } 100% { opacity:0; transform:translate(calc(-215px - var(--vx)),calc(80px + var(--vy))) rotate(-1040deg); } }
+@keyframes preview-neon-laser-left { 0% { opacity:0; transform:rotate(-35deg) scaleY(.2); } 18% { opacity:.95; } 48% { transform:rotate(32deg) scaleY(1); } 76% { opacity:.85; transform:rotate(-16deg); } 100% { opacity:0; transform:rotate(20deg); } }
+@keyframes preview-neon-laser-right { 0% { opacity:0; transform:rotate(35deg) scaleY(.2); } 18% { opacity:.95; } 48% { transform:rotate(-32deg) scaleY(1); } 76% { opacity:.85; transform:rotate(16deg); } 100% { opacity:0; transform:rotate(-20deg); } }
+@keyframes preview-neon-equalizer { 0% { opacity:0; transform:scaleY(.05); } 16% { opacity:1; transform:scaleY(1.55); } 34% { transform:scaleY(.35); } 54% { transform:scaleY(2.15); } 72% { transform:scaleY(.6); } 88% { opacity:1; transform:scaleY(1.3); } 100% { opacity:0; transform:scaleY(.1) translateY(-60px); } }
+@keyframes preview-cotton-bank { 0% { opacity:0; transform:translateY(26%) scale(.55); } 28% { opacity:.9; } 74% { opacity:.72; transform:translateY(-8%) scale(1.12); } 100% { opacity:0; transform:translateY(-22%) scale(1.3); } }
+@keyframes preview-cotton-left { 0% { opacity:0; transform:translate(-38px,34px) scale(.15); } 24% { opacity:.86; } 72% { opacity:.7; } 100% { opacity:0; transform:translate(calc(75px + var(--vx)),calc(-105px + var(--vy))) scale(1.7); } }
+@keyframes preview-cotton-right { 0% { opacity:0; transform:translate(38px,34px) scale(.15); } 24% { opacity:.86; } 72% { opacity:.7; } 100% { opacity:0; transform:translate(calc(-75px - var(--vx)),calc(-105px + var(--vy))) scale(1.7); } }
+@keyframes preview-scoreboard-drop { 0% { opacity:0; transform:translate(-50%,-38px) scaleX(.4); } 65% { opacity:1; transform:translate(-50%,4px) scaleX(1.04); } 100% { opacity:1; transform:translateX(-50%); } }
+@keyframes preview-score-blink { 0%,18%,36%,54%,72% { opacity:0; } 10%,28%,46%,64%,100% { opacity:1; } }
+@keyframes preview-highscore-burst { 0%,20% { opacity:0; transform:translate(-50%,-50%) scale(3); } 28% { opacity:1; transform:translate(-50%,-50%) scale(.7); } 76% { opacity:1; } 100% { opacity:0; transform:translate(calc(-50% + var(--vx)),calc(-50% + var(--vy))) rotate(270deg); } }
+@keyframes preview-score-rain { 0% { opacity:0; transform:translateY(-25px) rotate(0); } 20% { opacity:1; } 76% { opacity:1; } 100% { opacity:0; transform:translateY(245px) rotate(540deg); } }
 @keyframes victory-rose-left { 0% { opacity:0; transform:translate(-8vw,10vh) rotate(-60deg) scale(.15); } 18% { opacity:1; } 75% { opacity:1; } 100% { opacity:0; transform:translate(calc(50vw + var(--x)),var(--y)) rotate(520deg) scale(1.1); } }
 @keyframes victory-rose-right { 0% { opacity:0; transform:translate(8vw,10vh) rotate(60deg) scale(.15); } 18% { opacity:1; } 75% { opacity:1; } 100% { opacity:0; transform:translate(calc(-50vw + var(--x)),var(--y)) rotate(-520deg) scale(1.1); } }
 @keyframes rose-canopy-sway { 0%,100% { transform:translateX(-1%) rotate(-1deg); } 50% { transform:translateX(1%) rotate(1deg); } }
 
 @media (max-width:700px) {
   .cosmetic-preview-set { position:absolute; left:9px; top:38px; z-index:20; max-width:130px; font-size:7px; }
-  .preview-victory-stage { transform:scale(.78); transform-origin:center; }
+  .preview-victory-stage { transform:scale(.88); transform-origin:center; }
+  .preview-victory-stage i:nth-child(n+33) { display:none; }
+  .preview-mode-victory.preview-playing.skin-victory-confetti .preview-victory-stage i:nth-child(n+17) { left:auto; right:1%; animation-name:preview-confetti-right; }
+  .preview-mode-victory.preview-playing.skin-victory-cotton .preview-victory-stage i:nth-child(n+17) { left:80%; animation-name:preview-cotton-right; }
+  .skin-victory-rose .victory-earned.open .victory-stage i:nth-child(n+17) { left:auto; right:2%; animation-name:victory-rose-right; }
 }
 #online-opponent-hand .card-back.skin-back-rose::after { content:'✿'; width:34%; aspect-ratio:1; display:grid; place-items:center; border:2px double #f2d28f; border-radius:50%; color:#ffe0e8; background:#a51f4c; font-size:12px; }
 #online-opponent-hand .card-back.skin-back-library::after { content:'Ⅱ'; color:#f4d98b; font:900 15px/1 Georgia,serif; }

@@ -598,7 +598,7 @@ function replayCosmeticPreview() {
   root.classList.add('preview-playing');
   const item = cosmeticById(previewCosmeticId);
   playSound(item?.slot === 'victory' || item?.legendary ? 'win' : 'action');
-  cosmeticPreviewTimer = setTimeout(() => root.classList.remove('preview-playing'), item?.slot === 'victory' ? 3000 : 1400);
+  cosmeticPreviewTimer = setTimeout(() => root.classList.remove('preview-playing'), item?.slot === 'victory' ? 3600 : 1400);
 }
 
 function setCosmeticPreviewMode(mode) {
