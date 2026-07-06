@@ -100,6 +100,10 @@ test('꾸미기 보관함은 잠긴 아이템도 미리 보고 해금된 아이�
   assert.match(aiMain, /if \(!item \|\| item\.threshold > \(playerProfile\.peakPoints \|\| 0\)\) return/);
   assert.match(aiMain, /COSMETICS\.filter\(\(candidate\) => candidate\.legendary\)\.forEach/);
   assert.match(aiMain, /void root\.offsetWidth/);
+  assert.match(aiMain, /\[\{ key: 'all', name: '전체보기' \}, \.\.\.COSMETIC_SLOTS\]/);
+  assert.match(aiMain, /activeCosmeticSlot === 'all'/);
+  assert.match(aiHtml, /id="cosmetic-preview-face" class="playing-card red-card/);
+  assert.match(aiHtml, />내가 보는 앞면</);
 });
 
 test('서버 SQL은 비공개 패 테이블에 클라이언트 정책을 열지 않는다', () => {

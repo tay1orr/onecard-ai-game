@@ -39,7 +39,7 @@ let playerProfile = loadPlayerProfile();
 let currentMatchId = '';
 let lastRatingResult = null;
 let matching = false;
-let activeCosmeticSlot = 'table';
+let activeCosmeticSlot = 'all';
 let previewCosmeticId = null;
 let startedAt = 0;
 let timerId = null;
@@ -459,7 +459,7 @@ function matchAgain() {
 
 function setupCosmeticTabs() {
   els['cosmetics-tabs'].replaceChildren();
-  COSMETIC_SLOTS.forEach((slot) => {
+  [{ key: 'all', name: '전체보기' }, ...COSMETIC_SLOTS].forEach((slot) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'cosmetics-tab';
@@ -468,7 +468,8 @@ function setupCosmeticTabs() {
     button.textContent = slot.name;
     button.addEventListener('click', () => {
       activeCosmeticSlot = slot.key;
-      previewCosmeticId = playerProfile.equipped?.[slot.key] || cosmeticsForSlot(slot.key)[0]?.id;
+      if (slot.key !== 'all') previewCosmeticId = playerProfile.equipped?.[slot.key] || cosmeticsForSlot(slot.key)[0]?.id;
+      else previewCosmeticId ||= playerProfile.equipped?.table;
       renderCosmeticsModal();
     });
     els['cosmetics-tabs'].append(button);
@@ -477,7 +478,9 @@ function setupCosmeticTabs() {
 
 function openCosmetics() {
   playerProfile = loadPlayerProfile();
-  previewCosmeticId = playerProfile.equipped?.[activeCosmeticSlot] || cosmeticsForSlot(activeCosmeticSlot)[0]?.id;
+  previewCosmeticId = activeCosmeticSlot === 'all'
+    ? previewCosmeticId || playerProfile.equipped?.table
+    : playerProfile.equipped?.[activeCosmeticSlot] || cosmeticsForSlot(activeCosmeticSlot)[0]?.id;
   renderCosmeticsModal();
   openModal('cosmetics-modal');
 }
@@ -503,16 +506,21 @@ function renderCosmeticsModal() {
   }
 
   els['cosmetics-grid'].replaceChildren();
-  cosmeticsForSlot(activeCosmeticSlot).forEach((item) => {
+  els['cosmetics-grid'].classList.toggle('all-items', activeCosmeticSlot === 'all');
+  const visibleItems = activeCosmeticSlot === 'all'
+    ? [...COSMETICS].sort((a, b) => a.threshold - b.threshold || a.slot.localeCompare(b.slot))
+    : cosmeticsForSlot(activeCosmeticSlot);
+  visibleItems.forEach((item) => {
     const unlocked = item.threshold <= peak;
     const equipped = playerProfile.equipped?.[item.slot] === item.id;
     const selected = previewCosmeticId === item.id;
+    const slotName = COSMETIC_SLOTS.find((slot) => slot.key === item.slot)?.name || item.slot;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `cosmetic-item ${equipped ? 'equipped' : ''} ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'} ${item.legendary ? 'legendary' : ''}`;
     button.setAttribute('aria-pressed', String(selected));
     button.setAttribute('aria-label', `${item.name} 미리보기${unlocked ? '' : `, ${item.threshold}점에 해금`}`);
-    button.innerHTML = `<span class="cosmetic-item-icon">${item.icon}</span><strong>${item.name}</strong><small>${item.description}</small><b>${equipped ? '장착 중' : unlocked ? '미리보기' : `미리보기 · ${item.threshold.toLocaleString('ko-KR')}점`}</b>`;
+    button.innerHTML = `<span class="cosmetic-item-meta"><em>${slotName}</em>${item.concept ? `<i>${item.concept}</i>` : ''}</span><span class="cosmetic-item-icon">${item.icon}</span><strong>${item.name}</strong><small>${item.description}</small><b>${equipped ? '장착 중' : unlocked ? '미리보기' : `미리보기 · ${item.threshold.toLocaleString('ko-KR')}점`}</b>`;
     button.addEventListener('click', () => {
       previewCosmeticId = item.id;
       renderCosmeticsModal();
@@ -543,7 +551,9 @@ function equipCosmetic(item) {
 }
 
 function renderCosmeticPreview() {
-  const fallbackId = playerProfile.equipped?.[activeCosmeticSlot] || cosmeticsForSlot(activeCosmeticSlot)[0]?.id;
+  const fallbackId = activeCosmeticSlot === 'all'
+    ? playerProfile.equipped?.table
+    : playerProfile.equipped?.[activeCosmeticSlot] || cosmeticsForSlot(activeCosmeticSlot)[0]?.id;
   const item = cosmeticById(previewCosmeticId) || cosmeticById(fallbackId);
   if (!item) return;
   previewCosmeticId = item.id;
@@ -568,7 +578,10 @@ function renderCosmeticPreview() {
     : playerProfile.equipped?.[item.slot] === item.id;
   els['cosmetic-preview-status'].textContent = unlocked ? equipped ? '장착 중' : '해금 완료' : `잠금 · ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
   els['cosmetic-preview-name'].textContent = item.legendary ? '꿈빛 왕국 풀 세트' : item.name;
-  els['cosmetic-preview-description'].textContent = item.legendary ? '전설 아이템 하나를 고르면 일곱 부위가 함께 미리 보여요.' : item.description;
+  const slotName = COSMETIC_SLOTS.find((slot) => slot.key === item.slot)?.name || item.slot;
+  els['cosmetic-preview-description'].textContent = item.legendary
+    ? '전설 아이템 하나를 고르면 일곱 부위가 함께 미리 보여요.'
+    : `${slotName} · ${item.description}`;
   els['cosmetic-preview-equip'].disabled = !unlocked || equipped;
   els['cosmetic-preview-equip'].textContent = !unlocked
     ? `${item.threshold.toLocaleString('ko-KR')}점에 해금`

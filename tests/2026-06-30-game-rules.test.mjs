@@ -14,6 +14,7 @@ import {
   selectAiOpponent,
 } from '../src/2026-07-05-rating.js';
 import {
+  COSMETICS,
   DEFAULT_EQUIPPED,
   cosmeticsForSlot,
   newlyUnlockedCosmetics,
@@ -173,5 +174,8 @@ assert.deepEqual([cosmeticLoss.profile.points, cosmeticLoss.profile.peakPoints],
 assert.equal(cosmeticLoss.profile.equipped.cardBack, 'back-strawberry-milk', '점수가 내려가도 이미 해금하고 장착한 스킨은 유지해야 함');
 assert.equal(nextCosmeticUnlock(20000), null, '2만점에서는 모든 꾸미기 해금이 완료되어야 함');
 assert.equal(newlyUnlockedCosmetics(19999, 20000).length, 7, '2만점 달성 시 꿈빛 왕국 풀 세트 7종을 함께 해금해야 함');
+assert.equal(COSMETICS.filter((item) => item.concept).length >= 9, true, '서로 다른 신규 콘셉트 꾸미기가 충분히 제공되어야 함');
+assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-neon-arcade'), true, '네온 아케이드 카드 앞면을 제공해야 함');
+assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-dessert-cafe'), true, '디저트 카페 카드 앞면을 제공해야 함');
 
-console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 58개 통과');
+console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 61개 통과');
