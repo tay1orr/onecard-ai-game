@@ -512,7 +512,7 @@ function renderCosmeticsModal() {
   els['cosmetics-grid'].replaceChildren();
   els['cosmetics-grid'].classList.toggle('all-items', activeCosmeticSlot === 'all');
   const visibleItems = activeCosmeticSlot === 'all'
-    ? [...COSMETICS].sort((a, b) => a.threshold - b.threshold || a.slot.localeCompare(b.slot))
+    ? [...COSMETICS].sort((a, b) => Number(a.threshold === 0) - Number(b.threshold === 0) || a.threshold - b.threshold || a.slot.localeCompare(b.slot))
     : cosmeticsForSlot(activeCosmeticSlot);
   visibleItems.forEach((item) => {
     const unlocked = item.threshold <= peak;
@@ -522,9 +522,13 @@ function renderCosmeticsModal() {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `cosmetic-item ${equipped ? 'equipped' : ''} ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'} ${item.legendary ? 'legendary' : ''}`;
+    button.dataset.cosmeticState = selected ? 'previewing' : equipped ? 'equipped' : unlocked ? 'unlocked' : 'locked';
     button.setAttribute('aria-pressed', String(selected));
     button.setAttribute('aria-label', `${item.name} 미리보기${unlocked ? '' : `, ${item.threshold}점에 해금`}`);
-    button.innerHTML = `<span class="cosmetic-item-meta"><em>${slotName}</em>${item.concept ? `<i>${item.concept}</i>` : ''}</span><span class="cosmetic-item-icon">${item.icon}</span><strong>${item.name}</strong><small>${item.description}</small><b>${equipped ? '장착 중' : unlocked ? '미리보기' : `미리보기 · ${item.threshold.toLocaleString('ko-KR')}점`}</b>`;
+    const stateLabel = selected
+      ? equipped ? '✓ 현재 장착 · 미리보기' : unlocked ? '● 미리보기 중' : `● 미리보기 중 · ${item.threshold.toLocaleString('ko-KR')}점 잠금`
+      : equipped ? '✓ 현재 장착' : unlocked ? '눌러서 미리보기' : `🔒 ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
+    button.innerHTML = `<span class="cosmetic-item-meta"><em>${slotName}</em>${item.concept ? `<i>${item.concept}</i>` : ''}</span><span class="cosmetic-item-icon">${item.icon}</span><strong>${item.name}</strong><small>${item.description}</small><b>${stateLabel}</b>`;
     button.addEventListener('click', () => {
       previewCosmeticId = item.id;
       cosmeticPreviewMode = item.slot === 'effect' ? 'effect' : item.slot === 'victory' ? 'victory' : 'normal';
@@ -564,14 +568,14 @@ function renderCosmeticPreview() {
 
   const unlocked = item.threshold <= (playerProfile.peakPoints || 0);
   const equipped = playerProfile.equipped?.[item.slot] === item.id;
-  els['cosmetic-preview-status'].textContent = unlocked ? equipped ? '장착 중' : '해금 완료' : `잠금 · ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
+  els['cosmetic-preview-status'].textContent = unlocked ? equipped ? '미리보기 · 현재 장착' : '미리보기 · 장착 가능' : `미리보기 · ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
   els['cosmetic-preview-name'].textContent = item.name;
   const slotName = COSMETIC_SLOTS.find((slot) => slot.key === item.slot)?.name || item.slot;
   els['cosmetic-preview-description'].textContent = `${slotName} · ${item.description}`;
   els['cosmetic-preview-equip'].disabled = !unlocked || equipped;
   els['cosmetic-preview-equip'].textContent = !unlocked
     ? `${item.threshold.toLocaleString('ko-KR')}점에 해금`
-    : equipped ? '장착 중' : '이 아이템 장착';
+    : equipped ? '✓ 현재 장착' : '이 아이템 장착';
   renderCosmeticPreviewMode();
 }
 

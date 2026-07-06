@@ -470,6 +470,30 @@ button.playing-card { cursor: pointer; }
   .player-hand { --card-w: 65px; min-height: 120px; padding-top: 31px; }
 }
 
+/* P1: 첫 화면에서 대전 선택을 우선 노출하고 게임 안내 대비를 높인다. */
+.home-screen .hero { min-height:280px; padding-top:20px; padding-bottom:18px; }
+.home-screen .hero h1 { font-size:clamp(40px,5vw,64px); }
+.home-screen .hero-cards { height:235px; transform:scale(.88); }
+.home-screen .difficulty-section { padding-top:12px; }
+.home-screen .section-heading { margin-bottom:12px; }
+.home-screen .home-rating-card { margin-bottom:12px; padding-block:13px; }
+.home-screen .mode-card { min-height:96px; }
+.action-hint { max-width:min(460px,88vw); margin-top:14px; padding:7px 12px; border:1px solid rgba(255,255,255,.1); border-radius:99px; color:#d6d9e8; background:rgba(10,13,27,.58); font-size:13px; font-weight:700; line-height:1.4; box-shadow:0 7px 18px rgba(0,0,0,.16); }
+.attack-badge { font-size:12px; }
+
+@media (max-width:760px) {
+  .home-screen .hero { padding:24px 0 8px; }
+  .home-screen .hero h1 { font-size:clamp(36px,11.5vw,48px); line-height:1.06; }
+  .home-screen .hero-description { margin-top:13px; font-size:13px; line-height:1.65; }
+  .home-screen .hero-cards { height:172px; margin:-14px -45px; transform:scale(.68); }
+  .home-screen .difficulty-section { padding-top:7px; }
+  .home-screen .section-heading { margin-bottom:10px; }
+  .home-screen .home-rating-card { padding:13px 15px; }
+  .home-screen .mode-grid { gap:10px; }
+  .home-screen .mode-card { min-height:80px; padding:13px 15px; }
+  .action-hint { margin-top:10px; padding:6px 10px; font-size:12px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
 }

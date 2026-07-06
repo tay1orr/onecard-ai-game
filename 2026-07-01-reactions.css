@@ -80,3 +80,14 @@ body:has(#result-modal.open) .ai-reaction-bubble { position:fixed; z-index:65; t
   .result-reaction-picker { grid-template-columns:repeat(3,1fr); gap:6px; }
   body:has(#result-modal.open) .ai-reaction-bubble { top:12px; right:12px; }
 }
+
+/* 플레이어 정보와 겹치지 않는 상단 우측 반응 도크 */
+.ai-reaction-dock { left:auto; right:18px; top:22%; transform:none; }
+.ai-reaction-picker { left:auto; right:64px; top:0; transform:translate(8px,0) scale(.96); transform-origin:top right; }
+.ai-reaction-picker.open { transform:none; }
+
+@media (max-width:760px) {
+  .ai-reaction-dock { left:auto; right:5px; top:18%; bottom:auto; }
+  .ai-reaction-picker { left:auto; right:0; top:55px; bottom:auto; transform:translateY(-7px) scale(.96); transform-origin:top right; }
+  .ai-reaction-picker.open { transform:none; }
+}

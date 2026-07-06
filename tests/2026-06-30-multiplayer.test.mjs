@@ -69,6 +69,9 @@ const onlineHtml = await readFile(new URL('../2026-06-30-online.html', import.me
 const onlineMain = await readFile(new URL('../src/2026-06-30-online-main.js', import.meta.url), 'utf8');
 const aiHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const aiMain = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+const baseCss = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
+const cosmeticsCss = await readFile(new URL('../2026-07-06-cosmetics.css', import.meta.url), 'utf8');
+const reactionsCss = await readFile(new URL('../2026-07-01-reactions.css', import.meta.url), 'utf8');
 const multiplayerClient = await readFile(new URL('../src/2026-06-30-multiplayer.js', import.meta.url), 'utf8');
 
 function assertReferencedIdsExist(html, source) {
@@ -108,6 +111,19 @@ test('꾸미기 보관함은 잠긴 아이템도 미리 보고 해금된 아이�
   assert.match(aiHtml, /data-cosmetic-preview-mode="normal"/);
   assert.match(aiHtml, /data-cosmetic-preview-mode="effect"/);
   assert.match(aiHtml, /data-cosmetic-preview-mode="victory"/);
+  assert.match(cosmeticsCss, /\.cosmetic-preview-card\s*\{\s*width:var\(--card-w\);\s*height:var\(--card-h\);\s*\}/);
+  assert.match(cosmeticsCss, /grid-template-columns:minmax\(0,1fr\); grid-template-rows:auto minmax\(0,1fr\) auto auto/);
+  assert.match(cosmeticsCss, /grid-template-rows:auto minmax\(0,1fr\) auto auto/);
+  assert.match(cosmeticsCss, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(aiMain, /Number\(a\.threshold === 0\) - Number\(b\.threshold === 0\)/);
+  assert.match(aiMain, /data\.cosmeticState|dataset\.cosmeticState/);
+});
+
+test('홈은 대전 선택을 꾸미기함보다 먼저 보여주고 게임 안내와 반응 도크를 또렷하게 배치한다', () => {
+  assert.ok(aiHtml.indexOf('class="mode-grid"') < aiHtml.indexOf('id="cosmetics-button"'));
+  assert.match(baseCss, /\.home-screen \.hero \{ min-height:280px/);
+  assert.match(baseCss, /\.action-hint \{[^}]*font-size:13px/);
+  assert.match(reactionsCss, /\.ai-reaction-dock \{ left:auto; right:18px; top:22%/);
 });
 
 test('서버 SQL은 비공개 패 테이블에 클라이언트 정책을 열지 않는다', () => {

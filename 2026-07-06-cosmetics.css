@@ -519,3 +519,26 @@ body.skin-table-aquarium .ambient-b { background:#1658b9; opacity:.3; }
   .cosmetic-preview-actions { flex-basis:31px; }
   .cosmetic-preview-actions .primary-button,.cosmetic-preview-actions .secondary-button { min-height:31px; }
 }
+
+/* P0/P1 보정: 미리보기 요소의 실제 크기와 버튼 공간을 확정한다. */
+.cosmetic-preview { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto auto; align-items:stretch; }
+.cosmetic-preview-result.result-card { min-height:0; height:100%; }
+.cosmetic-preview-board.table { min-height:0; height:100%; }
+.cosmetic-preview-card { width:var(--card-w); height:var(--card-h); }
+.cosmetic-preview-copy { min-height:0; }
+.cosmetic-preview-actions { min-height:0; align-self:stretch; }
+.cosmetic-preview-equip:disabled,#cosmetic-preview-equip:disabled { color:#b9f3dc; border-color:rgba(93,228,180,.3); background:rgba(93,228,180,.11); box-shadow:none; opacity:1; }
+.cosmetics-tabs { flex-wrap:wrap; overflow:visible; scrollbar-width:none; }
+.cosmetics-tabs::-webkit-scrollbar { display:none; }
+.cosmetic-item[data-cosmetic-state="previewing"] { outline:3px solid #ffd66d; outline-offset:-3px; border-color:#ffd66d; background:linear-gradient(145deg,rgba(255,214,109,.15),rgba(255,255,255,.025)); }
+.cosmetic-item[data-cosmetic-state="previewing"] b { color:#ffd66d; }
+.cosmetic-item[data-cosmetic-state="equipped"] { border-color:rgba(93,228,180,.72); }
+.cosmetic-item[data-cosmetic-state="equipped"] b { color:#7bf0c5; }
+.cosmetic-item[data-cosmetic-state="locked"] b { color:#aeb3c8; }
+.cosmetic-item.locked::after { content:'🔒'; padding:5px 6px; color:#fff2c8; font-size:9px; letter-spacing:0; }
+
+@media (max-width:700px) {
+  .cosmetics-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; }
+  .cosmetics-tab { width:100%; min-width:0; padding:0 4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cosmetic-preview { grid-template-rows:auto minmax(0,1fr) auto auto; }
+}
