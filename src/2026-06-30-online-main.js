@@ -11,6 +11,7 @@ import { runDealAnimation } from './2026-06-30-deal-animation.js';
 import { REACTIONS, createReactionArtwork, createReactionButton, getReaction } from './2026-06-30-reactions.js';
 import { createCardCenter } from './2026-07-01-card-art.js';
 import { loadPlayerProfile, playerStarsForPoints, recordMatchResult, starsText } from './2026-07-05-rating.js';
+import { COSMETICS, cosmeticById, equippedClassNames, nextCosmeticUnlock } from './2026-07-06-cosmetics.js';
 
 const els = Object.fromEntries([...document.querySelectorAll('[id]')].map((element) => [element.id, element]));
 const effects = createGameEffects({
@@ -80,6 +81,7 @@ document.querySelectorAll('[data-online-toy]').forEach((button) => {
 window.addEventListener('resize', scheduleHandLayout);
 
 setupReactionPickers();
+applyOnlineCosmetics();
 
 if (!isSupabaseConfigured()) {
   els['setup-required'].classList.remove('hidden');
@@ -95,7 +97,7 @@ if (!isSupabaseConfigured()) {
 async function initializeConnection() {
   try {
     await client.connect();
-    await client.restoreRoom(playerProfile.points);
+    await client.restoreRoom(playerProfile.points, playerProfile.equipped.cardBack);
   } catch (error) {
     els['entry-error'].textContent = friendlyError(error.message);
     renderConnection('reconnecting');
@@ -120,8 +122,8 @@ async function runEntryAction(mode) {
     if (connectionPromise) await connectionPromise;
     else if (!client.supabase) await client.connect();
     playerProfile = loadPlayerProfile();
-    if (mode === 'create') await client.createRoom(nickname, playerProfile.points);
-    else await client.joinRoom(code, nickname, playerProfile.points);
+    if (mode === 'create') await client.createRoom(nickname, playerProfile.points, playerProfile.equipped.cardBack);
+    else await client.joinRoom(code, nickname, playerProfile.points, playerProfile.equipped.cardBack);
   }, 'entry-error');
 }
 
@@ -243,7 +245,7 @@ function renderGame(nextView) {
   els['online-my-status'].textContent = isMyTurn(nextView)
     ? nextView.freePlay ? '내 차례 · 자유 카드' : '내 차례'
     : '상대 차례';
-  renderOpponentHand(opponent.count);
+  renderOpponentHand(opponent.count, opponent.cardBack);
   renderHand(nextView);
     renderTopCard(nextView.topCard, nextView.activeSuit);
   els['online-deck-count'].textContent = nextView.drawCount;
@@ -265,16 +267,25 @@ function renderGame(nextView) {
   }
 }
 
-function renderOpponentHand(count) {
+function renderOpponentHand(count, cardBackId = 'back-classic') {
   els['online-opponent-hand'].replaceChildren();
+  const cardBack = cosmeticById(cardBackId);
   for (let index = 0; index < count; index += 1) {
     const card = document.createElement('div');
     card.className = 'mini-back card-back';
+    if (cardBack?.slot === 'cardBack') card.classList.add(cardBack.cssClass);
     card.style.setProperty('--i', index);
     card.style.setProperty('--count', count);
     card.innerHTML = '<span class="back-logo">ONE<b>!</b></span>';
     els['online-opponent-hand'].append(card);
   }
+}
+
+function applyOnlineCosmetics() {
+  const allClasses = COSMETICS.map((item) => item.cssClass).filter(Boolean);
+  document.body.classList.remove(...allClasses, 'reduced-effects');
+  document.body.classList.add(...equippedClassNames(playerProfile.equipped));
+  document.body.classList.toggle('reduced-effects', Boolean(playerProfile.reducedEffects));
 }
 
 function renderHand(nextView) {
@@ -597,6 +608,18 @@ function renderOnlineResult(nextView) {
   els['online-result-points-delta'].textContent = nextView.topCard ? `${ratingResult.delta > 0 ? '+' : ''}${ratingResult.delta}점` : '점수 변동 없음';
   els['online-result-points-delta'].classList.toggle('lost', ratingResult.delta < 0);
   els['online-result-current-points'].textContent = `현재 ${playerProfile.points.toLocaleString('ko-KR')}점 · ${starsText(playerStarsForPoints(playerProfile.points))}`;
+  const unlockedItems = ratingResult.unlockedItems || [];
+  els['online-result-unlock'].classList.toggle('hidden', unlockedItems.length === 0);
+  if (unlockedItems.length) {
+    els['online-result-unlock-title'].textContent = unlockedItems.length >= 5 ? '꿈빛 왕국 풀 세트 해금!' : '새 꾸미기 해금!';
+    els['online-result-unlock-copy'].textContent = `${unlockedItems.slice(0, 3).map((item) => `${item.icon} ${item.name}`).join(' · ')}${unlockedItems.length > 3 ? ` 외 ${unlockedItems.length - 3}개` : ''}`;
+  }
+  const nextUnlock = nextCosmeticUnlock(playerProfile.peakPoints);
+  els['online-result-next-unlock'].classList.toggle('hidden', !nextUnlock);
+  if (nextUnlock) {
+    els['online-result-next-name'].textContent = `다음 보상 · ${nextUnlock.items[0].name}`;
+    els['online-result-next-remaining'].textContent = `${nextUnlock.remaining.toLocaleString('ko-KR')}점 남음`;
+  }
   els['online-rematch-me'].textContent = mine.ready ? '나 · 재대결 신청' : '나 · 대기';
   els['online-rematch-opponent'].textContent = opponent.ready ? `${opponent.nickname} · 신청` : `${opponent.nickname} · 대기`;
   els['online-rematch-me'].classList.toggle('ready', mine.ready);

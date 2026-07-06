@@ -29,16 +29,18 @@ export class MultiplayerClient {
     this.onConnection?.('connected');
   }
 
-  async createRoom(nickname, rating = 0) {
+  async createRoom(nickname, rating = 0, cardBack = 'back-classic') {
     const view = await this.rpc('onecard_create_room', { p_nickname: nickname });
     await this.attachRoom(view);
-    return this.setRating(rating);
+    await this.setRating(rating);
+    return this.setCardBack(cardBack);
   }
 
-  async joinRoom(code, nickname, rating = 0) {
+  async joinRoom(code, nickname, rating = 0, cardBack = 'back-classic') {
     const view = await this.rpc('onecard_join_room', { p_code: code, p_nickname: nickname });
     await this.attachRoom(view);
-    return this.setRating(rating);
+    await this.setRating(rating);
+    return this.setCardBack(cardBack);
   }
 
   async rollDice() {
@@ -75,6 +77,10 @@ export class MultiplayerClient {
     return this.updateFromRpc('onecard_set_rating', { p_room_id: this.roomId, p_rating: Math.max(0, Math.floor(Number(rating) || 0)) });
   }
 
+  async setCardBack(cardBack) {
+    return this.updateFromRpc('onecard_set_card_back', { p_room_id: this.roomId, p_card_back: cardBack });
+  }
+
   async getHistory() {
     return this.rpc('onecard_get_history', { p_room_id: this.roomId });
   }
@@ -83,14 +89,15 @@ export class MultiplayerClient {
     return this.updateFromRpc('onecard_send_emote', { p_room_id: this.roomId, p_emote: emote });
   }
 
-  async restoreRoom(rating = 0) {
+  async restoreRoom(rating = 0, cardBack = 'back-classic') {
     let saved;
     try { saved = JSON.parse(localStorage.getItem(ACTIVE_ROOM_KEY) || 'null'); } catch { saved = null; }
     if (!saved?.roomId) return null;
     try {
       const view = await this.rpc('onecard_get_view', { p_room_id: saved.roomId });
       await this.attachRoom(view);
-      return this.setRating(rating);
+      await this.setRating(rating);
+      return this.setCardBack(cardBack);
     } catch {
       try { localStorage.removeItem(ACTIVE_ROOM_KEY); } catch { /* 저장소가 차단될 수 있습니다. */ }
       return null;

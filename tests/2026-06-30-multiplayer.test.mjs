@@ -84,6 +84,24 @@ test('AI와 온라인 화면의 모든 요소 참조가 실제 HTML에 존재한
   assertReferencedIdsExist(onlineHtml, onlineMain);
 });
 
+test('AI 결과 화면은 같은 상대 재대결 없이 반드시 다시 매칭한다', () => {
+  assert.doesNotMatch(aiHtml, /같은 상대와 다시 하기/);
+  assert.match(aiHtml, /id="match-again-button"[^>]*>다시 매칭하기</);
+  assert.match(aiHtml, /id="result-home-button"[^>]*>홈으로</);
+  assert.match(aiMain, /function matchAgain\(\)[\s\S]*?setTimeout\(beginAiMatchmaking, 520\)/);
+});
+
+test('꾸미기 보관함은 잠긴 아이템도 미리 보고 해금된 아이템만 장착한다', () => {
+  assert.match(aiHtml, /id="cosmetic-preview-board"/);
+  assert.match(aiHtml, /id="cosmetic-preview-replay"/);
+  assert.match(aiHtml, /id="cosmetic-preview-equip"/);
+  assert.match(aiMain, /let previewCosmeticId = null/);
+  assert.match(aiMain, /button\.addEventListener\('click', \(\) => \{\s*previewCosmeticId = item\.id/);
+  assert.match(aiMain, /if \(!item \|\| item\.threshold > \(playerProfile\.peakPoints \|\| 0\)\) return/);
+  assert.match(aiMain, /COSMETICS\.filter\(\(candidate\) => candidate\.legendary\)\.forEach/);
+  assert.match(aiMain, /void root\.offsetWidth/);
+});
+
 test('서버 SQL은 비공개 패 테이블에 클라이언트 정책을 열지 않는다', () => {
   assert.match(sql, /onecard_private_state enable row level security/i);
   assert.doesNotMatch(sql, /create policy[^;]+onecard_private_state/is);
@@ -147,7 +165,7 @@ test('카드 기록과 커스텀 스티커 RPC는 참가자 확인·종류 제�
 
 test('새로고침하면 익명 세션과 활성 방을 복원하고 주사위 결과를 보여준 뒤 시작한다', () => {
   assert.match(multiplayerClient, /persistSession: true/);
-  assert.match(multiplayerClient, /async restoreRoom\(rating = 0\)/);
+  assert.match(multiplayerClient, /async restoreRoom\(rating = 0, cardBack = 'back-classic'\)/);
   assert.match(multiplayerClient, /onecard-active-room-v1/);
   assert.match(onlineMain, /await wait\(1350\)/);
   assert.match(onlineMain, /client\.getHistory\(\)/);
@@ -165,6 +183,15 @@ test('멀티 대전은 상대 점수를 공유하고 결과를 한 번만 개인
   assert.match(sql, /round_no = round_no \+ 1/);
   assert.match(onlineMain, /round:\$\{nextView\.roundNo\}/);
   assert.doesNotMatch(onlineMain, /const resultKey = `multi:\$\{nextView\.roomId\}:\$\{nextView\.host\.wins/);
+});
+
+test('멀티 대전은 허용된 카드 뒷면 스킨만 상대에게 공유한다', () => {
+  assert.match(sql, /add column if not exists host_card_back text not null default 'back-classic'/);
+  assert.match(sql, /function public\.onecard_set_card_back\(p_room_id uuid, p_card_back text\)/);
+  assert.match(sql, /v_card_back not in \('back-classic', 'back-strawberry-milk', 'back-star-candy', 'back-space-whale', 'back-dream-kingdom'\)/);
+  assert.match(sql, /'cardBack', v_room\.host_card_back/);
+  assert.match(multiplayerClient, /onecard_set_card_back/);
+  assert.match(onlineMain, /renderOpponentHand\(opponent\.count, opponent\.cardBack\)/);
 });
 
 test('게임 시작 전 이미 나온 상대 주사위를 강제로 다시 돌리지 않는다', () => {

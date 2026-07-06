@@ -10,8 +10,16 @@ import {
   loadPlayerProfile,
   matchmakingWeights,
   recordMatchResult,
+  savePlayerProfile,
   selectAiOpponent,
 } from '../src/2026-07-05-rating.js';
+import {
+  DEFAULT_EQUIPPED,
+  cosmeticsForSlot,
+  newlyUnlockedCosmetics,
+  nextCosmeticUnlock,
+  normalizeEquipped,
+} from '../src/2026-07-06-cosmetics.js';
 
 function card(suit, rank) { return { id: `${suit}-${rank}`, suit, rank }; }
 
@@ -145,4 +153,25 @@ assert.deepEqual(matchmakingWeights(0), [55, 35, 10, 0, 0], '초기 점수대 �
 assert.deepEqual(matchmakingWeights(20000), [0, 0, 0, 30, 70], '2만점 이상은 4·5성만 매칭해야 함');
 assert.equal(selectAiOpponent(0, () => 0, [1, 1]).stars, 2, '같은 AI가 세 번 연속 걸리려 하면 다른 가능한 등급으로 바꿔야 함');
 
-console.log('원카드 규칙·레이아웃·AI 반응·기록 보존 테스트 46개 통과');
+const cosmeticStorage = memoryStorage({
+  [PROFILE_KEY]: JSON.stringify({ points: 1800, wins: 2, games: 3 }),
+  [LEGACY_RECORD_KEY]: JSON.stringify({ wins: 12, games: 20 }),
+});
+const cosmeticProfile = loadPlayerProfile(cosmeticStorage);
+assert.equal(cosmeticProfile.peakPoints, 1800, '기존 점수를 역대 최고 점수로 안전하게 이전해야 함');
+assert.deepEqual([cosmeticProfile.wins, cosmeticProfile.games], [12, 20], '꾸미기 프로필 이전 중 기존 승수·판수가 유지되어야 함');
+assert.deepEqual(cosmeticProfile.equipped, DEFAULT_EQUIPPED, '처음에는 슬롯마다 기본 꾸미기를 장착해야 함');
+assert.equal(cosmeticsForSlot('cardBack').some((item) => item.threshold === 300), true, '300점부터 첫 카드 스킨을 해금해야 함');
+assert.equal(nextCosmeticUnlock(700).threshold, 1200, '현재 최고 점수 다음 보상까지 정확히 안내해야 함');
+assert.deepEqual(newlyUnlockedCosmetics(250, 750).map((item) => item.threshold), [300, 700], '한 번에 여러 기준을 넘으면 모든 보상을 해금해야 함');
+assert.equal(normalizeEquipped({ cardBack: 'back-space-whale' }, 1000).cardBack, 'back-classic', '점수가 부족한 아이템은 장착할 수 없어야 함');
+assert.equal(normalizeEquipped({ cardBack: 'back-strawberry-milk' }, 1000).cardBack, 'back-strawberry-milk', '해금한 아이템은 장착 상태를 유지해야 함');
+cosmeticProfile.equipped.cardBack = 'back-strawberry-milk';
+savePlayerProfile(cosmeticProfile, cosmeticStorage);
+const cosmeticLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'cosmetic-loss' }, cosmeticStorage);
+assert.deepEqual([cosmeticLoss.profile.points, cosmeticLoss.profile.peakPoints], [1750, 1800], '패배해 현재 점수가 내려가도 역대 최고 점수는 유지해야 함');
+assert.equal(cosmeticLoss.profile.equipped.cardBack, 'back-strawberry-milk', '점수가 내려가도 이미 해금하고 장착한 스킨은 유지해야 함');
+assert.equal(nextCosmeticUnlock(20000), null, '2만점에서는 모든 꾸미기 해금이 완료되어야 함');
+assert.equal(newlyUnlockedCosmetics(19999, 20000).length, 7, '2만점 달성 시 꿈빛 왕국 풀 세트 7종을 함께 해금해야 함');
+
+console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 58개 통과');

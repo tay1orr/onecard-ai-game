@@ -8,6 +8,7 @@
   <title>ONE! — AI 원카드</title>
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./2026-07-01-reactions.css">
+  <link rel="stylesheet" href="./2026-07-06-cosmetics.css">
 </head>
 <body>
   <div class="ambient ambient-a" aria-hidden="true"></div>
@@ -47,8 +48,11 @@
         <div class="home-rating-card" aria-label="내 원카드 점수">
           <div><small>MY RATING</small><strong id="home-rating-points">0점</strong></div>
           <div class="home-rating-progress"><span id="home-rating-fill"></span></div>
-          <div><b id="home-rating-stars">★</b><small id="home-rating-next">다음 등급까지 500점</small></div>
+          <div><b id="home-rating-stars">★</b><small id="home-rating-next">다음 등급까지 500점</small><small id="home-next-unlock" class="home-next-unlock">다음 보상 · 딸기우유</small></div>
         </div>
+        <button id="cosmetics-button" class="cosmetics-entry" type="button">
+          <span>✦</span><span><strong>꾸미기 보관함</strong><small>달성 점수로 영구 해금한 아이템을 장착해요</small></span><b>MY COLLECTION →</b>
+        </button>
         <div class="mode-grid">
           <button id="ai-match-button" class="mode-card ai-mode" type="button">
             <span class="mode-icon">✦</span>
@@ -212,6 +216,7 @@
       <p id="result-kicker" class="step-label">NICE PLAY</p>
       <h2 id="result-title">당신의 승리!</h2>
       <p id="result-description">깔끔한 마무리였어요.</p>
+      <p id="result-opponent-meta" class="result-opponent-meta">★★★ 영리한 네오 · 승리 시 +200점</p>
       <div class="result-final-play">
         <div id="result-final-card" class="result-final-card"></div>
         <div><small>LAST PLAY</small><strong id="result-final-owner">내가 낸 마지막 카드</strong></div>
@@ -221,9 +226,56 @@
         <div><small>사용한 카드</small><strong id="result-moves">0장</strong></div>
       </div>
       <div class="result-rating"><strong id="result-points-delta">+100점</strong><small id="result-current-points">현재 100점 · ★</small></div>
-      <div class="result-reactions"><span>스티커 보내기</span><div id="ai-result-reaction-picker" class="result-reaction-picker"></div></div>
-      <button id="rematch-button" class="primary-button" type="button">같은 상대와 다시 하기</button>
-      <button id="change-ai-button" class="secondary-button" type="button">다른 상대 고르기</button>
+      <div id="result-unlock" class="result-unlock hidden"><span>NEW ITEM!</span><strong id="result-unlock-title">새 꾸미기 해금</strong><small id="result-unlock-copy"></small></div>
+      <div id="result-next-unlock" class="result-next-unlock"><span id="result-next-unlock-name">다음 보상 · 딸기우유</span><b id="result-next-unlock-remaining">300점 남음</b></div>
+      <details class="result-reactions"><summary>스티커 보내기</summary><div id="ai-result-reaction-picker" class="result-reaction-picker"></div></details>
+      <button id="match-again-button" class="primary-button" type="button">다시 매칭하기</button>
+      <button id="result-home-button" class="secondary-button" type="button">홈으로</button>
+    </div>
+  </div>
+
+  <div id="cosmetics-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="cosmetics-title">
+    <div class="modal-card cosmetics-modal-card">
+      <button class="modal-close" data-close-modal="cosmetics-modal" aria-label="꾸미기 보관함 닫기">×</button>
+      <p class="step-label">MY COLLECTION</p>
+      <h2 id="cosmetics-title">꾸미기 보관함</h2>
+      <p class="cosmetics-intro">구매 없이 역대 최고 점수를 달성하면 영구 해금돼요.</p>
+      <div class="cosmetics-progress-card">
+        <div><small>역대 최고 점수</small><strong id="cosmetics-peak-points">0점</strong></div>
+        <div><small id="cosmetics-next-copy">다음 보상까지 300점</small><div class="cosmetics-progress"><span id="cosmetics-progress-fill"></span></div></div>
+      </div>
+      <section id="cosmetic-preview" class="cosmetic-preview" aria-label="꾸미기 미리보기" aria-live="polite">
+        <div id="cosmetic-preview-result" class="result-card cosmetic-preview-result">
+          <div id="cosmetic-preview-board" class="table cosmetic-preview-board">
+            <div class="effect-particles cosmetic-preview-particles" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <div id="cosmetic-preview-back" class="card-back cosmetic-preview-card cosmetic-preview-back" aria-hidden="true">
+              <span class="back-logo">ONE<b>!</b></span>
+            </div>
+            <div id="cosmetic-preview-face" class="playing-card cosmetic-preview-card cosmetic-preview-face" aria-hidden="true">
+              <span class="card-corner top"><b>A</b><i>♥</i></span>
+              <span class="cosmetic-preview-heart">♥</span>
+              <span class="card-corner bottom"><b>A</b><i>♥</i></span>
+            </div>
+            <div class="draw-pile card-back cosmetic-preview-pile" aria-hidden="true"><span class="back-logo">ONE<b>!</b></span></div>
+            <div class="cosmetic-preview-charm" aria-hidden="true"><span class="star-body">★</span></div>
+          </div>
+        </div>
+        <div class="cosmetic-preview-copy">
+          <span id="cosmetic-preview-status">장착 중</span>
+          <strong id="cosmetic-preview-name">미드나잇 테이블</strong>
+          <small id="cosmetic-preview-description">차분한 기본 게임 테이블</small>
+        </div>
+        <div class="cosmetic-preview-actions">
+          <button id="cosmetic-preview-replay" class="secondary-button" type="button">효과 재생</button>
+          <button id="cosmetic-preview-equip" class="primary-button" type="button">장착하기</button>
+        </div>
+      </section>
+      <div id="cosmetics-tabs" class="cosmetics-tabs" role="tablist" aria-label="꾸미기 종류"></div>
+      <div id="cosmetics-grid" class="cosmetics-grid" aria-live="polite"></div>
+      <button id="reduced-effects-button" class="effects-toggle" type="button" aria-pressed="false"><span>✨</span><span><strong>화려한 효과</strong><small>파티클과 큰 연출을 사용해요</small></span><b>ON</b></button>
+      <button class="secondary-button" data-close-modal="cosmetics-modal" type="button">완료</button>
     </div>
   </div>
 
@@ -252,6 +304,7 @@
         <div><span class="mini-card red">Q</span><p><strong>일반 카드</strong><small>2인 대전에서는 추가 효과가 없어요.</small></p></div>
         <div><span class="mini-card">K</span><p><strong>일반 카드</strong><small>2인전에서는 효과가 없고, 추후 3인 이상에서 두 칸을 건너뛰어요.</small></p></div>
         <div><span class="mini-card red">7</span><p><strong>무늬 변경</strong><small>선언 무늬 또는 다른 7을 내고 다시 바꿔요.</small></p></div>
+        <div><span class="mini-card">★</span><p><strong>점수와 꾸미기</strong><small>승리하면 상대 별에 따라 +100~+400점, 패배하면 최대 50점이 줄어요. 꾸미기는 역대 최고 점수로 영구 해금됩니다.</small></p></div>
       </div>
       <button class="primary-button" data-close-modal="rules-modal" type="button">확인했어요</button>
     </div>

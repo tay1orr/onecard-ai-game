@@ -17,9 +17,18 @@ import {
   recordMatchResult,
   rememberAiOpponent,
   rewardForStars,
+  savePlayerProfile,
   selectAiOpponent,
   starsText,
 } from './2026-07-05-rating.js';
+import {
+  COSMETICS,
+  COSMETIC_SLOTS,
+  cosmeticById,
+  cosmeticsForSlot,
+  equippedClassNames,
+  nextCosmeticUnlock,
+} from './2026-07-06-cosmetics.js';
 
 const DIFFICULTIES = Object.fromEntries(AI_OPPONENTS.map((opponent) => [opponent.key, opponent]));
 
@@ -30,6 +39,8 @@ let playerProfile = loadPlayerProfile();
 let currentMatchId = '';
 let lastRatingResult = null;
 let matching = false;
+let activeCosmeticSlot = 'table';
+let previewCosmeticId = null;
 let startedAt = 0;
 let timerId = null;
 let aiTimer = null;
@@ -51,6 +62,7 @@ let reactionTimer = null;
 let reactionPickerTimer = null;
 let aiReactionTimer = null;
 let aiReactionCooldownUntil = 0;
+let cosmeticPreviewTimer = null;
 
 const DIE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
@@ -88,8 +100,12 @@ document.querySelectorAll('.sound-button').forEach((button) => button.addEventLi
 els['draw-pile'].addEventListener('click', playerDraw);
 els['discard-pile'].addEventListener('click', openHistory);
 els['exit-button'].addEventListener('click', goHome);
-els['rematch-button'].addEventListener('click', rematchWithReaction);
-els['change-ai-button'].addEventListener('click', goHome);
+els['match-again-button'].addEventListener('click', matchAgain);
+els['result-home-button'].addEventListener('click', goHome);
+els['cosmetics-button'].addEventListener('click', openCosmetics);
+els['cosmetic-preview-replay'].addEventListener('click', replayCosmeticPreview);
+els['cosmetic-preview-equip'].addEventListener('click', equipPreviewedCosmetic);
+els['reduced-effects-button'].addEventListener('click', toggleReducedEffects);
 els['peek-hand-button'].addEventListener('click', peekAtHand);
 els['return-to-suit-button'].addEventListener('click', returnToSuitPicker);
 els['cancel-seven-button'].addEventListener('click', cancelSevenSelection);
@@ -98,6 +114,8 @@ els['draw-reveal-skip'].addEventListener('click', finishDrawReveal);
 els['ai-reaction-toggle'].addEventListener('click', toggleAiReactionPicker);
 
 setupAiReactionPickers();
+setupCosmeticTabs();
+applyEquippedCosmetics();
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
@@ -183,7 +201,7 @@ function startGame(selectedDifficulty) {
   els['home-screen'].classList.add('hidden');
   els['game-screen'].classList.remove('hidden');
   closeModal('result-modal');
-  els['rematch-button'].disabled = false;
+  els['match-again-button'].disabled = false;
   const profile = DIFFICULTIES[difficulty];
   els['difficulty-label'].textContent = profile.name;
   els['ai-name'].textContent = profile.name;
@@ -430,10 +448,168 @@ function reactToCard(result, isAi) {
   if (context) maybeAiReact(context);
 }
 
-function rematchWithReaction() {
-  els['rematch-button'].disabled = true;
+function matchAgain() {
+  if (matching) return;
+  els['match-again-button'].disabled = true;
   maybeAiReact('rematch', { force: true, delay: 80 });
-  setTimeout(() => startGame(difficulty), 900);
+  closeModal('result-modal');
+  updateRecord();
+  setTimeout(beginAiMatchmaking, 520);
+}
+
+function setupCosmeticTabs() {
+  els['cosmetics-tabs'].replaceChildren();
+  COSMETIC_SLOTS.forEach((slot) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'cosmetics-tab';
+    button.dataset.cosmeticSlot = slot.key;
+    button.setAttribute('role', 'tab');
+    button.textContent = slot.name;
+    button.addEventListener('click', () => {
+      activeCosmeticSlot = slot.key;
+      previewCosmeticId = playerProfile.equipped?.[slot.key] || cosmeticsForSlot(slot.key)[0]?.id;
+      renderCosmeticsModal();
+    });
+    els['cosmetics-tabs'].append(button);
+  });
+}
+
+function openCosmetics() {
+  playerProfile = loadPlayerProfile();
+  previewCosmeticId = playerProfile.equipped?.[activeCosmeticSlot] || cosmeticsForSlot(activeCosmeticSlot)[0]?.id;
+  renderCosmeticsModal();
+  openModal('cosmetics-modal');
+}
+
+function renderCosmeticsModal() {
+  const peak = playerProfile.peakPoints || 0;
+  els['cosmetics-peak-points'].textContent = `${peak.toLocaleString('ko-KR')}점`;
+  document.querySelectorAll('.cosmetics-tab').forEach((button) => {
+    const active = button.dataset.cosmeticSlot === activeCosmeticSlot;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+  });
+
+  const next = nextCosmeticUnlock(peak);
+  if (next) {
+    const previousThreshold = Math.max(0, ...COSMETICS.filter((item) => item.threshold <= peak).map((item) => item.threshold));
+    const ratio = (peak - previousThreshold) / (next.threshold - previousThreshold);
+    els['cosmetics-next-copy'].textContent = `${next.items[0].name}까지 ${next.remaining.toLocaleString('ko-KR')}점`;
+    els['cosmetics-progress-fill'].style.width = `${Math.round(Math.max(0, Math.min(1, ratio)) * 100)}%`;
+  } else {
+    els['cosmetics-next-copy'].textContent = '모든 꾸미기를 해금했어요!';
+    els['cosmetics-progress-fill'].style.width = '100%';
+  }
+
+  els['cosmetics-grid'].replaceChildren();
+  cosmeticsForSlot(activeCosmeticSlot).forEach((item) => {
+    const unlocked = item.threshold <= peak;
+    const equipped = playerProfile.equipped?.[item.slot] === item.id;
+    const selected = previewCosmeticId === item.id;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `cosmetic-item ${equipped ? 'equipped' : ''} ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'} ${item.legendary ? 'legendary' : ''}`;
+    button.setAttribute('aria-pressed', String(selected));
+    button.setAttribute('aria-label', `${item.name} 미리보기${unlocked ? '' : `, ${item.threshold}점에 해금`}`);
+    button.innerHTML = `<span class="cosmetic-item-icon">${item.icon}</span><strong>${item.name}</strong><small>${item.description}</small><b>${equipped ? '장착 중' : unlocked ? '미리보기' : `미리보기 · ${item.threshold.toLocaleString('ko-KR')}점`}</b>`;
+    button.addEventListener('click', () => {
+      previewCosmeticId = item.id;
+      renderCosmeticsModal();
+      replayCosmeticPreview();
+    });
+    els['cosmetics-grid'].append(button);
+  });
+  renderCosmeticPreview();
+  renderReducedEffectsButton();
+}
+
+function equipCosmetic(item) {
+  if (!item || item.threshold > (playerProfile.peakPoints || 0)) return;
+  const equipped = { ...playerProfile.equipped };
+  if (item.legendary) {
+    COSMETICS.filter((candidate) => candidate.legendary).forEach((candidate) => {
+      equipped[candidate.slot] = candidate.id;
+    });
+  } else {
+    equipped[item.slot] = item.id;
+  }
+  playerProfile.equipped = equipped;
+  playerProfile = savePlayerProfile(playerProfile);
+  applyEquippedCosmetics();
+  renderCosmeticsModal();
+  playSound('card');
+  showToast(item.legendary ? '꿈빛 왕국 풀 세트 장착 완료!' : `${item.name} 장착 완료!`);
+}
+
+function renderCosmeticPreview() {
+  const fallbackId = playerProfile.equipped?.[activeCosmeticSlot] || cosmeticsForSlot(activeCosmeticSlot)[0]?.id;
+  const item = cosmeticById(previewCosmeticId) || cosmeticById(fallbackId);
+  if (!item) return;
+  previewCosmeticId = item.id;
+
+  const previewEquipped = { ...playerProfile.equipped };
+  if (item.legendary) {
+    COSMETICS.filter((candidate) => candidate.legendary).forEach((candidate) => {
+      previewEquipped[candidate.slot] = candidate.id;
+    });
+  } else {
+    previewEquipped[item.slot] = item.id;
+  }
+
+  const root = els['cosmetic-preview'];
+  const allClasses = COSMETICS.map((candidate) => candidate.cssClass).filter(Boolean);
+  root.classList.remove(...allClasses, 'preview-playing');
+  root.classList.add(...equippedClassNames(previewEquipped));
+
+  const unlocked = item.threshold <= (playerProfile.peakPoints || 0);
+  const equipped = item.legendary
+    ? COSMETICS.filter((candidate) => candidate.legendary).every((candidate) => playerProfile.equipped?.[candidate.slot] === candidate.id)
+    : playerProfile.equipped?.[item.slot] === item.id;
+  els['cosmetic-preview-status'].textContent = unlocked ? equipped ? '장착 중' : '해금 완료' : `잠금 · ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
+  els['cosmetic-preview-name'].textContent = item.legendary ? '꿈빛 왕국 풀 세트' : item.name;
+  els['cosmetic-preview-description'].textContent = item.legendary ? '전설 아이템 하나를 고르면 일곱 부위가 함께 미리 보여요.' : item.description;
+  els['cosmetic-preview-equip'].disabled = !unlocked || equipped;
+  els['cosmetic-preview-equip'].textContent = !unlocked
+    ? `${item.threshold.toLocaleString('ko-KR')}점에 해금`
+    : equipped ? '장착 중' : item.legendary ? '풀 세트 장착' : '장착하기';
+}
+
+function equipPreviewedCosmetic() {
+  equipCosmetic(cosmeticById(previewCosmeticId));
+}
+
+function replayCosmeticPreview() {
+  const root = els['cosmetic-preview'];
+  clearTimeout(cosmeticPreviewTimer);
+  root.classList.remove('preview-playing');
+  void root.offsetWidth;
+  root.classList.add('preview-playing');
+  const item = cosmeticById(previewCosmeticId);
+  playSound(item?.slot === 'victory' || item?.legendary ? 'win' : 'action');
+  cosmeticPreviewTimer = setTimeout(() => root.classList.remove('preview-playing'), 1200);
+}
+
+function toggleReducedEffects() {
+  playerProfile.reducedEffects = !playerProfile.reducedEffects;
+  playerProfile = savePlayerProfile(playerProfile);
+  applyEquippedCosmetics();
+  renderReducedEffectsButton();
+}
+
+function renderReducedEffectsButton() {
+  const reduced = Boolean(playerProfile.reducedEffects);
+  els['reduced-effects-button'].setAttribute('aria-pressed', String(reduced));
+  els['reduced-effects-button'].querySelector('strong').textContent = '효과 줄이기';
+  els['reduced-effects-button'].querySelector('small').textContent = '파티클과 큰 연출을 최소화해요';
+  els['reduced-effects-button'].querySelector('b').textContent = reduced ? 'ON' : 'OFF';
+}
+
+function applyEquippedCosmetics() {
+  const allClasses = COSMETICS.map((item) => item.cssClass).filter(Boolean);
+  document.body.classList.remove(...allClasses, 'reduced-effects');
+  document.body.classList.add(...equippedClassNames(playerProfile.equipped));
+  document.body.classList.toggle('reduced-effects', Boolean(playerProfile.reducedEffects));
 }
 
 function goHome() {
@@ -844,6 +1020,7 @@ function endGame(winner) {
   els['result-kicker'].textContent = won ? 'NICE PLAY' : 'GOOD TRY';
   els['result-title'].textContent = won ? '당신의 승리!' : `${DIFFICULTIES[difficulty].name}의 승리`;
   els['result-description'].textContent = won ? victoryMessage() : '흐름을 다시 읽으면 다음 판은 달라질 거예요.';
+  els['result-opponent-meta'].textContent = `${starsText(DIFFICULTIES[difficulty].stars)} ${DIFFICULTIES[difficulty].name} · 승리 시 +${rewardForStars(DIFFICULTIES[difficulty].stars)}점`;
   els['result-time'].textContent = formatTime(Date.now() - startedAt);
   els['result-moves'].textContent = `${moves}장`;
   els['result-final-card'].replaceChildren(createCardElement(game.topCard, false));
@@ -858,10 +1035,27 @@ function endGame(winner) {
   els['result-points-delta'].textContent = `${lastRatingResult.delta > 0 ? '+' : ''}${lastRatingResult.delta}점`;
   els['result-points-delta'].classList.toggle('lost', lastRatingResult.delta < 0);
   els['result-current-points'].textContent = `현재 ${playerProfile.points.toLocaleString('ko-KR')}점 · ${starsText(ratingProgress(playerProfile.points).stars)}`;
+  renderResultUnlocks(lastRatingResult.unlockedItems || []);
   resultRevealTimer = setTimeout(() => {
     openModal('result-modal');
-    setTimeout(() => els['rematch-button'].focus(), 0);
+    setTimeout(() => els['match-again-button'].focus(), 0);
   }, 1150);
+}
+
+function renderResultUnlocks(unlockedItems) {
+  const unlock = els['result-unlock'];
+  unlock.classList.toggle('hidden', unlockedItems.length === 0);
+  if (unlockedItems.length) {
+    const names = unlockedItems.slice(0, 3).map((item) => `${item.icon} ${item.name}`).join(' · ');
+    els['result-unlock-title'].textContent = unlockedItems.length >= 5 ? '꿈빛 왕국 풀 세트 해금!' : '새 꾸미기 해금!';
+    els['result-unlock-copy'].textContent = `${names}${unlockedItems.length > 3 ? ` 외 ${unlockedItems.length - 3}개` : ''}`;
+  }
+  const next = nextCosmeticUnlock(playerProfile.peakPoints);
+  els['result-next-unlock'].classList.toggle('hidden', !next);
+  if (next) {
+    els['result-next-unlock-name'].textContent = `다음 보상 · ${next.items[0].name}`;
+    els['result-next-unlock-remaining'].textContent = `${next.remaining.toLocaleString('ko-KR')}점 남음`;
+  }
 }
 
 function victoryMessage() {
@@ -882,6 +1076,11 @@ function updateRecord() {
   els['home-rating-next'].textContent = progress.target
     ? `다음 등급까지 ${progress.remaining.toLocaleString('ko-KR')}점`
     : '최고 점수 구간에 도달했어요';
+  const next = nextCosmeticUnlock(playerProfile.peakPoints);
+  els['home-next-unlock'].textContent = next
+    ? `다음 보상 · ${next.items[0].name} (${next.remaining.toLocaleString('ko-KR')}점)`
+    : '모든 꾸미기 해금 완료';
+  applyEquippedCosmetics();
 }
 
 function updateTimer() {

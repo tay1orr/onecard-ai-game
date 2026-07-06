@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./2026-07-01-reactions.css">
   <link rel="stylesheet" href="./2026-06-30-online.css">
+  <link rel="stylesheet" href="./2026-07-06-cosmetics.css">
 </head>
 <body>
   <div class="ambient ambient-a" aria-hidden="true"></div>
@@ -144,13 +145,15 @@
         <div><small>LAST PLAY</small><strong id="online-result-final-owner">마지막 카드</strong></div>
       </div>
       <div class="result-rating online-result-rating"><strong id="online-result-points-delta">+100점</strong><small id="online-result-current-points">현재 100점 · ★</small></div>
+      <div id="online-result-unlock" class="result-unlock hidden"><span>NEW ITEM!</span><strong id="online-result-unlock-title">새 꾸미기 해금!</strong><small id="online-result-unlock-copy"></small></div>
+      <div id="online-result-next-unlock" class="result-next-unlock"><span id="online-result-next-name">다음 보상</span><b id="online-result-next-remaining">300점 남음</b></div>
       <div class="rematch-state">
         <span><b id="online-rematch-me">나 · 대기</b><small>내 상태</small></span>
         <i>↻</i>
         <span><b id="online-rematch-opponent">상대 · 대기</b><small>상대 상태</small></span>
       </div>
       <button id="online-rematch-button" class="primary-button" type="button">재대결 신청</button>
-      <div class="result-reactions"><span>스티커 보내기</span><div id="result-reaction-picker" class="result-reaction-picker"></div></div>
+      <details class="result-reactions"><summary>스티커 보내기</summary><div id="result-reaction-picker" class="result-reaction-picker"></div></details>
       <button id="online-result-leave" class="secondary-button" type="button">방 나가기</button>
     </div>
   </div>

@@ -1,3 +1,5 @@
+import { DEFAULT_EQUIPPED, newlyUnlockedCosmetics, normalizeEquipped } from './2026-07-06-cosmetics.js';
+
 export const LEGACY_RECORD_KEY = 'onecard-record';
 export const LEGACY_BACKUP_KEY = 'onecard-record-backup-v1';
 export const PROFILE_KEY = 'onecard-player-profile-v2';
@@ -57,9 +59,12 @@ export function loadPlayerProfile(storage = defaultStorage()) {
   const savedGames = safeInteger(saved.games);
   const wins = Math.max(legacyWins, savedWins);
   const games = Math.max(legacyGames, savedGames, wins);
+  const points = safeInteger(saved.points);
+  const peakPoints = Math.max(points, safeInteger(saved.peakPoints));
   const profile = {
-    version: 2,
-    points: safeInteger(saved.points),
+    version: 3,
+    points,
+    peakPoints,
     wins,
     games,
     losses: Math.max(safeInteger(saved.losses), Math.max(0, games - wins)),
@@ -69,13 +74,22 @@ export function loadPlayerProfile(storage = defaultStorage()) {
     multiGames: safeInteger(saved.multiGames),
     awardedMatchIds: Array.isArray(saved.awardedMatchIds) ? saved.awardedMatchIds.slice(-100) : [],
     recentAiStars: Array.isArray(saved.recentAiStars) ? saved.recentAiStars.filter((value) => value >= 1 && value <= 5).slice(-2) : [],
+    equipped: normalizeEquipped(saved.equipped || DEFAULT_EQUIPPED, peakPoints),
+    reducedEffects: Boolean(saved.reducedEffects),
   };
   savePlayerProfile(profile, storage);
   return profile;
 }
 
 export function savePlayerProfile(profile, storage = defaultStorage()) {
-  const normalized = { ...profile, version: 2 };
+  const peakPoints = Math.max(safeInteger(profile.peakPoints), safeInteger(profile.points));
+  const normalized = {
+    ...profile,
+    version: 3,
+    peakPoints,
+    equipped: normalizeEquipped(profile.equipped || DEFAULT_EQUIPPED, peakPoints),
+    reducedEffects: Boolean(profile.reducedEffects),
+  };
   write(storage, PROFILE_KEY, JSON.stringify(normalized));
 
   const legacy = safeParse(storage?.getItem(LEGACY_RECORD_KEY)) || {};
@@ -95,7 +109,9 @@ export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId
 
   const requestedDelta = won ? WIN_REWARDS[safeStars] : LOSS_PENALTY;
   const previousPoints = profile.points;
+  const previousPeak = profile.peakPoints;
   profile.points = Math.max(0, profile.points + requestedDelta);
+  profile.peakPoints = Math.max(profile.peakPoints, profile.points);
   const delta = profile.points - previousPoints;
   profile.games += 1;
   if (won) profile.wins += 1;
@@ -108,7 +124,12 @@ export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId
     if (won) profile.aiWins += 1;
   }
   profile.awardedMatchIds = [...profile.awardedMatchIds, id].slice(-100);
-  return { profile: savePlayerProfile(profile, storage), delta, duplicate: false };
+  return {
+    profile: savePlayerProfile(profile, storage),
+    delta,
+    duplicate: false,
+    unlockedItems: newlyUnlockedCosmetics(previousPeak, profile.peakPoints),
+  };
 }
 
 export function playerStarsForPoints(points) {
