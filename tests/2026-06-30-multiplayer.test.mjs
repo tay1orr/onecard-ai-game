@@ -294,6 +294,7 @@ test('불꽃·색종이·네온·솜사탕·하이스코어는 서로 다른 전
 test('리얼 로즈가든과 신규 고점수 세트도 전용 이펙트와 승리 연출을 가진다', () => {
   assert.match(cosmeticsCss, /\.skin-table-real-rose \.table/);
   assert.match(cosmeticsCss, /\.skin-face-real-rose \.playing-card/);
+  assert.match(cosmeticsCss, /2026-07-07-real-rose-garden-card-face\.webp/);
   assert.match(cosmeticsCss, /\.skin-effect-real-rose \.effect-particles i/);
   assert.match(cosmeticsCss, /animation:victory-real-rose-petal-left/);
   assert.match(cosmeticsCss, /animation:preview-rose-petal/);
