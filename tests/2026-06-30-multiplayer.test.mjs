@@ -91,6 +91,13 @@ test('AI와 온라인 화면의 모든 요소 참조가 실제 HTML에 존재한
   assertReferencedIdsExist(onlineHtml, onlineMain);
 });
 
+test('딜 애니메이션 전에 실제 패가 먼저 노출되지 않는다', () => {
+  assert.match(baseCss, /\.dealing-cards \.player-hand \.playing-card, \.dealing-cards \.ai-hand \.mini-back \{ opacity: 0 !important; \}/);
+  assert.match(aiMain, /els\['game-table'\]\.classList\.add\('dealing-cards'\);[\s\S]*?render\(\);[\s\S]*?resetDiceModal\(\)/);
+  assert.match(aiMain, /function goHome\(\)[\s\S]*?els\['game-table'\]\.classList\.remove\('dealing-cards'\)/);
+  assert.match(onlineMain, /els\['online-table'\]\.classList\.add\('dealing-cards'\);[\s\S]*?previousStatus = 'playing';[\s\S]*?renderView\(gameView\);[\s\S]*?await runDealAnimation/);
+});
+
 test('메인 화면은 단일 이메일 기록 연결 카드와 모달을 제공한다', () => {
   assert.match(aiHtml, /2026-07-07-account-sync\.css/);
   assert.match(aiHtml, /id="account-profile-button"/);
@@ -327,12 +334,17 @@ test('게임 시작 전 이미 나온 상대 주사위를 강제로 다시 돌�
 test('AI 결과창 예약은 홈으로 나갈 때 취소된다', () => {
   assert.match(aiMain, /let resultRevealTimer = null/);
   assert.match(aiMain, /function goHome\(\)[\s\S]*?clearTimeout\(resultRevealTimer\)/);
-  assert.match(aiMain, /resultRevealTimer = setTimeout\(\(\) =>/);
+  assert.match(aiMain, /function showResultModal\(won\)/);
+  assert.match(aiMain, /VICTORY_RESULT_REVEAL_DELAY_MS = 2550/);
+  assert.match(aiMain, /victory-preview/);
+  assert.match(baseCss, /\.modal\.victory-preview \.result-card/);
 });
 
-test('멀티 기권 종료는 마지막 필드 카드를 승자의 카드로 오인하지 않는다', () => {
-  assert.match(onlineMain, /finishedByLeave = nextView\.lastEvent\?\.eventType === 'left'/);
-  assert.match(onlineMain, /상대 퇴장으로 종료 · 마지막 필드 카드/);
+test('결과창에는 이제 마지막 카드 블록을 표시하지 않는다', () => {
+  assert.doesNotMatch(aiHtml, /result-final-play|result-final-card|result-final-owner/);
+  assert.doesNotMatch(onlineHtml, /result-final-play|online-result-final-card|online-result-final-owner/);
+  assert.doesNotMatch(aiMain, /result-final-card|result-final-owner/);
+  assert.doesNotMatch(onlineMain, /online-result-final-card|online-result-final-owner|finishedByLeave/);
 });
 
 test('AI와 멀티 결과창은 승리한 경우에만 장착한 대형 승리 연출을 재생한다', () => {
@@ -341,8 +353,19 @@ test('AI와 멀티 결과창은 승리한 경우에만 장착한 대형 승리 �
   assert.match(onlineHtml, /class="victory-stage"/);
   assert.match(aiMain, /classList\.toggle\('victory-earned', won\)/);
   assert.match(onlineMain, /classList\.toggle\('victory-earned', won\)/);
+  assert.match(onlineMain, /function showOnlineResultModal\(won\)/);
+  assert.match(onlineMain, /VICTORY_RESULT_REVEAL_DELAY_MS = 2550/);
+  assert.match(onlineMain, /victory-preview/);
   assert.match(cosmeticsCss, /\.skin-victory-fireworks \.victory-earned\.open \.victory-stage i/);
   assert.doesNotMatch(cosmeticsCss, /\.skin-victory-fireworks \.victory-stage i \{/);
+});
+
+test('버린 카드 더미가 앞면 스킨을 계속 유지한다', () => {
+  assert.match(aiMain, /function applyDiscardFaceSkin\(\)/);
+  assert.match(aiMain, /closest\('\.discard-wrap'\)/);
+  assert.match(aiMain, /function renderTopCard\(\)[\s\S]*?applyDiscardFaceSkin\(\)/);
+  assert.match(onlineMain, /function applyOnlineDiscardFaceSkin\(\)/);
+  assert.match(onlineMain, /function renderTopCard\(card, activeSuit\)[\s\S]*?applyOnlineDiscardFaceSkin\(\)/);
 });
 
 test('승리 연출은 실제 게임과 미리보기에서 각각 48개 파티클을 사용한다', () => {

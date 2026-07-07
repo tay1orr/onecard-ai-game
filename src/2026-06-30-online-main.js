@@ -54,6 +54,10 @@ let resultRevealTimer = null;
 let currentResultKey = '';
 let pendingOnlineMissionUnlocks = [];
 const resultRatingCache = new Map();
+const CARD_FACE_CLASS_NAMES = COSMETICS
+  .filter((item) => item.slot === 'cardFace' && item.cssClass)
+  .map((item) => item.cssClass);
+const VICTORY_RESULT_REVEAL_DELAY_MS = 2550;
 
 els['room-code-input'].addEventListener('input', () => {
   els['room-code-input'].value = normalizeRoomCode(els['room-code-input'].value);
@@ -330,6 +334,19 @@ function applyOnlineCosmetics() {
   document.body.classList.remove(...allClasses, ...allSetBonusClassNames(), 'reduced-effects');
   document.body.classList.add(...equippedClassNames(playerProfile.equipped));
   document.body.classList.toggle('reduced-effects', Boolean(playerProfile.reducedEffects));
+  applyOnlineDiscardFaceSkin();
+}
+
+function equippedCardFaceClassName() {
+  const cardFace = cosmeticById(playerProfile.equipped?.cardFace);
+  return cardFace?.slot === 'cardFace' ? cardFace.cssClass : 'skin-face-classic';
+}
+
+function applyOnlineDiscardFaceSkin() {
+  const discardWrap = els['online-top-card']?.closest('.discard-wrap');
+  if (!discardWrap) return;
+  discardWrap.classList.remove(...CARD_FACE_CLASS_NAMES);
+  discardWrap.classList.add(equippedCardFaceClassName());
 }
 
 function renderHand(nextView) {
@@ -360,6 +377,7 @@ function renderTopCard(card, activeSuit) {
   const element = createCard(card, false);
   els['online-top-card'].className = `${element.className} discard-card`;
   els['online-top-card'].replaceChildren(...element.childNodes);
+  applyOnlineDiscardFaceSkin();
   const showSuit = ['7','JOKER'].includes(card.rank) && activeSuit;
   els['online-active-suit'].classList.toggle('hidden', !showSuit);
   els['online-active-suit'].classList.toggle('red', ['hearts','diamonds'].includes(activeSuit));
@@ -525,9 +543,9 @@ async function runOnlineStartSequence(nextView) {
   const starter = gameView.currentSeat === 0 ? gameView.host.nickname : gameView.guest.nickname;
   els['online-dice-status'].textContent = `${gameView.host.die} 대 ${gameView.guest.die} · ${starter} 선공!`;
   await wait(1350);
+  els['online-table'].classList.add('dealing-cards');
   previousStatus = 'playing';
   renderView(gameView);
-  els['online-table'].classList.add('dealing-cards');
   await runDealAnimation({
     playerCards: gameView.myHand,
     createCardFace: (card) => createCard(card, false),
@@ -660,7 +678,6 @@ function renderOnlineResult(nextView) {
     ? `round:${nextView.roundNo}`
     : `legacy-score:${nextView.host.wins ?? 0}:${nextView.guest.wins ?? 0}`;
   const resultKey = `multi:${nextView.roomId}:${roundIdentity}`;
-  const finishedByLeave = nextView.lastEvent?.eventType === 'left';
   const recordedResult = nextView.topCard ? recordMatchResult({
     won,
     opponentStars: playerStarsForPoints(opponent.rating || 0),
@@ -688,11 +705,6 @@ function renderOnlineResult(nextView) {
   els['online-result-icon'].textContent = won ? '✦' : '↻';
   els['online-result-title'].textContent = won ? '내 승리!' : '상대 승리';
   els['online-result-description'].textContent = `현재 전적 ${mine.wins ?? 0}승 ${opponent.wins ?? 0}패 · ${won ? '같은 방에서 흐름을 이어가 보세요.' : '바로 다시 도전할 수 있어요.'}`;
-  els['online-result-final-card'].replaceChildren();
-  if (nextView.topCard) els['online-result-final-card'].append(createCard(nextView.topCard, false));
-  els['online-result-final-owner'].textContent = nextView.topCard
-    ? finishedByLeave ? '상대 퇴장으로 종료 · 마지막 필드 카드' : won ? '내가 낸 마지막 카드' : `${opponent.nickname}님이 낸 마지막 카드`
-    : '상대 퇴장으로 종료된 경기';
   els['online-result-points-delta'].textContent = nextView.topCard ? `${ratingResult.delta > 0 ? '+' : ''}${ratingResult.delta}점` : '점수 변동 없음';
   els['online-result-points-delta'].classList.toggle('lost', ratingResult.delta < 0);
   els['online-result-current-points'].textContent = `현재 ${playerProfile.points.toLocaleString('ko-KR')}점 · ${starsText(playerStarsForPoints(playerProfile.points))}`;
@@ -719,11 +731,26 @@ function renderOnlineResult(nextView) {
   if (currentResultKey !== resultKey) {
     currentResultKey = resultKey;
     clearTimeout(resultRevealTimer);
-    resultRevealTimer = setTimeout(() => {
-      els['online-result-modal'].classList.remove('hidden');
-      requestAnimationFrame(() => els['online-result-modal'].classList.add('open'));
-    }, 1150);
+    showOnlineResultModal(won);
   }
+}
+
+function showOnlineResultModal(won) {
+  const modal = els['online-result-modal'];
+  modal.classList.remove('victory-preview');
+  if (won) {
+    modal.classList.add('victory-preview');
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => modal.classList.add('open'));
+    resultRevealTimer = setTimeout(() => {
+      modal.classList.remove('victory-preview');
+    }, VICTORY_RESULT_REVEAL_DELAY_MS);
+    return;
+  }
+  resultRevealTimer = setTimeout(() => {
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => modal.classList.add('open'));
+  }, 1150);
 }
 
 function renderOnlineBonusResultSummary(won, ratingResult) {
@@ -798,6 +825,7 @@ function onlineResultMissionEvents({ won, resultKey, opponentStars, bonus }) {
 
 function closeOnlineResult() {
   clearTimeout(resultRevealTimer);
+  els['online-result-modal'].classList.remove('victory-preview');
   els['online-result-modal'].classList.remove('open');
   setTimeout(() => {
     if (view?.status !== 'finished') {
@@ -984,6 +1012,7 @@ async function leaveRoom() {
   finally {
     busy = false; view = null; previousStatus = null; lastEventId = null;
     eventEffectGeneration += 1; clearTimeout(eventEffectTimer); effects.clear();
+    els['online-table'].classList.remove('dealing-cards');
     displayedDice = [null, null]; lastDiceTie = false; clearDiceAnimation(0); clearDiceAnimation(1); closeOnlineResult(); closeOnlineHistory();
     els['online-game'].classList.add('hidden'); els['online-lobby'].classList.add('hidden'); els['online-entry'].classList.remove('hidden');
   }

@@ -85,6 +85,11 @@ let aiReactionCooldownUntil = 0;
 let cosmeticPreviewTimer = null;
 let currentAccountSyncState = { status: 'checking' };
 
+const CARD_FACE_CLASS_NAMES = COSMETICS
+  .filter((item) => item.slot === 'cardFace' && item.cssClass)
+  .map((item) => item.cssClass);
+const VICTORY_RESULT_REVEAL_DELAY_MS = 2550;
+
 const DIE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
 const TOY_LINES = {
@@ -242,6 +247,7 @@ function startGame(selectedDifficulty) {
   startedAt = 0;
   els['home-screen'].classList.add('hidden');
   els['game-screen'].classList.remove('hidden');
+  els['game-table'].classList.add('dealing-cards');
   els['bonus-match-badge'].classList.toggle('hidden', !currentBonusMatch);
   closeModal('result-modal');
   els['match-again-button'].disabled = false;
@@ -703,6 +709,19 @@ function applyEquippedCosmetics() {
   document.body.classList.remove(...allClasses, ...allSetBonusClassNames(), 'reduced-effects');
   document.body.classList.add(...equippedClassNames(playerProfile.equipped));
   document.body.classList.toggle('reduced-effects', Boolean(playerProfile.reducedEffects));
+  applyDiscardFaceSkin();
+}
+
+function equippedCardFaceClassName() {
+  const cardFace = cosmeticById(playerProfile.equipped?.cardFace);
+  return cardFace?.slot === 'cardFace' ? cardFace.cssClass : 'skin-face-classic';
+}
+
+function applyDiscardFaceSkin() {
+  const discardWrap = els['discard-pile']?.closest('.discard-wrap');
+  if (!discardWrap) return;
+  discardWrap.classList.remove(...CARD_FACE_CLASS_NAMES);
+  discardWrap.classList.add(equippedCardFaceClassName());
 }
 
 function goHome() {
@@ -716,6 +735,8 @@ function goHome() {
   effects.clear();
   hideAiReaction();
   closeAiReactionPicker(true);
+  els['game-table'].classList.remove('dealing-cards');
+  els['result-modal'].classList.remove('victory-preview');
   gameReady = false;
   currentBonusMatch = false;
   pendingSeven = null;
@@ -985,6 +1006,7 @@ function renderTopCard() {
   const current = createCardElement(card, false);
   els['discard-pile'].className = `${current.className} discard-card history-trigger`;
   els['discard-pile'].replaceChildren(...current.childNodes);
+  applyDiscardFaceSkin();
   els['discard-pile'].setAttribute('aria-label', `현재 카드 ${suitName(card.suit)} ${card.rank}, 낸 카드 기록 보기`);
   els['discard-pile'].dataset.historyCount = String(game.history.length);
   const changed = Boolean(game.requestedSuit);
@@ -1128,8 +1150,6 @@ function endGame(winner) {
   els['result-opponent-meta'].textContent = `${starsText(DIFFICULTIES[difficulty].stars)} ${DIFFICULTIES[difficulty].name} · 승리 시 +${displayedReward}점`;
   els['result-time'].textContent = formatTime(Date.now() - startedAt);
   els['result-moves'].textContent = `${moves}장`;
-  els['result-final-card'].replaceChildren(createCardElement(game.topCard, false));
-  els['result-final-owner'].textContent = won ? '내가 낸 마지막 카드' : `${DIFFICULTIES[difficulty].name}가 낸 마지막 카드`;
   lastRatingResult = recordMatchResult({
     won,
     opponentStars: DIFFICULTIES[difficulty].stars,
@@ -1149,6 +1169,22 @@ function endGame(winner) {
   els['result-points-delta'].classList.toggle('lost', lastRatingResult.delta < 0);
   els['result-current-points'].textContent = `현재 ${playerProfile.points.toLocaleString('ko-KR')}점 · ${starsText(ratingProgress(playerProfile.points).stars)}`;
   renderResultUnlocks(mergeUnlockedItems(lastRatingResult.unlockedItems || [], pendingMissionUnlocks, missionResult.unlockedItems || []));
+  showResultModal(won);
+}
+
+function showResultModal(won) {
+  clearTimeout(resultRevealTimer);
+  const modal = els['result-modal'];
+  modal.classList.remove('victory-preview');
+  if (won) {
+    modal.classList.add('victory-preview');
+    openModal('result-modal');
+    resultRevealTimer = setTimeout(() => {
+      modal.classList.remove('victory-preview');
+      setTimeout(() => els['match-again-button'].focus(), 0);
+    }, VICTORY_RESULT_REVEAL_DELAY_MS);
+    return;
+  }
   resultRevealTimer = setTimeout(() => {
     openModal('result-modal');
     setTimeout(() => els['match-again-button'].focus(), 0);

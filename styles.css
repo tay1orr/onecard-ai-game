@@ -315,6 +315,12 @@ button.playing-card { cursor: pointer; }
 @keyframes drawn-card-enter { to { opacity: 1; transform: translateY(0) rotate(calc((var(--draw-index) - (var(--draw-count) - 1) / 2) * 3deg)) scale(1); } }
 @keyframes drawn-card-to-hand { to { opacity: 0; transform: translateY(45vh) scale(.5); } }
 .result-card { text-align: center; }
+.modal.victory-preview .result-card { opacity: 0; pointer-events: none; transform: translateY(18px) scale(.94); }
+.modal.victory-earned.open:not(.victory-preview) .result-card { animation: result-card-reveal .42s cubic-bezier(.2,.82,.24,1.12) both; }
+@keyframes result-card-reveal {
+  from { opacity: 0; transform: translateY(22px) scale(.94); }
+  to { opacity: 1; transform: none; }
+}
 .result-icon { width: 67px; height: 67px; border-radius: 22px; margin: 0 auto 22px; display: grid; place-items: center; background: linear-gradient(145deg, #ff6588, #c93e62); font-size: 28px; transform: rotate(-5deg); box-shadow: 0 12px 28px rgba(255,77,116,.25); }
 .result-card > p:not(.step-label) { color: var(--muted); font-size: 13px; }
 .result-stats { display: grid; grid-template-columns: 1fr 1fr; margin: 25px 0; border: 1px solid var(--line); border-radius: 15px; }
@@ -322,12 +328,6 @@ button.playing-card { cursor: pointer; }
 .result-stats div + div { border-left: 1px solid var(--line); }
 .result-stats small { color: var(--muted); font-size: 10px; }
 .result-stats strong { font: 700 19px/1 'DM Sans', sans-serif; }
-.result-final-play { margin: 19px auto 0; padding: 12px 15px; display: flex; align-items: center; justify-content: center; gap: 15px; width: fit-content; border: 1px solid var(--line); border-radius: 15px; background: rgba(8,11,23,.36); }
-.result-final-card .playing-card { width: 56px; height: 78px; min-width: 56px; font-size: 10px; pointer-events: none; }
-.result-final-card .card-center { transform: scale(.62); }
-.result-final-play > div:last-child { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
-.result-final-play small { color: var(--muted); font: 800 9px/1 'DM Sans', sans-serif; letter-spacing: .12em; }
-.result-final-play strong { font-size: 12px; }
 .result-rating { margin: -10px 0 20px; display: flex; flex-direction: column; gap: 5px; }
 .result-rating strong { color: var(--green); font: 900 25px/1 'DM Sans', sans-serif; }
 .result-rating strong.lost { color: #ff7895; }
