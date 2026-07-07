@@ -43,8 +43,7 @@ import {
   friendlyAccountSyncError,
   getAccountSyncState,
   queueAccountProfileSync,
-  requestEmailConnection,
-  requestEmailLogin,
+  requestEmailRecordLink,
   syncAccountProfile,
 } from './2026-07-07-account-sync.js';
 
@@ -127,7 +126,6 @@ els['cosmetics-button'].addEventListener('click', openCosmetics);
 els['account-connect-button']?.addEventListener('click', openAccountModal);
 els['account-refresh-button']?.addEventListener('click', refreshAccountSync);
 els['account-link-email-button']?.addEventListener('click', connectAccountEmail);
-els['account-login-email-button']?.addEventListener('click', loginAccountEmail);
 els['account-email-input']?.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
     event.preventDefault();
@@ -1331,7 +1329,7 @@ function renderAccountSyncState(state = {}) {
   els['account-sync-title'].textContent = message.title;
   els['account-sync-copy'].textContent = message.copy;
   if (els['account-connect-button']) {
-    els['account-connect-button'].textContent = status === 'email' ? '이메일 확인' : '계정 연결하기';
+    els['account-connect-button'].textContent = status === 'email' ? '관리' : '이메일로 기록 연결';
   }
   if (els['account-refresh-button']) els['account-refresh-button'].disabled = status === 'checking';
 }
@@ -1341,7 +1339,7 @@ function openAccountModal() {
   if (!email && els['account-sync-card']?.dataset.accountStatus === 'email') {
     els['account-email-input'].placeholder = '이미 이메일로 보호 중이에요';
   }
-  setAccountModalStatus('현재 기록을 보호하려면 이메일을 입력하고 “보호 메일 보내기”를 눌러 주세요.');
+  setAccountModalStatus('이메일을 입력하고 “이메일로 기록 연결”을 누르면 현재 기록 보호 또는 기존 기록 불러오기를 자동으로 처리해요.');
   openModal('account-modal');
 }
 
@@ -1350,11 +1348,19 @@ function accountEmailValue() {
 }
 
 async function connectAccountEmail() {
-  setAccountModalBusy(true, '현재 기록을 Supabase에 안전하게 저장하고 있어요...');
+  setAccountModalBusy(true, '이메일 기록 연결을 준비하고 있어요...');
   try {
-    const result = await requestEmailConnection(accountEmailValue());
-    setAccountModalStatus(`${result.email}로 인증 메일을 보냈어요. 메일의 링크를 누르면 이 기록이 이메일로 보호돼요.`);
-    showToast('기록 보호 메일을 보냈어요!');
+    const result = await requestEmailRecordLink(accountEmailValue());
+    if (result.status === 'already-connected') {
+      setAccountModalStatus(`${result.email} 계정으로 이미 연결되어 있어요. 기록을 한 번 더 동기화했어요.`);
+      showToast('이미 연결된 계정이에요!');
+    } else if (result.status === 'magic-link-sent') {
+      setAccountModalStatus(`${result.email}로 로그인 메일을 보냈어요. 링크를 열면 저장된 기록을 이 브라우저로 불러와 합쳐요.`);
+      showToast('기록 불러오기 메일을 보냈어요!');
+    } else {
+      setAccountModalStatus(`${result.email}로 인증 메일을 보냈어요. 링크를 열면 이 기록이 이메일 계정으로 보호돼요.`);
+      showToast('기록 연결 메일을 보냈어요!');
+    }
     await refreshAccountSync({ manual: false });
   } catch (error) {
     setAccountModalStatus(friendlyAccountSyncError(error), true);
@@ -1363,21 +1369,8 @@ async function connectAccountEmail() {
   }
 }
 
-async function loginAccountEmail() {
-  setAccountModalBusy(true, '기록을 불러올 로그인 메일을 보내고 있어요...');
-  try {
-    const result = await requestEmailLogin(accountEmailValue());
-    setAccountModalStatus(`${result.email}로 불러오기 메일을 보냈어요. 같은 브라우저에서 링크를 열면 기록을 병합해서 가져와요.`);
-    showToast('불러오기 메일을 보냈어요!');
-  } catch (error) {
-    setAccountModalStatus(friendlyAccountSyncError(error), true);
-  } finally {
-    setAccountModalBusy(false);
-  }
-}
-
 function setAccountModalBusy(busy, message = '') {
-  ['account-link-email-button', 'account-login-email-button'].forEach((id) => {
+  ['account-link-email-button'].forEach((id) => {
     if (els[id]) els[id].disabled = busy;
   });
   if (message) setAccountModalStatus(message);

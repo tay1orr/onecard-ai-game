@@ -304,6 +304,14 @@ export async function requestEmailConnection(email, options = {}) {
   return { status: 'email-link-sent', email: cleanEmail };
 }
 
+function isAlreadyRegisteredEmailError(error) {
+  const message = String(error?.message || error || '');
+  return message.includes('User already registered')
+    || message.includes('already been registered')
+    || message.includes('already registered')
+    || message.includes('identity_already_exists');
+}
+
 export async function requestEmailLogin(email, options = {}) {
   const storage = options.storage || defaultStorage();
   const cleanEmail = String(email || '').trim().toLowerCase();
@@ -321,12 +329,34 @@ export async function requestEmailLogin(email, options = {}) {
   return { status: 'magic-link-sent', email: cleanEmail };
 }
 
+export async function requestEmailRecordLink(email, options = {}) {
+  const storage = options.storage || defaultStorage();
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  if (!cleanEmail || !cleanEmail.includes('@')) throw new Error('INVALID_EMAIL');
+  const client = options.client || await getAccountClient();
+  const session = await ensureAccountSession(client);
+  const currentEmail = session?.user?.email?.toLowerCase?.() || '';
+  if (session?.user && !isAnonymousUser(session.user)) {
+    if (currentEmail === cleanEmail) {
+      const synced = await syncAccountProfile({ storage, client });
+      return { status: 'already-connected', email: cleanEmail, profile: synced.profile };
+    }
+    return requestEmailLogin(cleanEmail, { storage, client });
+  }
+  try {
+    return await requestEmailConnection(cleanEmail, { storage, client });
+  } catch (error) {
+    if (!isAlreadyRegisteredEmailError(error)) throw error;
+    return requestEmailLogin(cleanEmail, { storage, client });
+  }
+}
+
 export function friendlyAccountSyncError(error) {
   const message = String(error?.message || error || '');
   if (message.includes('ACCOUNT_SUPABASE_NOT_CONFIGURED')) return 'Supabase 공개 설정이 필요해요.';
   if (message.includes('relation') && message.includes(ACCOUNT_SYNC_TABLE)) return 'Supabase SQL을 먼저 실행해야 기록 보호를 사용할 수 있어요.';
   if (message.includes('INVALID_EMAIL')) return '이메일 주소를 다시 확인해 주세요.';
   if (message.includes('Email rate limit exceeded') || message.includes('For security purposes')) return '메일은 잠시 후 다시 보낼 수 있어요.';
-  if (message.includes('User already registered') || message.includes('already been registered')) return '이미 사용 중인 이메일이면 아래 “이메일로 불러오기”를 사용해 주세요.';
+  if (isAlreadyRegisteredEmailError(error)) return '이미 연결된 이메일이에요. 같은 이메일로 로그인 메일을 받아 기록을 불러와 주세요.';
   return message || '기록 보호 연결 중 문제가 생겼어요.';
 }
