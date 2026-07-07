@@ -7,9 +7,12 @@ import {
   LEGACY_BACKUP_KEY,
   LEGACY_RECORD_KEY,
   PROFILE_KEY,
+  bonusMatchChance,
   loadPlayerProfile,
   matchmakingWeights,
   recordMatchResult,
+  rewardForStars,
+  rollBonusMatch,
   savePlayerProfile,
   selectAiOpponent,
 } from '../src/2026-07-05-rating.js';
@@ -141,13 +144,24 @@ assert.equal(legacyStorage.getItem(LEGACY_BACKUP_KEY), legacyRaw, '이전 전 �
 assert.deepEqual(JSON.parse(legacyStorage.getItem(LEGACY_RECORD_KEY)), { wins: 12, games: 20, nickname: '기존 플레이어' }, '기존 기록의 추가 필드까지 보존해야 함');
 assert.ok(legacyStorage.getItem(PROFILE_KEY), '새 프로필을 별도 키로 저장해야 함');
 
+assert.deepEqual([1, 2, 3, 4, 5].map(rewardForStars), [125, 180, 250, 340, 500], '상대 등급별 상향된 승리 보상을 적용해야 함');
 const firstWin = recordMatchResult({ won: true, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-1' }, legacyStorage);
-assert.deepEqual([firstWin.delta, firstWin.profile.points, firstWin.profile.wins, firstWin.profile.games], [400, 400, 13, 21], '5성 승리는 기존 기록 위에 점수와 승리를 더해야 함');
+assert.deepEqual([firstWin.delta, firstWin.profile.points, firstWin.profile.wins, firstWin.profile.games], [500, 500, 13, 21], '5성 승리는 기존 기록 위에 상향된 점수와 승리를 더해야 함');
 const duplicateWin = recordMatchResult({ won: true, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-1' }, legacyStorage);
 assert.deepEqual([duplicateWin.duplicate, duplicateWin.profile.wins, duplicateWin.profile.games], [true, 13, 21], '같은 경기 결과는 중복 반영하지 않아야 함');
 const fixedLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-2' }, legacyStorage);
-assert.deepEqual([fixedLoss.delta, fixedLoss.profile.points, fixedLoss.profile.games], [-50, 350, 22], '상대 등급과 무관하게 패배는 50점만 차감해야 함');
+assert.deepEqual([fixedLoss.delta, fixedLoss.profile.points, fixedLoss.profile.games], [-50, 450, 22], '상대 등급과 무관하게 패배는 50점만 차감해야 함');
 assert.deepEqual(JSON.parse(legacyStorage.getItem(LEGACY_RECORD_KEY)), { wins: 13, games: 22, nickname: '기존 플레이어' }, '새 결과 반영 뒤에도 기존 키의 승수·판수와 추가 필드를 보존해야 함');
+
+const bonusStorage = memoryStorage();
+const bonusWin = recordMatchResult({ won: true, opponentStars: 3, mode: 'ai', matchId: 'bonus-win', bonusMultiplier: 2 }, bonusStorage);
+assert.deepEqual([bonusWin.baseDelta, bonusWin.delta, bonusWin.bonusMultiplier, bonusWin.profile.points], [250, 500, 2, 500], '보너스판 승리는 기본 승리 보상을 2배로 지급해야 함');
+const bonusLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'bonus-loss', bonusMultiplier: 2 }, bonusStorage);
+assert.deepEqual([bonusLoss.delta, bonusLoss.bonusMultiplier, bonusLoss.profile.points], [-50, 2, 450], '보너스판에서 져도 패배 차감은 2배가 아니어야 함');
+assert.equal(bonusMatchChance(0), 0.2, '초기 보너스판 확률은 20%여야 함');
+assert.equal(bonusMatchChance(40000), 0.15, '고점 보너스판 확률은 15%까지 완만히 줄어야 함');
+assert.equal(rollBonusMatch(0, () => 0.19), true, '확률 안쪽이면 보너스판이 등장해야 함');
+assert.equal(rollBonusMatch(40000, () => 0.16), false, '고점 확률 밖이면 일반판이어야 함');
 
 const floorStorage = memoryStorage();
 const floorLoss = recordMatchResult({ won: false, opponentStars: 1, matchId: 'floor-loss' }, floorStorage);
@@ -175,8 +189,10 @@ savePlayerProfile(cosmeticProfile, cosmeticStorage);
 const cosmeticLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'cosmetic-loss' }, cosmeticStorage);
 assert.deepEqual([cosmeticLoss.profile.points, cosmeticLoss.profile.peakPoints], [1750, 1800], '패배해 현재 점수가 내려가도 역대 최고 점수는 유지해야 함');
 assert.equal(cosmeticLoss.profile.equipped.cardBack, 'back-strawberry-milk', '점수가 내려가도 이미 해금하고 장착한 스킨은 유지해야 함');
-assert.equal(nextCosmeticUnlock(20000), null, '2만점에서는 모든 꾸미기 해금이 완료되어야 함');
+assert.equal(nextCosmeticUnlock(20000).threshold, 20700, '2만점 이후에는 마스터 꾸미기 라인이 이어져야 함');
 assert.equal(newlyUnlockedCosmetics(19999, 20000).length, 6, '2만점 달성 시 꿈빛 왕국 풀 세트 6종을 함께 해금해야 함');
+assert.equal(nextCosmeticUnlock(20699).threshold, 20700, '20,700점부터 신규 이미지 테이블 보상이 시작되어야 함');
+assert.equal(newlyUnlockedCosmetics(20699, 21200).map((item) => item.id).join(','), 'table-pink-cloud-pop,back-pink-cloud-pop', '핑크 구름 팝은 테이블과 카드 뒷면 순서로 해금되어야 함');
 assert.equal(COSMETICS.filter((item) => item.concept).length >= 9, true, '서로 다른 신규 콘셉트 꾸미기가 충분히 제공되어야 함');
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-neon-arcade'), true, '네온 아케이드 카드 앞면을 제공해야 함');
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-dessert-cafe'), true, '디저트 카페 카드 앞면을 제공해야 함');
@@ -192,6 +208,9 @@ assert.deepEqual(cosmeticSetProgress(roseSet, 10900), { unlocked: 5, total: 5 },
 assert.equal(['table-rose-conservatory', 'back-rose-arbor', 'effect-rose-petal-storm', 'victory-rose-grand-bloom'].every((id) => COSMETICS.some((item) => item.id === id)), true, '장미 온실의 네 가지 신규 아이템이 모두 있어야 함');
 assert.equal(cosmeticSetForItem('face-rose-tea')?.id, 'rose-conservatory', '장미 티파티 앞면은 장미 온실 세트로 표시되어야 함');
 assert.equal(normalizeEquipped({ cardBack: 'back-rose-arbor' }, 14000).cardBack, 'back-rose-arbor', '해금한 장미 뒷면은 정상 장착되어야 함');
+const roseBallroomSet = COSMETIC_SETS.find((set) => set.id === 'rose-ballroom');
+assert.deepEqual(cosmeticSetProgress(roseBallroomSet, 30300), { unlocked: 2, total: 2 }, '장미 무도회 이미지 세트는 30,300점에 2종 모두 해금되어야 함');
+assert.equal(normalizeEquipped({ cardBack: 'back-ancient-sun-temple' }, 38500).cardBack, 'back-ancient-sun-temple', '고대 태양 신전 뒷면은 최고 구간에서 장착되어야 함');
 
 const preservedCosmeticStorage = memoryStorage({
   [PROFILE_KEY]: JSON.stringify({
@@ -212,4 +231,4 @@ assert.deepEqual(
 assert.equal(preservedCosmeticProfile.equipped.cardBack, 'back-antique-atlas', '해금한 새 카드 뒷면 장착 상태를 보존해야 함');
 assert.equal(Object.hasOwn(preservedCosmeticProfile.equipped, 'pile'), false, '예전 더미 장착값은 기록을 건드리지 않고 정규화 과정에서만 제외해야 함');
 
-console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 75개 통과');
+console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 89개 통과');

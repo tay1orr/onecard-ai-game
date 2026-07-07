@@ -31,6 +31,7 @@ create table if not exists public.onecard_rooms (
   guest_rating integer not null default 0 check (guest_rating >= 0),
   host_card_back text not null default 'back-classic',
   guest_card_back text not null default 'back-classic',
+  bonus_multiplier smallint not null default 1 check (bonus_multiplier in (1, 2)),
   round_no bigint not null default 0 check (round_no >= 0),
   winner_seat smallint check (winner_seat in (0, 1)),
   version bigint not null default 0,
@@ -47,6 +48,7 @@ alter table public.onecard_rooms add column if not exists host_rating integer no
 alter table public.onecard_rooms add column if not exists guest_rating integer not null default 0 check (guest_rating >= 0);
 alter table public.onecard_rooms add column if not exists host_card_back text not null default 'back-classic';
 alter table public.onecard_rooms add column if not exists guest_card_back text not null default 'back-classic';
+alter table public.onecard_rooms add column if not exists bonus_multiplier smallint not null default 1 check (bonus_multiplier in (1, 2));
 alter table public.onecard_rooms add column if not exists round_no bigint not null default 0 check (round_no >= 0);
 
 create table if not exists public.onecard_private_state (
@@ -195,6 +197,7 @@ begin
     'mySeat', v_seat,
     'version', v_room.version,
     'roundNo', v_room.round_no,
+    'bonusMultiplier', v_room.bonus_multiplier,
     'currentSeat', v_room.current_seat,
     'activeSuit', v_room.active_suit,
     'attackCount', v_room.attack_count,
@@ -266,7 +269,9 @@ begin
   if v_card_back not in (
     'back-classic', 'back-strawberry-milk', 'back-star-candy', 'back-space-whale', 'back-dream-kingdom',
     'back-antique-atlas', 'back-bauhaus', 'back-jade-rune', 'back-brass-orbit',
-    'back-monochrome-wave', 'back-antique-library', 'back-rose-arbor'
+    'back-monochrome-wave', 'back-antique-library', 'back-rose-arbor',
+    'back-pink-cloud-pop', 'back-moon-rabbit-observatory', 'back-strawberry-toy-parade',
+    'back-rose-ballroom', 'back-neon-deepsea-city', 'back-ancient-sun-temple'
   ) then
     v_card_back := 'back-classic';
   end if;
@@ -376,7 +381,7 @@ begin
   where id = p_room_id;
 
   update public.onecard_rooms
-  set status = 'dice', updated_at = now(), version = version + 1
+  set status = 'dice', bonus_multiplier = 1, updated_at = now(), version = version + 1
   where id = p_room_id and host_ready and guest_ready and status = 'waiting';
 
   insert into public.onecard_events(room_id, actor_seat, event_type, payload)
@@ -392,12 +397,19 @@ set search_path = ''
 as $$
 declare
   v_deck jsonb := public.onecard_new_deck();
+  v_room public.onecard_rooms%rowtype;
   v_host_hand jsonb;
   v_guest_hand jsonb;
   v_draw_pile jsonb;
   v_top_card jsonb;
   v_top_position bigint;
+  v_bonus_chance numeric;
+  v_bonus_multiplier smallint := 1;
 begin
+  select * into v_room from public.onecard_rooms where id = p_room_id for update;
+  v_bonus_chance := greatest(0.15, 0.20 - (least(greatest(v_room.host_rating, v_room.guest_rating), 40000)::numeric / 40000) * 0.05);
+  v_bonus_multiplier := case when random() < v_bonus_chance then 2 else 1 end;
+
   select coalesce(jsonb_agg(card order by position), '[]'::jsonb)
   into v_host_hand
   from jsonb_array_elements(v_deck) with ordinality as d(card, position)
@@ -436,7 +448,7 @@ begin
       round_no = round_no + 1,
       active_suit = v_top_card->>'suit', attack_count = 0, free_play = false,
       top_card = v_top_card, host_count = 5, guest_count = 5,
-      winner_seat = null, dice_tie = false,
+      winner_seat = null, dice_tie = false, bonus_multiplier = v_bonus_multiplier,
       host_ready = false, guest_ready = false,
       updated_at = now(), version = version + 1
   where id = p_room_id;
@@ -489,7 +501,8 @@ begin
       perform public.onecard_start_game(p_room_id, v_first);
       insert into public.onecard_events(room_id, event_type, payload)
       values (p_room_id, 'game_started', jsonb_build_object(
-        'hostDie', v_room.host_die, 'guestDie', v_room.guest_die, 'firstSeat', v_first
+        'hostDie', v_room.host_die, 'guestDie', v_room.guest_die, 'firstSeat', v_first,
+        'bonusMultiplier', (select bonus_multiplier from public.onecard_rooms where id = p_room_id)
       ));
     end if;
   end if;
@@ -623,7 +636,7 @@ begin
   update public.onecard_rooms
   set status = 'dice', host_die = null, guest_die = null, dice_tie = false,
       current_seat = null, active_suit = null, attack_count = 0, free_play = false, top_card = null,
-      host_count = 0, guest_count = 0, winner_seat = null,
+      host_count = 0, guest_count = 0, winner_seat = null, bonus_multiplier = 1,
       updated_at = now(), version = version + 1
   where id = p_room_id and host_ready and guest_ready and status = 'finished';
 
@@ -816,10 +829,10 @@ begin
   elsif v_seat = 1 then
     update public.onecard_rooms
     set guest_id = null, guest_nickname = null, guest_ready = false, guest_die = null,
-        guest_rating = 0, guest_card_back = 'back-classic',
-        host_ready = false, host_die = null, status = 'waiting', dice_tie = false,
-        host_wins = 0, guest_wins = 0,
-        updated_at = now(), version = version + 1
+      guest_rating = 0, guest_card_back = 'back-classic',
+      host_ready = false, host_die = null, status = 'waiting', dice_tie = false,
+      host_wins = 0, guest_wins = 0, bonus_multiplier = 1,
+      updated_at = now(), version = version + 1
     where id = p_room_id;
   else
     delete from public.onecard_rooms where id = p_room_id;

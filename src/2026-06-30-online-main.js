@@ -245,6 +245,10 @@ function renderGame(nextView) {
   els['online-my-status'].textContent = isMyTurn(nextView)
     ? nextView.freePlay ? '내 차례 · 자유 카드' : '내 차례'
     : '상대 차례';
+  const bonusMatch = (nextView.bonusMultiplier || 1) > 1;
+  els['online-bonus-match-badge'].classList.toggle('hidden', !bonusMatch);
+  els['online-live-state'].textContent = bonusMatch ? 'BONUS ×2' : 'LIVE';
+  els['online-live-state'].classList.toggle('bonus', bonusMatch);
   renderOpponentHand(opponent.count, opponent.cardBack);
   renderHand(nextView);
     renderTopCard(nextView.topCard, nextView.activeSuit);
@@ -494,6 +498,17 @@ async function runOnlineStartSequence(nextView) {
   deferredStartView = null;
   renderView(latest);
   announceInitiative(latest);
+  if ((latest.bonusMultiplier || 1) > 1) {
+    setTimeout(() => {
+      effects.play('onecard', {
+        symbol: '×2',
+        title: 'BONUS MATCH!',
+        subtitle: '이번 판은 승리 포인트가 2배예요',
+        particleCount: 34,
+      });
+      playSound('onecard');
+    }, 1700);
+  }
 }
 
 function announceInitiative(nextView) {
@@ -591,12 +606,14 @@ function renderOnlineResult(nextView) {
     opponentStars: playerStarsForPoints(opponent.rating || 0),
     mode: 'multi',
     matchId: resultKey,
+    bonusMultiplier: nextView.bonusMultiplier || 1,
   }) : { profile: loadPlayerProfile(), delta: 0, duplicate: true };
   if (!recordedResult.duplicate) resultRatingCache.set(resultKey, recordedResult);
   const ratingResult = recordedResult.duplicate && resultRatingCache.has(resultKey)
     ? resultRatingCache.get(resultKey)
     : recordedResult;
   playerProfile = ratingResult.profile;
+  renderOnlineBonusResultSummary(won, ratingResult);
   els['online-result-modal'].classList.toggle('victory-earned', won);
   els['online-result-icon'].textContent = won ? '✦' : '↻';
   els['online-result-title'].textContent = won ? '내 승리!' : '상대 승리';
@@ -636,6 +653,15 @@ function renderOnlineResult(nextView) {
       requestAnimationFrame(() => els['online-result-modal'].classList.add('open'));
     }, 1150);
   }
+}
+
+function renderOnlineBonusResultSummary(won, ratingResult) {
+  const bonus = (ratingResult?.bonusMultiplier || 1) > 1;
+  els['online-result-bonus-summary'].classList.toggle('hidden', !bonus);
+  if (!bonus) return;
+  els['online-result-bonus-summary'].textContent = won
+    ? `BONUS MATCH · 기본 +${ratingResult.baseDelta}점 ×${ratingResult.bonusMultiplier} = +${ratingResult.delta}점`
+    : 'BONUS MATCH · 패배는 추가 차감 없이 -50점만 적용돼요';
 }
 
 function closeOnlineResult() {

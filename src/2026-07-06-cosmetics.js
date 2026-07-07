@@ -64,6 +64,19 @@ export const COSMETICS = Object.freeze([
   { id: 'effect-dream-kingdom', slot: 'effect', threshold: 20000, name: '꿈빛 마법', icon: '✨', description: '별과 보석이 터지는 카드 효과', cssClass: 'skin-effect-dream', legendary: true },
   { id: 'charm-dream-kingdom', slot: 'charm', threshold: 20000, name: '꿈빛 친구들', icon: '🦄', description: '작은 유니콘 장난감 장식', cssClass: 'skin-charm-dream', legendary: true },
   { id: 'victory-dream-kingdom', slot: 'victory', threshold: 20000, name: '꿈빛 대관식', icon: '👑', description: '전설 등급 왕관 승리 연출', cssClass: 'skin-victory-dream', legendary: true },
+
+  { id: 'table-pink-cloud-pop', slot: 'table', threshold: 20700, name: '핑크 구름 팝 테이블', icon: '☁', description: '분홍 구름과 별 풍선이 둥둥 떠 있는 말랑한 보너스 테이블', cssClass: 'skin-table-pink-cloud', concept: '핑크 구름 팝', legendary: true },
+  { id: 'back-pink-cloud-pop', slot: 'cardBack', threshold: 21200, name: '핑크 구름 팝 카드', icon: 'PINK', description: '솜사탕 구름과 하트 별빛이 가득한 핑크 카드 뒷면', cssClass: 'skin-back-pink-cloud', concept: '핑크 구름 팝', legendary: true },
+  { id: 'table-moon-rabbit-observatory', slot: 'table', threshold: 23200, name: '달토끼 천문대', icon: '☾', description: '달토끼와 별자리 장식이 빛나는 밤하늘 천문대 테이블', cssClass: 'skin-table-moon-rabbit', concept: '달토끼 천문대', legendary: true },
+  { id: 'back-moon-rabbit-observatory', slot: 'cardBack', threshold: 23800, name: '달토끼 별자리 카드', icon: 'MOON', description: '달토끼 실루엣과 은빛 별자리 문양의 카드 뒷면', cssClass: 'skin-back-moon-rabbit', concept: '달토끼 천문대', legendary: true },
+  { id: 'table-strawberry-toy-parade', slot: 'table', threshold: 26100, name: '딸기 토이 퍼레이드', icon: '🍓', description: '딸기 장난감과 리본 색종이가 행진하는 축제 테이블', cssClass: 'skin-table-strawberry-parade', concept: '딸기 토이 퍼레이드', legendary: true },
+  { id: 'back-strawberry-toy-parade', slot: 'cardBack', threshold: 26800, name: '딸기 퍼레이드 카드', icon: 'TOY', description: '딸기 마차와 장난감 별들이 들어간 달콤한 카드 뒷면', cssClass: 'skin-back-strawberry-parade', concept: '딸기 토이 퍼레이드', legendary: true },
+  { id: 'table-rose-ballroom', slot: 'table', threshold: 29500, name: '장미 무도회', icon: '🌹', description: '붉은 장미 샹들리에와 금빛 바닥이 펼쳐지는 우아한 무도회 테이블', cssClass: 'skin-table-rose-ballroom', concept: '장미 무도회', legendary: true },
+  { id: 'back-rose-ballroom', slot: 'cardBack', threshold: 30300, name: '장미 무도회 카드', icon: 'ROSE', description: '장미 덩굴과 금박 문양이 카드 전체를 휘감은 뒷면', cssClass: 'skin-back-rose-ballroom', concept: '장미 무도회', legendary: true },
+  { id: 'table-neon-deepsea-city', slot: 'table', threshold: 33300, name: '네온 심해 도시', icon: '◈', description: '네온 산호와 유리 돔 도시가 빛나는 심해 테이블', cssClass: 'skin-table-neon-deepsea', concept: '네온 심해 도시', legendary: true },
+  { id: 'back-neon-deepsea-city', slot: 'cardBack', threshold: 34200, name: '네온 심해 카드', icon: 'NEON', description: '전기 산호와 푸른 빛 회로가 흐르는 카드 뒷면', cssClass: 'skin-back-neon-deepsea', concept: '네온 심해 도시', legendary: true },
+  { id: 'table-ancient-sun-temple', slot: 'table', threshold: 37500, name: '고대 태양 신전', icon: '☀', description: '황금 태양문과 모래빛 룬이 새겨진 고대 신전 테이블', cssClass: 'skin-table-sun-temple', concept: '고대 태양 신전', legendary: true },
+  { id: 'back-ancient-sun-temple', slot: 'cardBack', threshold: 38500, name: '태양 신전 카드', icon: 'SUN', description: '태양 원반과 고대 룬이 빛나는 황금 석판 카드 뒷면', cssClass: 'skin-back-sun-temple', concept: '고대 태양 신전', legendary: true },
 ]);
 
 export const COSMETIC_SETS = Object.freeze([
@@ -72,6 +85,12 @@ export const COSMETIC_SETS = Object.freeze([
   { id: 'ancient-temple', name: '고대 신전 세트', icon: '◇', itemIds: ['face-stone-tablet', 'back-jade-rune'] },
   { id: 'neon-arcade', name: '네온 아케이드 세트', icon: '👾', itemIds: ['face-neon-arcade', 'effect-pixel-combo', 'charm-ufo-pet', 'victory-high-score'] },
   { id: 'dream-kingdom', name: '꿈빛 왕국 세트', icon: '👑', itemIds: ['table-dream-kingdom', 'back-dream-kingdom', 'face-dream-kingdom', 'effect-dream-kingdom', 'charm-dream-kingdom', 'victory-dream-kingdom'] },
+  { id: 'pink-cloud-pop', name: '핑크 구름 팝 세트', icon: '☁', itemIds: ['table-pink-cloud-pop', 'back-pink-cloud-pop'] },
+  { id: 'moon-rabbit-observatory', name: '달토끼 천문대 세트', icon: '☾', itemIds: ['table-moon-rabbit-observatory', 'back-moon-rabbit-observatory'] },
+  { id: 'strawberry-toy-parade', name: '딸기 토이 퍼레이드 세트', icon: '🍓', itemIds: ['table-strawberry-toy-parade', 'back-strawberry-toy-parade'] },
+  { id: 'rose-ballroom', name: '장미 무도회 세트', icon: '🌹', itemIds: ['table-rose-ballroom', 'back-rose-ballroom'] },
+  { id: 'neon-deepsea-city', name: '네온 심해 도시 세트', icon: '◈', itemIds: ['table-neon-deepsea-city', 'back-neon-deepsea-city'] },
+  { id: 'ancient-sun-temple', name: '고대 태양 신전 세트', icon: '☀', itemIds: ['table-ancient-sun-temple', 'back-ancient-sun-temple'] },
 ]);
 
 export const DEFAULT_EQUIPPED = Object.freeze(Object.fromEntries(

@@ -215,9 +215,26 @@ test('멀티 대전은 허용된 카드 뒷면 스킨만 상대에게 공유한�
   assert.match(sql, /'back-antique-atlas', 'back-bauhaus', 'back-jade-rune', 'back-brass-orbit'/);
   assert.match(sql, /'back-monochrome-wave', 'back-antique-library'/);
   assert.match(sql, /'back-rose-arbor'/);
+  assert.match(sql, /'back-pink-cloud-pop', 'back-moon-rabbit-observatory', 'back-strawberry-toy-parade'/);
+  assert.match(sql, /'back-rose-ballroom', 'back-neon-deepsea-city', 'back-ancient-sun-temple'/);
   assert.match(sql, /'cardBack', v_room\.host_card_back/);
   assert.match(multiplayerClient, /onecard_set_card_back/);
   assert.match(onlineMain, /renderOpponentHand\(opponent\.count, opponent\.cardBack\)/);
+  assert.match(cosmeticsCss, /2026-07-06-pink-cloud-card-back\.webp/);
+  assert.match(cosmeticsCss, /2026-07-06-sun-temple-table\.webp/);
+});
+
+test('AI와 멀티 대전은 보너스판 승리 포인트 2배 이벤트를 지원한다', () => {
+  assert.match(aiHtml, /id="bonus-match-badge"/);
+  assert.match(onlineHtml, /id="online-bonus-match-badge"/);
+  assert.match(aiHtml, /id="result-bonus-summary"/);
+  assert.match(onlineHtml, /id="online-result-bonus-summary"/);
+  assert.match(aiMain, /rollBonusMatch\(playerProfile\.points\)/);
+  assert.match(aiMain, /bonusMultiplier: currentBonusMatch \? 2 : 1/);
+  assert.match(onlineMain, /bonusMultiplier: nextView\.bonusMultiplier \|\| 1/);
+  assert.match(sql, /add column if not exists bonus_multiplier smallint not null default 1/);
+  assert.match(sql, /'bonusMultiplier', v_room\.bonus_multiplier/);
+  assert.match(sql, /greatest\(0\.15, 0\.20 - \(least\(greatest\(v_room\.host_rating, v_room\.guest_rating\), 40000\)::numeric \/ 40000\) \* 0\.05\)/);
 });
 
 test('게임 시작 전 이미 나온 상대 주사위를 강제로 다시 돌리지 않는다', () => {

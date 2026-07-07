@@ -4,8 +4,9 @@ export const LEGACY_RECORD_KEY = 'onecard-record';
 export const LEGACY_BACKUP_KEY = 'onecard-record-backup-v1';
 export const PROFILE_KEY = 'onecard-player-profile-v2';
 
-export const WIN_REWARDS = Object.freeze({ 1: 100, 2: 150, 3: 200, 4: 275, 5: 400 });
+export const WIN_REWARDS = Object.freeze({ 1: 125, 2: 180, 3: 250, 4: 340, 5: 500 });
 export const LOSS_PENALTY = -50;
+export const BONUS_MATCH_MULTIPLIER = 2;
 
 export const AI_OPPONENTS = Object.freeze([
   { key: 'star1', stars: 1, name: '느긋한 루미', icon: '☁', status: '마음 가는 카드를 고르고 있어요', delay: 820 },
@@ -101,13 +102,15 @@ export function savePlayerProfile(profile, storage = defaultStorage()) {
   return normalized;
 }
 
-export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId }, storage = defaultStorage()) {
+export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId, bonusMultiplier: requestedMultiplier = 1 }, storage = defaultStorage()) {
   const profile = loadPlayerProfile(storage);
   const safeStars = Math.min(5, Math.max(1, safeInteger(opponentStars, 1)));
   const id = String(matchId || `${mode}:${Date.now()}`);
   if (profile.awardedMatchIds.includes(id)) return { profile, delta: 0, duplicate: true };
 
-  const requestedDelta = won ? WIN_REWARDS[safeStars] : LOSS_PENALTY;
+  const bonusMultiplier = Math.max(1, Math.min(BONUS_MATCH_MULTIPLIER, safeInteger(requestedMultiplier, 1)));
+  const baseDelta = won ? WIN_REWARDS[safeStars] : LOSS_PENALTY;
+  const requestedDelta = won ? baseDelta * bonusMultiplier : baseDelta;
   const previousPoints = profile.points;
   const previousPeak = profile.peakPoints;
   profile.points = Math.max(0, profile.points + requestedDelta);
@@ -127,6 +130,8 @@ export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId
   return {
     profile: savePlayerProfile(profile, storage),
     delta,
+    baseDelta,
+    bonusMultiplier,
     duplicate: false,
     unlockedItems: newlyUnlockedCosmetics(previousPeak, profile.peakPoints),
   };
@@ -191,6 +196,15 @@ export function rememberAiOpponent(profile, stars, storage = defaultStorage()) {
 
 export function rewardForStars(stars) {
   return WIN_REWARDS[Math.min(5, Math.max(1, safeInteger(stars, 1)))];
+}
+
+export function bonusMatchChance(points) {
+  const score = Math.min(40000, safeInteger(points));
+  return Number((0.2 - (score / 40000) * 0.05).toFixed(4));
+}
+
+export function rollBonusMatch(points, random = Math.random) {
+  return random() < bonusMatchChance(points);
 }
 
 export function starsText(stars) {

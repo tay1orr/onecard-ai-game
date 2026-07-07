@@ -17,6 +17,7 @@ import {
   recordMatchResult,
   rememberAiOpponent,
   rewardForStars,
+  rollBonusMatch,
   savePlayerProfile,
   selectAiOpponent,
   starsText,
@@ -39,6 +40,7 @@ const game = new OneCardGame();
 let difficulty = 'star3';
 let playerProfile = loadPlayerProfile();
 let currentMatchId = '';
+let currentBonusMatch = false;
 let lastRatingResult = null;
 let matching = false;
 let activeCosmeticSlot = 'all';
@@ -140,14 +142,16 @@ async function beginAiMatchmaking() {
   matching = true;
   playerProfile = loadPlayerProfile();
   const opponent = selectAiOpponent(playerProfile.points, Math.random, playerProfile.recentAiStars);
+  const bonusMatch = rollBonusMatch(playerProfile.points);
   const weights = matchmakingWeights(playerProfile.points);
-  els['matching-kicker'].textContent = 'AI MATCHING';
+  els['matching-kicker'].textContent = bonusMatch ? 'BONUS MATCH!' : 'AI MATCHING';
   els['matching-points'].textContent = `${playerProfile.points.toLocaleString('ko-KR')}점`;
   els['matching-probability'].textContent = weights
     .map((weight, index) => weight ? `${index + 1}성 ${weight}%` : '')
     .filter(Boolean)
     .join(' · ');
   els['matching-result'].classList.remove('decided');
+  els['matching-result'].classList.toggle('bonus', bonusMatch);
   openModal('matching-modal');
   playSound('card');
 
@@ -158,7 +162,9 @@ async function beginAiMatchmaking() {
     els['matching-icon'].textContent = candidate.icon;
     els['matching-name'].textContent = candidate.name;
     els['matching-stars'].textContent = starsText(candidate.stars);
-    els['matching-reward'].textContent = `승리 +${rewardForStars(candidate.stars)}점`;
+    els['matching-reward'].textContent = bonusMatch
+      ? `승리 +${rewardForStars(candidate.stars) * 2}점 · 보너스 ×2`
+      : `승리 +${rewardForStars(candidate.stars)}점`;
     els['matching-result'].classList.remove('tick');
     void els['matching-result'].offsetWidth;
     els['matching-result'].classList.add('tick');
@@ -168,7 +174,8 @@ async function beginAiMatchmaking() {
   }
 
   els['matching-result'].classList.add('decided');
-  els['matching-kicker'].textContent = '상대 결정!';
+  els['matching-kicker'].textContent = bonusMatch ? '보너스판 상대 결정!' : '상대 결정!';
+  currentBonusMatch = bonusMatch;
   playerProfile = rememberAiOpponent(playerProfile, opponent.stars);
   await wait(1150);
   closeModal('matching-modal');
@@ -206,6 +213,7 @@ function startGame(selectedDifficulty) {
   startedAt = 0;
   els['home-screen'].classList.add('hidden');
   els['game-screen'].classList.remove('hidden');
+  els['bonus-match-badge'].classList.toggle('hidden', !currentBonusMatch);
   closeModal('result-modal');
   els['match-again-button'].disabled = false;
   const profile = DIFFICULTIES[difficulty];
@@ -290,7 +298,18 @@ async function rollForFirstTurn() {
     particleCount: 24,
   });
   playSound(playerFirst ? 'first' : 'second');
-  if (!playerFirst) setTimeout(scheduleAiTurn, 2150);
+  if (currentBonusMatch) {
+    setTimeout(() => {
+      effects.play('onecard', {
+        symbol: '×2',
+        title: 'BONUS MATCH!',
+        subtitle: '이번 판은 승리 포인트가 2배예요',
+        particleCount: 34,
+      });
+      playSound('onecard');
+    }, 1700);
+  }
+  if (!playerFirst) setTimeout(scheduleAiTurn, currentBonusMatch ? 3350 : 2150);
 }
 
 function randomDie() {
@@ -653,9 +672,11 @@ function goHome() {
   hideAiReaction();
   closeAiReactionPicker(true);
   gameReady = false;
+  currentBonusMatch = false;
   pendingSeven = null;
   isPeekingHand = false;
   els['suit-return-bar'].classList.add('hidden');
+  els['bonus-match-badge'].classList.add('hidden');
   els['game-screen'].classList.remove('suit-peek-active');
   closeModal('suit-picker');
   closeModal('result-modal');
@@ -874,6 +895,7 @@ function render() {
   els['draw-pile'].disabled = !playerTurn || drawAnimating || game.winner !== null;
   els['attack-badge'].classList.toggle('hidden', game.attackCount === 0);
   els['attack-badge'].querySelector('b').textContent = game.attackCount;
+  els['bonus-match-badge'].classList.toggle('hidden', !currentBonusMatch);
 }
 
 function renderOpponent() {
@@ -1050,7 +1072,9 @@ function endGame(winner) {
   els['result-kicker'].textContent = won ? 'NICE PLAY' : 'GOOD TRY';
   els['result-title'].textContent = won ? '당신의 승리!' : `${DIFFICULTIES[difficulty].name}의 승리`;
   els['result-description'].textContent = won ? victoryMessage() : '흐름을 다시 읽으면 다음 판은 달라질 거예요.';
-  els['result-opponent-meta'].textContent = `${starsText(DIFFICULTIES[difficulty].stars)} ${DIFFICULTIES[difficulty].name} · 승리 시 +${rewardForStars(DIFFICULTIES[difficulty].stars)}점`;
+  const baseReward = rewardForStars(DIFFICULTIES[difficulty].stars);
+  const displayedReward = currentBonusMatch ? baseReward * 2 : baseReward;
+  els['result-opponent-meta'].textContent = `${starsText(DIFFICULTIES[difficulty].stars)} ${DIFFICULTIES[difficulty].name} · 승리 시 +${displayedReward}점`;
   els['result-time'].textContent = formatTime(Date.now() - startedAt);
   els['result-moves'].textContent = `${moves}장`;
   els['result-final-card'].replaceChildren(createCardElement(game.topCard, false));
@@ -1060,8 +1084,10 @@ function endGame(winner) {
     opponentStars: DIFFICULTIES[difficulty].stars,
     mode: 'ai',
     matchId: currentMatchId,
+    bonusMultiplier: currentBonusMatch ? 2 : 1,
   });
   playerProfile = lastRatingResult.profile;
+  renderBonusResultSummary(won, lastRatingResult, 'result-bonus-summary');
   els['result-points-delta'].textContent = `${lastRatingResult.delta > 0 ? '+' : ''}${lastRatingResult.delta}점`;
   els['result-points-delta'].classList.toggle('lost', lastRatingResult.delta < 0);
   els['result-current-points'].textContent = `현재 ${playerProfile.points.toLocaleString('ko-KR')}점 · ${starsText(ratingProgress(playerProfile.points).stars)}`;
@@ -1086,6 +1112,16 @@ function renderResultUnlocks(unlockedItems) {
     els['result-next-unlock-name'].textContent = `다음 보상 · ${next.items[0].name}`;
     els['result-next-unlock-remaining'].textContent = `${next.remaining.toLocaleString('ko-KR')}점 남음`;
   }
+}
+
+function renderBonusResultSummary(won, ratingResult, elementId) {
+  const element = els[elementId];
+  const bonus = (ratingResult?.bonusMultiplier || 1) > 1;
+  element.classList.toggle('hidden', !bonus);
+  if (!bonus) return;
+  element.textContent = won
+    ? `BONUS MATCH · 기본 +${ratingResult.baseDelta}점 ×${ratingResult.bonusMultiplier} = +${ratingResult.delta}점`
+    : 'BONUS MATCH · 패배는 추가 차감 없이 -50점만 적용돼요';
 }
 
 function victoryMessage() {

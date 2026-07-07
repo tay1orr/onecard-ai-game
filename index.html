@@ -116,6 +116,7 @@
 
         <section class="center-zone" aria-label="카드 더미와 현재 카드">
           <div id="turn-banner" class="turn-banner" role="status" aria-live="polite">내 차례예요</div>
+          <div id="bonus-match-badge" class="bonus-match-badge hidden" role="status">BONUS MATCH · 승리 포인트 2배</div>
           <div class="piles">
             <button id="draw-pile" class="draw-pile card-back" type="button" aria-label="카드 한 장 뽑기">
               <span class="back-logo">ONE<b>!</b></span>
@@ -233,6 +234,7 @@
         <div><small>플레이 시간</small><strong id="result-time">00:00</strong></div>
         <div><small>사용한 카드</small><strong id="result-moves">0장</strong></div>
       </div>
+      <div id="result-bonus-summary" class="result-bonus-summary hidden">BONUS MATCH · 기본 +100점 ×2 = +200점</div>
       <div class="result-rating"><strong id="result-points-delta">+100점</strong><small id="result-current-points">현재 100점 · ★</small></div>
       <div id="result-unlock" class="result-unlock hidden"><span>NEW ITEM!</span><strong id="result-unlock-title">새 꾸미기 해금</strong><small id="result-unlock-copy"></small></div>
       <div id="result-next-unlock" class="result-next-unlock"><span id="result-next-unlock-name">다음 보상 · 딸기우유</span><b id="result-next-unlock-remaining">300점 남음</b></div>
