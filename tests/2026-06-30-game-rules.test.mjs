@@ -23,10 +23,18 @@ import {
   cosmeticSetForItem,
   cosmeticSetProgress,
   cosmeticsForSlot,
+  equippedClassNames,
+  equippedSetBonuses,
   newlyUnlockedCosmetics,
   nextCosmeticUnlock,
   normalizeEquipped,
 } from '../src/2026-07-06-cosmetics.js';
+import {
+  DAILY_MISSION_COUNT,
+  WEEKLY_MISSION_COUNT,
+  applyMissionEvents,
+  loadMissionDashboard,
+} from '../src/2026-07-07-missions.js';
 
 function card(suit, rank) { return { id: `${suit}-${rank}`, suit, rank }; }
 
@@ -217,6 +225,47 @@ assert.deepEqual(cosmeticSetProgress(realRoseSet, 34800), { unlocked: 5, total: 
 assert.equal(cosmeticSetForItem('face-real-rose-garden')?.id, 'real-rose-garden', '리얼 로즈가든 앞면은 리얼 로즈가든 세트로 표시되어야 함');
 assert.equal(normalizeEquipped({ cardFace: 'face-real-rose-garden', cardBack: 'back-real-rose-garden' }, 34800).cardFace, 'face-real-rose-garden', '해금한 리얼 로즈가든 앞면은 정상 장착되어야 함');
 assert.equal(normalizeEquipped({ cardBack: 'back-ancient-sun-temple' }, 40400).cardBack, 'back-ancient-sun-temple', '고대 태양 신전 뒷면은 최고 구간에서 장착되어야 함');
+
+const realRoseEquipped = {
+  ...DEFAULT_EQUIPPED,
+  table: 'table-real-rose-garden',
+  cardBack: 'back-real-rose-garden',
+  cardFace: 'face-real-rose-garden',
+  effect: 'effect-real-rose-garden',
+  victory: 'victory-real-rose-garden',
+};
+assert.equal(equippedSetBonuses(realRoseEquipped).some((set) => set.id === 'real-rose-garden'), true, '리얼 로즈가든 풀 장착 시 세트 보너스를 감지해야 함');
+assert.equal(equippedClassNames(realRoseEquipped).includes('set-bonus-real-rose-garden'), true, '세트 보너스 CSS 클래스가 장착 클래스에 포함되어야 함');
+assert.equal(equippedClassNames(realRoseEquipped).includes('set-bonus-active'), true, '세트 보너스 공통 CSS 클래스가 장착 클래스에 포함되어야 함');
+
+const missionNow = new Date('2026-07-07T12:00:00+09:00');
+const missionStorage = memoryStorage({
+  [PROFILE_KEY]: JSON.stringify({ points: 100, peakPoints: 100, wins: 9, games: 12 }),
+  [LEGACY_RECORD_KEY]: JSON.stringify({ wins: 9, games: 12 }),
+});
+const missionDashboard = loadMissionDashboard(missionStorage, missionNow);
+assert.equal(missionDashboard.daily.total, DAILY_MISSION_COUNT, '일일 미션은 3개 조합되어야 함');
+assert.equal(missionDashboard.weekly.total, WEEKLY_MISSION_COUNT, '주간 미션은 5개 조합되어야 함');
+assert.equal(missionDashboard.weekly.missions.reduce((sum, mission) => sum + mission.target, 0) >= 18, true, '주간 미션은 일일보다 높은 목표량으로 구성되어야 함');
+const missionEvents = [
+  { id: 'mission-game', type: 'game', mode: 'ai', amount: 99, bonus: true },
+  { id: 'mission-win', type: 'win', mode: 'ai', amount: 99, opponentStars: 5, bonus: true },
+  { id: 'mission-card', type: 'card-play', amount: 99 },
+  { id: 'mission-draw', type: 'draw-card', amount: 99 },
+  { id: 'mission-attack', type: 'attack-card', amount: 99 },
+  { id: 'mission-seven', type: 'seven-card', amount: 99 },
+  { id: 'mission-joker', type: 'joker-card', amount: 99 },
+  { id: 'mission-emote', type: 'emote', amount: 99 },
+  { id: 'mission-onecard', type: 'one-card', amount: 99 },
+  { id: 'mission-bonus', type: 'bonus-match', amount: 99 },
+  { id: 'mission-bonus-win', type: 'bonus-win', amount: 99 },
+];
+const missionReward = applyMissionEvents(missionEvents, { storage: missionStorage, now: missionNow });
+assert.equal(missionReward.rewardDelta > 0, true, '완료된 미션은 점수 보상을 지급해야 함');
+assert.deepEqual([missionReward.profile.wins, missionReward.profile.games], [9, 12], '미션 보상은 기존 승수와 판수를 바꾸지 않아야 함');
+assert.equal(missionReward.profile.points, 100 + missionReward.rewardDelta, '미션 보상은 현재 점수에만 더해져야 함');
+const duplicatedMissionReward = applyMissionEvents(missionEvents, { storage: missionStorage, now: missionNow });
+assert.equal(duplicatedMissionReward.rewardDelta, 0, '같은 미션 이벤트 ID는 중복 보상되지 않아야 함');
 
 const preservedCosmeticStorage = memoryStorage({
   [PROFILE_KEY]: JSON.stringify({

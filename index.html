@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./2026-07-01-reactions.css">
   <link rel="stylesheet" href="./2026-07-06-cosmetics.css">
+  <link rel="stylesheet" href="./2026-07-07-missions.css">
 </head>
 <body>
   <div class="ambient ambient-a" aria-hidden="true"></div>
@@ -50,6 +51,25 @@
           <div class="home-rating-progress"><span id="home-rating-fill"></span></div>
           <div><b id="home-rating-stars">★</b><small id="home-rating-next">다음 등급까지 500점</small><small id="home-next-unlock" class="home-next-unlock">다음 보상 · 딸기우유</small></div>
         </div>
+        <section id="missions-card" class="missions-card" aria-labelledby="missions-title">
+          <div class="missions-heading">
+            <div>
+              <p class="step-label">MISSION BOARD</p>
+              <h3 id="missions-title">오늘의 미션</h3>
+            </div>
+            <small id="missions-reset-copy">매일/매주 새로운 조합</small>
+          </div>
+          <div class="missions-columns">
+            <section class="mission-period" aria-label="일일 미션">
+              <div class="mission-period-heading"><strong>일일</strong><small id="daily-missions-count">0/3</small></div>
+              <div id="daily-missions-list" class="mission-list"></div>
+            </section>
+            <section class="mission-period" aria-label="주간 미션">
+              <div class="mission-period-heading"><strong>주간</strong><small id="weekly-missions-count">0/5</small></div>
+              <div id="weekly-missions-list" class="mission-list"></div>
+            </section>
+          </div>
+        </section>
         <div class="mode-grid">
           <button id="ai-match-button" class="mode-card ai-mode" type="button">
             <span class="mode-icon">✦</span>
@@ -236,6 +256,7 @@
       </div>
       <div id="result-bonus-summary" class="result-bonus-summary hidden">BONUS MATCH · 기본 +100점 ×2 = +200점</div>
       <div class="result-rating"><strong id="result-points-delta">+100점</strong><small id="result-current-points">현재 100점 · ★</small></div>
+      <div id="result-mission-summary" class="result-mission-summary hidden"></div>
       <div id="result-unlock" class="result-unlock hidden"><span>NEW ITEM!</span><strong id="result-unlock-title">새 꾸미기 해금</strong><small id="result-unlock-copy"></small></div>
       <div id="result-next-unlock" class="result-next-unlock"><span id="result-next-unlock-name">다음 보상 · 딸기우유</span><b id="result-next-unlock-remaining">300점 남음</b></div>
       <details class="result-reactions"><summary>스티커 보내기</summary><div id="ai-result-reaction-picker" class="result-reaction-picker"></div></details>

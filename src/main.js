@@ -25,6 +25,7 @@ import {
 import {
   COSMETICS,
   COSMETIC_SLOTS,
+  allSetBonusClassNames,
   cosmeticById,
   cosmeticSetForItem,
   cosmeticSetProgress,
@@ -32,6 +33,12 @@ import {
   equippedClassNames,
   nextCosmeticUnlock,
 } from './2026-07-06-cosmetics.js';
+import {
+  applyMissionEvents,
+  loadMissionDashboard,
+  mergeUnlockedItems,
+  missionEventsForCard,
+} from './2026-07-07-missions.js';
 
 const DIFFICULTIES = Object.fromEntries(AI_OPPONENTS.map((opponent) => [opponent.key, opponent]));
 
@@ -42,6 +49,7 @@ let playerProfile = loadPlayerProfile();
 let currentMatchId = '';
 let currentBonusMatch = false;
 let lastRatingResult = null;
+let pendingMissionUnlocks = [];
 let matching = false;
 let activeCosmeticSlot = 'all';
 let previewCosmeticId = null;
@@ -193,6 +201,7 @@ function startGame(selectedDifficulty) {
   difficulty = selectedDifficulty;
   currentMatchId = `ai:${Date.now()}:${globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)}`;
   lastRatingResult = null;
+  pendingMissionUnlocks = [];
   game.reset(difficulty);
   moves = 0;
   pendingSeven = null;
@@ -299,17 +308,9 @@ async function rollForFirstTurn() {
   });
   playSound(playerFirst ? 'first' : 'second');
   if (currentBonusMatch) {
-    setTimeout(() => {
-      effects.play('onecard', {
-        symbol: '×2',
-        title: 'BONUS MATCH!',
-        subtitle: '이번 판은 승리 포인트가 2배예요',
-        particleCount: 34,
-      });
-      playSound('onecard');
-    }, 1700);
+    setTimeout(() => playBonusStartEffect(els['game-table']), 1700);
   }
-  if (!playerFirst) setTimeout(scheduleAiTurn, currentBonusMatch ? 3350 : 2150);
+  if (!playerFirst) setTimeout(scheduleAiTurn, currentBonusMatch ? 4050 : 2150);
 }
 
 function randomDie() {
@@ -340,6 +341,22 @@ function animateDie(die, resultLabel, result, duration) {
       resolve();
     }, duration);
   });
+}
+
+function playBonusStartEffect(tableElement) {
+  tableElement?.classList.add('bonus-starting');
+  const flare = document.createElement('div');
+  flare.className = 'bonus-start-flare';
+  document.body.append(flare);
+  effects.play('onecard', {
+    symbol: '×2',
+    title: 'BONUS MATCH!',
+    subtitle: '이번 판은 승리 포인트가 2배예요',
+    particleCount: 58,
+  });
+  playSound('onecard');
+  setTimeout(() => tableElement?.classList.remove('bonus-starting'), 2100);
+  setTimeout(() => flare.remove(), 2300);
 }
 
 function wait(ms) {
@@ -424,6 +441,7 @@ function closeAiReactionPicker(immediate = false) {
 function sendPlayerReaction(key) {
   closeAiReactionPicker();
   showAiReaction(key, false);
+  handleMissionEvents([{ id: `${currentMatchId || 'home'}:emote:${key}:${Date.now()}`, type: 'emote' }]);
   maybeAiReact({ type: 'player-emote', emote: key }, { force: true });
 }
 
@@ -510,7 +528,7 @@ function openCosmetics() {
   openModal('cosmetics-modal');
 }
 
-function renderCosmeticsModal() {
+function renderCosmeticsModal({ preserveGridScroll = null } = {}) {
   const peak = playerProfile.peakPoints || 0;
   els['cosmetics-peak-points'].textContent = `${peak.toLocaleString('ko-KR')}점`;
   document.querySelectorAll('.cosmetics-tab').forEach((button) => {
@@ -552,23 +570,28 @@ function renderCosmeticsModal() {
       : equipped ? '✓ 현재 장착' : unlocked ? '눌러서 미리보기' : `🔒 ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
     button.innerHTML = `<span class="cosmetic-item-meta"><em>${slotName}</em>${itemSet || item.concept ? `<i>${itemSet?.name || item.concept}</i>` : ''}</span><span class="cosmetic-item-icon">${item.icon}</span><strong>${item.name}</strong><small>${item.description}</small><b>${stateLabel}</b>`;
     button.addEventListener('click', () => {
+      const scrollTop = els['cosmetics-grid'].scrollTop;
       previewCosmeticId = item.id;
       cosmeticPreviewMode = item.slot === 'effect' ? 'effect' : item.slot === 'victory' ? 'victory' : 'normal';
-      renderCosmeticsModal();
+      renderCosmeticsModal({ preserveGridScroll: scrollTop });
       replayCosmeticPreview();
     });
     els['cosmetics-grid'].append(button);
   });
   renderCosmeticPreview();
   renderReducedEffectsButton();
+  if (Number.isFinite(preserveGridScroll)) {
+    requestAnimationFrame(() => { els['cosmetics-grid'].scrollTop = preserveGridScroll; });
+  }
 }
 
 function equipCosmetic(item) {
   if (!item || item.threshold > (playerProfile.peakPoints || 0)) return;
+  const scrollTop = els['cosmetics-grid'].scrollTop;
   playerProfile.equipped = { ...playerProfile.equipped, [item.slot]: item.id };
   playerProfile = savePlayerProfile(playerProfile);
   applyEquippedCosmetics();
-  renderCosmeticsModal();
+  renderCosmeticsModal({ preserveGridScroll: scrollTop });
   playSound('card');
   showToast(`${item.name} 장착 완료!`);
 }
@@ -585,7 +608,7 @@ function renderCosmeticPreview() {
 
   const root = els['cosmetic-preview'];
   const allClasses = COSMETICS.map((candidate) => candidate.cssClass).filter(Boolean);
-  root.classList.remove(...allClasses, 'preview-playing');
+  root.classList.remove(...allClasses, ...allSetBonusClassNames(), 'preview-playing');
   root.classList.add(...equippedClassNames(previewEquipped));
 
   const unlocked = item.threshold <= (playerProfile.peakPoints || 0);
@@ -655,7 +678,7 @@ function renderReducedEffectsButton() {
 
 function applyEquippedCosmetics() {
   const allClasses = COSMETICS.map((item) => item.cssClass).filter(Boolean);
-  document.body.classList.remove(...allClasses, 'reduced-effects');
+  document.body.classList.remove(...allClasses, ...allSetBonusClassNames(), 'reduced-effects');
   document.body.classList.add(...equippedClassNames(playerProfile.equipped));
   document.body.classList.toggle('reduced-effects', Boolean(playerProfile.reducedEffects));
 }
@@ -761,6 +784,7 @@ async function applyPlayerCard(cardId, suit = null) {
   }
   const result = game.playCard(0, cardId, suit);
   moves += 1;
+  handleMissionEvents(missionEventsForCard(result.card, { idPrefix: `${currentMatchId}:player:${moves}:${result.card.id}` }));
   playSound(result.card.rank === 'JOKER' ? 'joker' : ['2', 'A', 'J', '7'].includes(result.card.rank) ? 'action' : 'card');
   cardAnimating = false;
   render();
@@ -777,6 +801,7 @@ async function playerDraw() {
   clearTimeout(oneCardEffectTimer);
   effects.clear();
   const result = game.drawCards(0);
+  handleMissionEvents([{ id: `${currentMatchId}:draw:${Date.now()}`, type: 'draw-card', amount: result.cards.length || 1 }]);
   playSound('draw');
   await showDrawReveal(result.cards, result.wasPenalty);
   render();
@@ -857,6 +882,10 @@ function announceSpecial(result, isAi = false) {
 function announceOneCardIfNeeded(player, delay = 0) {
   if (game.hands[player].length !== 1 || oneCardAnnounced[player]) return;
   oneCardAnnounced[player] = true;
+  if (player === 0) {
+    const lastCard = game.hands[player][0];
+    handleMissionEvents([{ id: `${currentMatchId}:onecard:${moves}:${lastCard?.id || 'last'}`, type: 'one-card' }]);
+  }
   const owner = player === 0 ? '내 손에 마지막 한 장!' : `${DIFFICULTIES[difficulty].name}도 단 한 장!`;
   const showEffect = () => {
     effects.play('onecard', { symbol: '1', title: 'ONE CARD!', subtitle: owner, particleCount: 32 });
@@ -1087,11 +1116,16 @@ function endGame(winner) {
     bonusMultiplier: currentBonusMatch ? 2 : 1,
   });
   playerProfile = lastRatingResult.profile;
+  const missionResult = lastRatingResult.duplicate
+    ? { completedMissions: [], rewardDelta: 0, unlockedItems: [] }
+    : handleMissionEvents(aiResultMissionEvents(won), { resultElementId: 'result-mission-summary', suppressToast: true });
+  if (lastRatingResult.duplicate) renderMissionSummary(missionResult, 'result-mission-summary');
+  if (missionResult.profile) playerProfile = missionResult.profile;
   renderBonusResultSummary(won, lastRatingResult, 'result-bonus-summary');
   els['result-points-delta'].textContent = `${lastRatingResult.delta > 0 ? '+' : ''}${lastRatingResult.delta}점`;
   els['result-points-delta'].classList.toggle('lost', lastRatingResult.delta < 0);
   els['result-current-points'].textContent = `현재 ${playerProfile.points.toLocaleString('ko-KR')}점 · ${starsText(ratingProgress(playerProfile.points).stars)}`;
-  renderResultUnlocks(lastRatingResult.unlockedItems || []);
+  renderResultUnlocks(mergeUnlockedItems(lastRatingResult.unlockedItems || [], pendingMissionUnlocks, missionResult.unlockedItems || []));
   resultRevealTimer = setTimeout(() => {
     openModal('result-modal');
     setTimeout(() => els['match-again-button'].focus(), 0);
@@ -1101,6 +1135,7 @@ function endGame(winner) {
 function renderResultUnlocks(unlockedItems) {
   const unlock = els['result-unlock'];
   unlock.classList.toggle('hidden', unlockedItems.length === 0);
+  unlock.classList.toggle('result-unlock-celebration', unlockedItems.length > 0);
   if (unlockedItems.length) {
     const names = unlockedItems.slice(0, 3).map((item) => `${item.icon} ${item.name}`).join(' · ');
     els['result-unlock-title'].textContent = unlockedItems.length >= 5 ? '꿈빛 왕국 풀 세트 해금!' : '새 꾸미기 해금!';
@@ -1122,6 +1157,68 @@ function renderBonusResultSummary(won, ratingResult, elementId) {
   element.textContent = won
     ? `BONUS MATCH · 기본 +${ratingResult.baseDelta}점 ×${ratingResult.bonusMultiplier} = +${ratingResult.delta}점`
     : 'BONUS MATCH · 패배는 추가 차감 없이 -50점만 적용돼요';
+}
+
+function handleMissionEvents(events, { resultElementId = null, suppressToast = false } = {}) {
+  const missionResult = applyMissionEvents(events);
+  if (missionResult.profile) {
+    playerProfile = missionResult.profile;
+    applyEquippedCosmetics();
+  }
+  pendingMissionUnlocks = mergeUnlockedItems(pendingMissionUnlocks, missionResult.unlockedItems || []);
+  renderMissionPanel();
+  if (resultElementId) renderMissionSummary(missionResult, resultElementId);
+  if (missionResult.rewardDelta > 0 && !suppressToast) {
+    showToast(`미션 완료! +${missionResult.rewardDelta.toLocaleString('ko-KR')}점`);
+  }
+  return missionResult;
+}
+
+function renderMissionPanel() {
+  if (!els['daily-missions-list'] || !els['weekly-missions-list']) return;
+  const dashboard = loadMissionDashboard();
+  renderMissionList(els['daily-missions-list'], dashboard.daily.missions);
+  renderMissionList(els['weekly-missions-list'], dashboard.weekly.missions);
+  if (els['daily-missions-count']) els['daily-missions-count'].textContent = `${dashboard.daily.completedCount}/${dashboard.daily.total}`;
+  if (els['weekly-missions-count']) els['weekly-missions-count'].textContent = `${dashboard.weekly.completedCount}/${dashboard.weekly.total}`;
+}
+
+function renderMissionList(container, missions) {
+  container.replaceChildren();
+  missions.forEach((mission) => {
+    const article = document.createElement('article');
+    article.className = `mission-item ${mission.completed ? 'complete' : ''}`;
+    article.innerHTML = `
+      <div class="mission-topline"><strong>${mission.title}</strong><b>+${mission.reward}점</b></div>
+      <p>${mission.description}</p>
+      <div class="mission-progress-row">
+        <div class="mission-progress"><span style="--mission-progress:${mission.percent}%"></span></div>
+        <small>${mission.progress}/${mission.target}</small>
+      </div>
+    `;
+    container.append(article);
+  });
+}
+
+function renderMissionSummary(missionResult, elementId) {
+  const element = els[elementId];
+  if (!element) return;
+  const completed = missionResult?.completedMissions || [];
+  element.classList.toggle('hidden', completed.length === 0);
+  if (!completed.length) return;
+  const names = completed.slice(0, 3).map((mission) => mission.title).join(' · ');
+  element.innerHTML = `<strong>미션 보상 +${missionResult.rewardDelta.toLocaleString('ko-KR')}점</strong><small>${names}${completed.length > 3 ? ` 외 ${completed.length - 3}개` : ''}</small>`;
+}
+
+function aiResultMissionEvents(won) {
+  const stars = DIFFICULTIES[difficulty].stars;
+  const prefix = `${currentMatchId}:result`;
+  return [
+    { id: `${prefix}:game`, type: 'game', mode: 'ai', bonus: currentBonusMatch },
+    ...(won ? [{ id: `${prefix}:win`, type: 'win', mode: 'ai', opponentStars: stars, bonus: currentBonusMatch }] : []),
+    ...(currentBonusMatch ? [{ id: `${prefix}:bonus-match`, type: 'bonus-match', mode: 'ai' }] : []),
+    ...(currentBonusMatch && won ? [{ id: `${prefix}:bonus-win`, type: 'bonus-win', mode: 'ai', opponentStars: stars }] : []),
+  ];
 }
 
 function victoryMessage() {
@@ -1147,6 +1244,7 @@ function updateRecord() {
     ? `다음 보상 · ${next.items[0].name} (${next.remaining.toLocaleString('ko-KR')}점)`
     : '모든 꾸미기 해금 완료';
   applyEquippedCosmetics();
+  renderMissionPanel();
 }
 
 function updateTimer() {

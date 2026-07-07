@@ -164,8 +164,33 @@ export function normalizeEquipped(equipped, peakPoints) {
   }));
 }
 
+export function equippedSetBonuses(equipped) {
+  return COSMETIC_SETS.filter((set) => set.itemIds.every((id) => {
+    const item = cosmeticById(id);
+    return item && equipped?.[item.slot] === id;
+  }));
+}
+
+export function setBonusClassNames(equipped) {
+  const bonuses = equippedSetBonuses(equipped);
+  return [
+    ...bonuses.map((set) => `set-bonus-${set.id}`),
+    ...(bonuses.length ? ['set-bonus-active'] : []),
+  ];
+}
+
+export function allSetBonusClassNames() {
+  return [
+    'set-bonus-active',
+    ...COSMETIC_SETS.map((set) => `set-bonus-${set.id}`),
+  ];
+}
+
 export function equippedClassNames(equipped) {
-  return COSMETIC_SLOTS
+  return [
+    ...COSMETIC_SLOTS
     .map(({ key }) => cosmeticById(equipped?.[key])?.cssClass)
-    .filter(Boolean);
+      .filter(Boolean),
+    ...setBonusClassNames(equipped),
+  ];
 }

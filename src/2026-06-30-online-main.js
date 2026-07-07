@@ -11,7 +11,13 @@ import { runDealAnimation } from './2026-06-30-deal-animation.js';
 import { REACTIONS, createReactionArtwork, createReactionButton, getReaction } from './2026-06-30-reactions.js';
 import { createCardCenter } from './2026-07-01-card-art.js';
 import { loadPlayerProfile, playerStarsForPoints, recordMatchResult, starsText } from './2026-07-05-rating.js';
-import { COSMETICS, cosmeticById, equippedClassNames, nextCosmeticUnlock } from './2026-07-06-cosmetics.js';
+import { COSMETICS, allSetBonusClassNames, cosmeticById, equippedClassNames, nextCosmeticUnlock } from './2026-07-06-cosmetics.js';
+import {
+  applyMissionEvents,
+  loadMissionDashboard,
+  mergeUnlockedItems,
+  missionEventsForCard,
+} from './2026-07-07-missions.js';
 
 const els = Object.fromEntries([...document.querySelectorAll('[id]')].map((element) => [element.id, element]));
 const effects = createGameEffects({
@@ -42,6 +48,7 @@ let reactionSending = false;
 let playerProfile = loadPlayerProfile();
 let resultRevealTimer = null;
 let currentResultKey = '';
+let pendingOnlineMissionUnlocks = [];
 const resultRatingCache = new Map();
 
 els['room-code-input'].addEventListener('input', () => {
@@ -82,6 +89,7 @@ window.addEventListener('resize', scheduleHandLayout);
 
 setupReactionPickers();
 applyOnlineCosmetics();
+renderOnlineMissionPanel();
 
 if (!isSupabaseConfigured()) {
   els['setup-required'].classList.remove('hidden');
@@ -287,7 +295,7 @@ function renderOpponentHand(count, cardBackId = 'back-classic') {
 
 function applyOnlineCosmetics() {
   const allClasses = COSMETICS.map((item) => item.cssClass).filter(Boolean);
-  document.body.classList.remove(...allClasses, 'reduced-effects');
+  document.body.classList.remove(...allClasses, ...allSetBonusClassNames(), 'reduced-effects');
   document.body.classList.add(...equippedClassNames(playerProfile.equipped));
   document.body.classList.toggle('reduced-effects', Boolean(playerProfile.reducedEffects));
 }
@@ -474,6 +482,7 @@ function updateDiceControls(nextView) {
 async function runOnlineStartSequence(nextView) {
   if (startSequenceRunning) return;
   startSequenceRunning = true;
+  pendingOnlineMissionUnlocks = [];
   deferredStartView = nextView;
   els['online-dice-status'].textContent = '두 주사위의 결과를 확인합니다!';
   await Promise.all([
@@ -499,16 +508,24 @@ async function runOnlineStartSequence(nextView) {
   renderView(latest);
   announceInitiative(latest);
   if ((latest.bonusMultiplier || 1) > 1) {
-    setTimeout(() => {
-      effects.play('onecard', {
-        symbol: '×2',
-        title: 'BONUS MATCH!',
-        subtitle: '이번 판은 승리 포인트가 2배예요',
-        particleCount: 34,
-      });
-      playSound('onecard');
-    }, 1700);
+    setTimeout(() => playOnlineBonusStartEffect(), 1700);
   }
+}
+
+function playOnlineBonusStartEffect() {
+  els['online-table']?.classList.add('bonus-starting');
+  const flare = document.createElement('div');
+  flare.className = 'bonus-start-flare';
+  document.body.append(flare);
+  effects.play('onecard', {
+    symbol: '×2',
+    title: 'BONUS MATCH!',
+    subtitle: '이번 판은 승리 포인트가 2배예요',
+    particleCount: 58,
+  });
+  playSound('onecard');
+  setTimeout(() => els['online-table']?.classList.remove('bonus-starting'), 2100);
+  setTimeout(() => flare.remove(), 2300);
 }
 
 function announceInitiative(nextView) {
@@ -522,6 +539,9 @@ async function renderLastEvent(event) {
   if (!event || event.id === lastEventId) return;
   lastEventId = event.id;
   if (event.eventType === 'emote') {
+    if (event.actorSeat === view.mySeat) {
+      handleOnlineMissionEvents([{ id: `online:${event.id}:emote`, type: 'emote', mode: 'multi' }]);
+    }
     showReaction(event);
     return;
   }
@@ -533,6 +553,9 @@ async function renderLastEvent(event) {
 
   if (event.eventType === 'draw') {
     const owner = event.actorSeat === view.mySeat ? '내가' : '상대가';
+    if (event.actorSeat === view.mySeat) {
+      handleOnlineMissionEvents([{ id: `online:${event.id}:draw`, type: 'draw-card', mode: 'multi', amount: event.payload.count || 1 }]);
+    }
     effects.play('impact', {
       symbol: `+${event.payload.count}`,
       title: `${owner} ${event.payload.count}장 뽑기`,
@@ -542,6 +565,11 @@ async function renderLastEvent(event) {
   }
   const card = event.payload.card;
   const owner = event.actorSeat === view.mySeat ? '내가' : '상대가';
+  if (event.actorSeat === view.mySeat) {
+    const events = missionEventsForCard(card, { idPrefix: `online:${event.id}` });
+    if (event.payload.remaining === 1) events.push({ id: `online:${event.id}:onecard`, type: 'one-card', mode: 'multi' });
+    handleOnlineMissionEvents(events.map((item) => ({ ...item, mode: 'multi' })));
+  }
   if (event.actorSeat !== view.mySeat) {
     const source = els['online-opponent-hand'].lastElementChild;
     await animateCardToPile({
@@ -612,7 +640,16 @@ function renderOnlineResult(nextView) {
   const ratingResult = recordedResult.duplicate && resultRatingCache.has(resultKey)
     ? resultRatingCache.get(resultKey)
     : recordedResult;
-  playerProfile = ratingResult.profile;
+  const missionResult = !recordedResult.duplicate && nextView.topCard
+    ? handleOnlineMissionEvents(onlineResultMissionEvents({
+      won,
+      resultKey,
+      opponentStars: playerStarsForPoints(opponent.rating || 0),
+      bonus: (nextView.bonusMultiplier || 1) > 1,
+    }), { resultElementId: 'online-result-mission-summary', suppressToast: true })
+    : { completedMissions: [], rewardDelta: 0, unlockedItems: [] };
+  if (recordedResult.duplicate || !nextView.topCard) renderOnlineMissionSummary(missionResult, 'online-result-mission-summary');
+  playerProfile = missionResult.profile || recordedResult.profile || ratingResult.profile;
   renderOnlineBonusResultSummary(won, ratingResult);
   els['online-result-modal'].classList.toggle('victory-earned', won);
   els['online-result-icon'].textContent = won ? '✦' : '↻';
@@ -626,8 +663,9 @@ function renderOnlineResult(nextView) {
   els['online-result-points-delta'].textContent = nextView.topCard ? `${ratingResult.delta > 0 ? '+' : ''}${ratingResult.delta}점` : '점수 변동 없음';
   els['online-result-points-delta'].classList.toggle('lost', ratingResult.delta < 0);
   els['online-result-current-points'].textContent = `현재 ${playerProfile.points.toLocaleString('ko-KR')}점 · ${starsText(playerStarsForPoints(playerProfile.points))}`;
-  const unlockedItems = ratingResult.unlockedItems || [];
+  const unlockedItems = mergeUnlockedItems(ratingResult.unlockedItems || [], pendingOnlineMissionUnlocks, missionResult.unlockedItems || []);
   els['online-result-unlock'].classList.toggle('hidden', unlockedItems.length === 0);
+  els['online-result-unlock'].classList.toggle('result-unlock-celebration', unlockedItems.length > 0);
   if (unlockedItems.length) {
     els['online-result-unlock-title'].textContent = unlockedItems.length >= 5 ? '꿈빛 왕국 풀 세트 해금!' : '새 꾸미기 해금!';
     els['online-result-unlock-copy'].textContent = `${unlockedItems.slice(0, 3).map((item) => `${item.icon} ${item.name}`).join(' · ')}${unlockedItems.length > 3 ? ` 외 ${unlockedItems.length - 3}개` : ''}`;
@@ -662,6 +700,66 @@ function renderOnlineBonusResultSummary(won, ratingResult) {
   els['online-result-bonus-summary'].textContent = won
     ? `BONUS MATCH · 기본 +${ratingResult.baseDelta}점 ×${ratingResult.bonusMultiplier} = +${ratingResult.delta}점`
     : 'BONUS MATCH · 패배는 추가 차감 없이 -50점만 적용돼요';
+}
+
+function handleOnlineMissionEvents(events, { resultElementId = null, suppressToast = false } = {}) {
+  const missionResult = applyMissionEvents(events);
+  if (missionResult.profile) {
+    playerProfile = missionResult.profile;
+    applyOnlineCosmetics();
+  }
+  pendingOnlineMissionUnlocks = mergeUnlockedItems(pendingOnlineMissionUnlocks, missionResult.unlockedItems || []);
+  renderOnlineMissionPanel();
+  if (resultElementId) renderOnlineMissionSummary(missionResult, resultElementId);
+  if (missionResult.rewardDelta > 0 && !suppressToast) {
+    showToast(`미션 완료! +${missionResult.rewardDelta.toLocaleString('ko-KR')}점`);
+  }
+  return missionResult;
+}
+
+function renderOnlineMissionPanel() {
+  if (!els['online-daily-missions-list'] || !els['online-weekly-missions-list']) return;
+  const dashboard = loadMissionDashboard();
+  renderOnlineMissionList(els['online-daily-missions-list'], dashboard.daily.missions);
+  renderOnlineMissionList(els['online-weekly-missions-list'], dashboard.weekly.missions);
+  els['online-daily-missions-count'].textContent = `${dashboard.daily.completedCount}/${dashboard.daily.total}`;
+  els['online-weekly-missions-count'].textContent = `${dashboard.weekly.completedCount}/${dashboard.weekly.total}`;
+}
+
+function renderOnlineMissionList(container, missions) {
+  container.replaceChildren();
+  missions.forEach((mission) => {
+    const article = document.createElement('article');
+    article.className = `mission-item ${mission.completed ? 'complete' : ''}`;
+    article.innerHTML = `
+      <div class="mission-topline"><strong>${mission.title}</strong><b>+${mission.reward}점</b></div>
+      <p>${mission.description}</p>
+      <div class="mission-progress-row">
+        <div class="mission-progress"><span style="--mission-progress:${mission.percent}%"></span></div>
+        <small>${mission.progress}/${mission.target}</small>
+      </div>
+    `;
+    container.append(article);
+  });
+}
+
+function renderOnlineMissionSummary(missionResult, elementId) {
+  const element = els[elementId];
+  if (!element) return;
+  const completed = missionResult?.completedMissions || [];
+  element.classList.toggle('hidden', completed.length === 0);
+  if (!completed.length) return;
+  const names = completed.slice(0, 3).map((mission) => mission.title).join(' · ');
+  element.innerHTML = `<strong>미션 보상 +${missionResult.rewardDelta.toLocaleString('ko-KR')}점</strong><small>${names}${completed.length > 3 ? ` 외 ${completed.length - 3}개` : ''}</small>`;
+}
+
+function onlineResultMissionEvents({ won, resultKey, opponentStars, bonus }) {
+  return [
+    { id: `${resultKey}:mission:game`, type: 'game', mode: 'multi', bonus },
+    ...(won ? [{ id: `${resultKey}:mission:win`, type: 'win', mode: 'multi', opponentStars, bonus }] : []),
+    ...(bonus ? [{ id: `${resultKey}:mission:bonus-match`, type: 'bonus-match', mode: 'multi' }] : []),
+    ...(bonus && won ? [{ id: `${resultKey}:mission:bonus-win`, type: 'bonus-win', mode: 'multi', opponentStars }] : []),
+  ];
 }
 
 function closeOnlineResult() {

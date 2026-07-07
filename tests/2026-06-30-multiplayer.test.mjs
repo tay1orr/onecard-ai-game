@@ -71,6 +71,7 @@ const aiHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 const aiMain = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
 const baseCss = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
 const cosmeticsCss = await readFile(new URL('../2026-07-06-cosmetics.css', import.meta.url), 'utf8');
+const missionsCss = await readFile(new URL('../2026-07-07-missions.css', import.meta.url), 'utf8');
 const reactionsCss = await readFile(new URL('../2026-07-01-reactions.css', import.meta.url), 'utf8');
 const multiplayerClient = await readFile(new URL('../src/2026-06-30-multiplayer.js', import.meta.url), 'utf8');
 
@@ -99,7 +100,7 @@ test('꾸미기 보관함은 잠긴 아이템도 미리 보고 해금된 아이�
   assert.match(aiHtml, /id="cosmetic-preview-replay"/);
   assert.match(aiHtml, /id="cosmetic-preview-equip"/);
   assert.match(aiMain, /let previewCosmeticId = null/);
-  assert.match(aiMain, /button\.addEventListener\('click', \(\) => \{\s*previewCosmeticId = item\.id/);
+  assert.match(aiMain, /button\.addEventListener\('click', \(\) => \{[\s\S]*?previewCosmeticId = item\.id/);
   assert.match(aiMain, /if \(!item \|\| item\.threshold > \(playerProfile\.peakPoints \|\| 0\)\) return/);
   assert.match(aiMain, /playerProfile\.equipped = \{ \.\.\.playerProfile\.equipped, \[item\.slot\]: item\.id \}/);
   assert.doesNotMatch(aiMain, /if \(item\.legendary\)[\s\S]*?equipped\[candidate\.slot\]/);
@@ -236,6 +237,35 @@ test('AI와 멀티 대전은 보너스판 승리 포인트 2배 이벤트를 지
   assert.match(sql, /add column if not exists bonus_multiplier smallint not null default 1/);
   assert.match(sql, /'bonusMultiplier', v_room\.bonus_multiplier/);
   assert.match(sql, /greatest\(0\.15, 0\.20 - \(least\(greatest\(v_room\.host_rating, v_room\.guest_rating\), 40000\)::numeric \/ 40000\) \* 0\.05\)/);
+});
+
+test('AI와 멀티 대전은 일일·주간 미션 보드와 결과 보상 표시를 제공한다', () => {
+  assert.match(aiHtml, /2026-07-07-missions\.css/);
+  assert.match(onlineHtml, /2026-07-07-missions\.css/);
+  assert.match(aiHtml, /id="missions-card"/);
+  assert.match(aiHtml, /id="daily-missions-list"/);
+  assert.match(aiHtml, /id="weekly-missions-list"/);
+  assert.match(aiHtml, /id="result-mission-summary"/);
+  assert.match(onlineHtml, /id="online-missions-card"/);
+  assert.match(onlineHtml, /id="online-daily-missions-list"/);
+  assert.match(onlineHtml, /id="online-weekly-missions-list"/);
+  assert.match(onlineHtml, /id="online-result-mission-summary"/);
+  assert.match(aiMain, /applyMissionEvents/);
+  assert.match(aiMain, /missionEventsForCard/);
+  assert.match(onlineMain, /handleOnlineMissionEvents/);
+  assert.match(onlineMain, /onlineResultMissionEvents/);
+});
+
+test('꾸밈함 스크롤 고정과 세트·보너스·해금 강화 연출 CSS가 연결되어 있다', () => {
+  assert.match(aiMain, /preserveGridScroll/);
+  assert.match(aiMain, /cosmetics-grid'\]\.scrollTop/);
+  assert.match(aiMain, /allSetBonusClassNames/);
+  assert.match(onlineMain, /allSetBonusClassNames/);
+  assert.match(aiMain, /playBonusStartEffect/);
+  assert.match(onlineMain, /playOnlineBonusStartEffect/);
+  assert.match(missionsCss, /\.bonus-start-flare/);
+  assert.match(missionsCss, /\.result-unlock\.result-unlock-celebration/);
+  assert.match(missionsCss, /\.set-bonus-real-rose-garden/);
 });
 
 test('게임 시작 전 이미 나온 상대 주사위를 강제로 다시 돌리지 않는다', () => {
