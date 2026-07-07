@@ -1,0 +1,209 @@
+.account-sync-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  margin: 16px 0 6px;
+  padding: 18px;
+  border-radius: 26px;
+  border: 1px solid rgba(134, 230, 255, .22);
+  background:
+    radial-gradient(circle at 10% 10%, rgba(111, 231, 255, .2), transparent 30%),
+    radial-gradient(circle at 88% 18%, rgba(255, 140, 198, .18), transparent 28%),
+    linear-gradient(145deg, rgba(255,255,255,.095), rgba(255,255,255,.035));
+  box-shadow: 0 22px 64px rgba(3, 7, 22, .25), inset 0 0 0 1px rgba(255,255,255,.055);
+}
+
+.account-sync-card::after {
+  content: "";
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  right: -68px;
+  bottom: -88px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 231, 139, .28), transparent 66%);
+  pointer-events: none;
+}
+
+.account-sync-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 7px;
+}
+
+.account-sync-copy h3 {
+  margin: 0;
+  font-size: clamp(18px, 2.5vw, 24px);
+}
+
+.account-sync-copy p {
+  margin: 0;
+  max-width: 58ch;
+  color: rgba(255,255,255,.68);
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.account-sync-state {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #dffbff;
+  background: rgba(111, 231, 255, .1);
+  border: 1px solid rgba(111, 231, 255, .22);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.account-sync-state::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8df0ff;
+  box-shadow: 0 0 14px rgba(141, 240, 255, .72);
+}
+
+.account-sync-card[data-account-status="local"] .account-sync-state {
+  color: #fff0c6;
+  background: rgba(255, 211, 107, .11);
+  border-color: rgba(255, 211, 107, .26);
+}
+
+.account-sync-card[data-account-status="local"] .account-sync-state::before {
+  background: #ffd36b;
+  box-shadow: 0 0 14px rgba(255, 211, 107, .68);
+}
+
+.account-sync-card[data-account-status="email"] .account-sync-state {
+  color: #dfffe9;
+  background: rgba(123, 255, 191, .12);
+  border-color: rgba(123, 255, 191, .3);
+}
+
+.account-sync-card[data-account-status="email"] .account-sync-state::before {
+  background: #7bffbf;
+  box-shadow: 0 0 14px rgba(123, 255, 191, .72);
+}
+
+.account-sync-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.account-sync-actions button {
+  white-space: nowrap;
+}
+
+.account-modal-card {
+  max-width: 560px;
+}
+
+.account-modal-intro {
+  margin: 0 0 16px;
+  color: rgba(255,255,255,.72);
+  line-height: 1.55;
+}
+
+.account-email-field {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.account-email-field label {
+  color: rgba(255,255,255,.7);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.account-email-field input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 18px;
+  padding: 13px 14px;
+  color: #fff;
+  background: rgba(8, 12, 29, .62);
+  outline: none;
+}
+
+.account-email-field input:focus {
+  border-color: rgba(141, 240, 255, .62);
+  box-shadow: 0 0 0 4px rgba(141, 240, 255, .1);
+}
+
+.account-modal-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.account-modal-option {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px;
+  background: rgba(255,255,255,.055);
+}
+
+.account-modal-option strong {
+  font-size: 15px;
+}
+
+.account-modal-option small {
+  color: rgba(255,255,255,.64);
+  line-height: 1.45;
+}
+
+.account-modal-status {
+  min-height: 22px;
+  margin: 14px 0 0;
+  color: #dffbff;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.account-modal-status.error {
+  color: #ffd1dc;
+}
+
+.account-sync-card.syncing .account-sync-state::before {
+  animation: account-pulse 1s ease infinite;
+}
+
+@keyframes account-pulse {
+  0%, 100% { transform: scale(.8); opacity: .6; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+
+@media (max-width: 760px) {
+  .account-sync-card {
+    grid-template-columns: 1fr;
+  }
+
+  .account-sync-actions {
+    justify-content: stretch;
+  }
+
+  .account-sync-actions button {
+    flex: 1 1 140px;
+  }
+
+  .account-modal-options {
+    grid-template-columns: 1fr;
+  }
+}

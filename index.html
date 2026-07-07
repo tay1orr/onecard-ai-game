@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="./2026-07-01-reactions.css">
   <link rel="stylesheet" href="./2026-07-06-cosmetics.css">
   <link rel="stylesheet" href="./2026-07-07-missions.css">
+  <link rel="stylesheet" href="./2026-07-07-account-sync.css">
 </head>
 <body>
   <div class="ambient ambient-a" aria-hidden="true"></div>
@@ -51,6 +52,17 @@
           <div class="home-rating-progress"><span id="home-rating-fill"></span></div>
           <div><b id="home-rating-stars">★</b><small id="home-rating-next">다음 등급까지 500점</small><small id="home-next-unlock" class="home-next-unlock">다음 보상 · 딸기우유</small></div>
         </div>
+        <section id="account-sync-card" class="account-sync-card" data-account-status="checking" aria-labelledby="account-sync-title">
+          <div class="account-sync-copy">
+            <span id="account-sync-state" class="account-sync-state">기록 상태 확인 중</span>
+            <h3 id="account-sync-title">기록 보호</h3>
+            <p id="account-sync-copy">지금 기록은 이 브라우저에 먼저 저장돼요. 이메일을 연결하면 브라우저를 바꿔도 점수와 꾸밈을 다시 불러올 수 있어요.</p>
+          </div>
+          <div class="account-sync-actions">
+            <button id="account-connect-button" class="primary-button" type="button">계정 연결하기</button>
+            <button id="account-refresh-button" class="secondary-button" type="button">동기화</button>
+          </div>
+        </section>
         <section id="missions-card" class="missions-card" aria-labelledby="missions-title">
           <div class="missions-heading">
             <div>
@@ -333,6 +345,32 @@
         <button id="reduced-effects-button" class="effects-toggle" type="button" aria-pressed="false"><span>✨</span><span><strong>화려한 효과</strong><small>파티클과 큰 연출을 사용해요</small></span><b>ON</b></button>
         <button class="secondary-button cosmetics-done-button" data-close-modal="cosmetics-modal" type="button">완료</button>
       </div>
+    </div>
+  </div>
+
+  <div id="account-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="account-modal-title">
+    <div class="modal-card account-modal-card">
+      <button class="modal-close" data-close-modal="account-modal" aria-label="기록 보호 창 닫기">×</button>
+      <p class="step-label">ACCOUNT LINK</p>
+      <h2 id="account-modal-title">기록 보호하기</h2>
+      <p class="account-modal-intro">승수, 판수, 점수, 미션, 꾸밈 장착 상태를 Supabase에 같이 저장해요. 게임 끝날 때마다 귀찮게 묻지 않고, 연결된 뒤에는 조용히 자동 동기화됩니다.</p>
+      <div class="account-email-field">
+        <label for="account-email-input">이메일</label>
+        <input id="account-email-input" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com">
+      </div>
+      <div class="account-modal-options">
+        <div class="account-modal-option">
+          <strong>현재 기록 보호</strong>
+          <small>이 브라우저에 있는 기록을 먼저 Supabase에 저장하고, 인증 메일을 보내요.</small>
+          <button id="account-link-email-button" class="primary-button" type="button">보호 메일 보내기</button>
+        </div>
+        <div class="account-modal-option">
+          <strong>이미 연결한 기록 불러오기</strong>
+          <small>다른 기기나 캐시 삭제 후 같은 이메일로 기록을 다시 불러올 때 사용해요.</small>
+          <button id="account-login-email-button" class="secondary-button" type="button">불러오기 메일 보내기</button>
+        </div>
+      </div>
+      <p id="account-modal-status" class="account-modal-status" role="status" aria-live="polite"></p>
     </div>
   </div>
 

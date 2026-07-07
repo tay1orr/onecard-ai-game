@@ -72,8 +72,11 @@ const aiMain = await readFile(new URL('../src/main.js', import.meta.url), 'utf8'
 const baseCss = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
 const cosmeticsCss = await readFile(new URL('../2026-07-06-cosmetics.css', import.meta.url), 'utf8');
 const missionsCss = await readFile(new URL('../2026-07-07-missions.css', import.meta.url), 'utf8');
+const accountCss = await readFile(new URL('../2026-07-07-account-sync.css', import.meta.url), 'utf8');
 const reactionsCss = await readFile(new URL('../2026-07-01-reactions.css', import.meta.url), 'utf8');
 const multiplayerClient = await readFile(new URL('../src/2026-06-30-multiplayer.js', import.meta.url), 'utf8');
+const accountSyncMain = await readFile(new URL('../src/2026-07-07-account-sync.js', import.meta.url), 'utf8');
+const accountSyncSql = await readFile(new URL('../supabase/2026-07-07-onecard-profile-sync.sql', import.meta.url), 'utf8');
 
 function assertReferencedIdsExist(html, source) {
   const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
@@ -86,6 +89,40 @@ function assertReferencedIdsExist(html, source) {
 test('AI와 온라인 화면의 모든 요소 참조가 실제 HTML에 존재한다', () => {
   assertReferencedIdsExist(aiHtml, aiMain);
   assertReferencedIdsExist(onlineHtml, onlineMain);
+});
+
+test('메인 화면은 기록 보호 카드와 이메일 연결 모달을 제공한다', () => {
+  assert.match(aiHtml, /2026-07-07-account-sync\.css/);
+  assert.match(aiHtml, /id="account-sync-card"/);
+  assert.match(aiHtml, /id="account-modal"/);
+  assert.match(aiHtml, /id="account-link-email-button"/);
+  assert.match(aiHtml, /id="account-login-email-button"/);
+  assert.match(aiMain, /requestEmailConnection/);
+  assert.match(aiMain, /requestEmailLogin/);
+  assert.match(aiMain, /refreshAccountSync\(\{ manual: false \}\)/);
+  assert.match(accountCss, /\.account-sync-card/);
+  assert.match(accountCss, /\.account-modal-options/);
+});
+
+test('프로필 동기화 SQL은 본인 row만 읽고 쓸 수 있게 제한한다', () => {
+  assert.match(accountSyncSql, /create table if not exists public\.onecard_profiles/);
+  assert.match(accountSyncSql, /profile jsonb not null default '\{\}'::jsonb/);
+  assert.match(accountSyncSql, /mission_state jsonb not null default '\{\}'::jsonb/);
+  assert.match(accountSyncSql, /enable row level security/);
+  assert.match(accountSyncSql, /using \(auth\.uid\(\) = user_id\)/);
+  assert.match(accountSyncSql, /with check \(auth\.uid\(\) = user_id\)/);
+  assert.match(accountSyncSql, /grant select, insert, update on public\.onecard_profiles to authenticated/);
+});
+
+test('계정 동기화 모듈은 익명 저장, 이메일 연결, 매직링크 불러오기를 모두 지원한다', () => {
+  assert.match(accountSyncMain, /signInAnonymously/);
+  assert.match(accountSyncMain, /updateUser\(/);
+  assert.match(accountSyncMain, /signInWithOtp/);
+  assert.match(accountSyncMain, /shouldCreateUser: false/);
+  assert.match(accountSyncMain, /mergeProfiles/);
+  assert.match(accountSyncMain, /mergeMissionStates/);
+  assert.match(onlineMain, /hydrateOnlineAccountProfile/);
+  assert.match(onlineMain, /scheduleOnlineAccountSync/);
 });
 
 test('AI 결과 화면은 같은 상대 재대결 없이 반드시 다시 매칭한다', () => {

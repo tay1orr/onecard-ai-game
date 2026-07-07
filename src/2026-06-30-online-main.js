@@ -18,6 +18,10 @@ import {
   mergeUnlockedItems,
   missionEventsForCard,
 } from './2026-07-07-missions.js';
+import {
+  queueAccountProfileSync,
+  syncAccountProfile,
+} from './2026-07-07-account-sync.js';
 
 const els = Object.fromEntries([...document.querySelectorAll('[id]')].map((element) => [element.id, element]));
 const effects = createGameEffects({
@@ -105,6 +109,7 @@ if (!isSupabaseConfigured()) {
 async function initializeConnection() {
   try {
     await client.connect();
+    await hydrateOnlineAccountProfile();
     await client.restoreRoom(playerProfile.points, playerProfile.equipped.cardBack);
   } catch (error) {
     els['entry-error'].textContent = friendlyError(error.message);
@@ -113,6 +118,32 @@ async function initializeConnection() {
     els['create-room-button'].disabled = false;
     els['join-room-button'].disabled = false;
   }
+}
+
+async function hydrateOnlineAccountProfile() {
+  try {
+    const result = await syncAccountProfile();
+    if (result.profile) {
+      playerProfile = result.profile;
+      applyOnlineCosmetics();
+      renderOnlineMissionPanel();
+    }
+  } catch {
+    /* 프로필 동기화가 실패해도 멀티 입장은 계속 가능해야 합니다. */
+  }
+}
+
+function scheduleOnlineAccountSync(delay = 700) {
+  queueAccountProfileSync({
+    delay,
+    onComplete: (result) => {
+      if (!result?.profile) return;
+      playerProfile = result.profile;
+      applyOnlineCosmetics();
+      renderOnlineMissionPanel();
+    },
+    onError: () => {},
+  });
 }
 
 async function runEntryAction(mode) {
@@ -129,6 +160,7 @@ async function runEntryAction(mode) {
   await perform(async () => {
     if (connectionPromise) await connectionPromise;
     else if (!client.supabase) await client.connect();
+    await hydrateOnlineAccountProfile();
     playerProfile = loadPlayerProfile();
     if (mode === 'create') await client.createRoom(nickname, playerProfile.points, playerProfile.equipped.cardBack);
     else await client.joinRoom(code, nickname, playerProfile.points, playerProfile.equipped.cardBack);
@@ -636,6 +668,7 @@ function renderOnlineResult(nextView) {
     matchId: resultKey,
     bonusMultiplier: nextView.bonusMultiplier || 1,
   }) : { profile: loadPlayerProfile(), delta: 0, duplicate: true };
+  if (!recordedResult.duplicate) scheduleOnlineAccountSync();
   if (!recordedResult.duplicate) resultRatingCache.set(resultKey, recordedResult);
   const ratingResult = recordedResult.duplicate && resultRatingCache.has(resultKey)
     ? resultRatingCache.get(resultKey)
@@ -709,6 +742,7 @@ function handleOnlineMissionEvents(events, { resultElementId = null, suppressToa
     applyOnlineCosmetics();
   }
   pendingOnlineMissionUnlocks = mergeUnlockedItems(pendingOnlineMissionUnlocks, missionResult.unlockedItems || []);
+  scheduleOnlineAccountSync();
   renderOnlineMissionPanel();
   if (resultElementId) renderOnlineMissionSummary(missionResult, resultElementId);
   if (missionResult.rewardDelta > 0 && !suppressToast) {

@@ -39,6 +39,14 @@ import {
   mergeUnlockedItems,
   missionEventsForCard,
 } from './2026-07-07-missions.js';
+import {
+  friendlyAccountSyncError,
+  getAccountSyncState,
+  queueAccountProfileSync,
+  requestEmailConnection,
+  requestEmailLogin,
+  syncAccountProfile,
+} from './2026-07-07-account-sync.js';
 
 const DIFFICULTIES = Object.fromEntries(AI_OPPONENTS.map((opponent) => [opponent.key, opponent]));
 
@@ -116,6 +124,16 @@ els['exit-button'].addEventListener('click', goHome);
 els['match-again-button'].addEventListener('click', matchAgain);
 els['result-home-button'].addEventListener('click', goHome);
 els['cosmetics-button'].addEventListener('click', openCosmetics);
+els['account-connect-button']?.addEventListener('click', openAccountModal);
+els['account-refresh-button']?.addEventListener('click', refreshAccountSync);
+els['account-link-email-button']?.addEventListener('click', connectAccountEmail);
+els['account-login-email-button']?.addEventListener('click', loginAccountEmail);
+els['account-email-input']?.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    connectAccountEmail();
+  }
+});
 els['cosmetic-preview-replay'].addEventListener('click', replayCosmeticPreview);
 els['cosmetic-preview-equip'].addEventListener('click', equipPreviewedCosmetic);
 document.querySelectorAll('[data-cosmetic-preview-mode]').forEach((button) => {
@@ -185,6 +203,7 @@ async function beginAiMatchmaking() {
   els['matching-kicker'].textContent = bonusMatch ? '보너스판 상대 결정!' : '상대 결정!';
   currentBonusMatch = bonusMatch;
   playerProfile = rememberAiOpponent(playerProfile, opponent.stars);
+  scheduleAccountSync();
   await wait(1150);
   closeModal('matching-modal');
   matching = false;
@@ -590,6 +609,7 @@ function equipCosmetic(item) {
   const scrollTop = els['cosmetics-grid'].scrollTop;
   playerProfile.equipped = { ...playerProfile.equipped, [item.slot]: item.id };
   playerProfile = savePlayerProfile(playerProfile);
+  scheduleAccountSync();
   applyEquippedCosmetics();
   renderCosmeticsModal({ preserveGridScroll: scrollTop });
   playSound('card');
@@ -664,6 +684,7 @@ function renderCosmeticPreviewMode() {
 function toggleReducedEffects() {
   playerProfile.reducedEffects = !playerProfile.reducedEffects;
   playerProfile = savePlayerProfile(playerProfile);
+  scheduleAccountSync();
   applyEquippedCosmetics();
   renderReducedEffectsButton();
 }
@@ -1115,6 +1136,7 @@ function endGame(winner) {
     matchId: currentMatchId,
     bonusMultiplier: currentBonusMatch ? 2 : 1,
   });
+  scheduleAccountSync();
   playerProfile = lastRatingResult.profile;
   const missionResult = lastRatingResult.duplicate
     ? { completedMissions: [], rewardDelta: 0, unlockedItems: [] }
@@ -1166,6 +1188,7 @@ function handleMissionEvents(events, { resultElementId = null, suppressToast = f
     applyEquippedCosmetics();
   }
   pendingMissionUnlocks = mergeUnlockedItems(pendingMissionUnlocks, missionResult.unlockedItems || []);
+  scheduleAccountSync();
   renderMissionPanel();
   if (resultElementId) renderMissionSummary(missionResult, resultElementId);
   if (missionResult.rewardDelta > 0 && !suppressToast) {
@@ -1225,6 +1248,145 @@ function victoryMessage() {
   if (DIFFICULTIES[difficulty].stars >= 4) return `${DIFFICULTIES[difficulty].name}의 계산을 멋지게 넘어섰어요.`;
   if (moves <= 8) return '군더더기 없는 빠른 승리였어요.';
   return '마지막까지 흐름을 놓치지 않았네요.';
+}
+
+function scheduleAccountSync(delay = 700) {
+  queueAccountProfileSync({
+    delay,
+    onComplete: handleAccountSyncComplete,
+    onError: (error) => renderAccountSyncState({ status: 'error', error }),
+  });
+}
+
+function handleAccountSyncComplete(result) {
+  if (result?.profile) {
+    playerProfile = result.profile;
+    applyEquippedCosmetics();
+    renderMissionPanel();
+  }
+  if (result && !result.skipped) renderAccountSyncState(result);
+}
+
+async function refreshAccountSync(options = {}) {
+  const manual = options?.type === 'click' || options.manual;
+  renderAccountSyncState({ status: 'checking' });
+  try {
+    const result = await syncAccountProfile();
+    if (result.profile) {
+      playerProfile = result.profile;
+      updateRecord();
+    }
+    const state = await getAccountSyncState();
+    renderAccountSyncState({ ...state, lastSyncedAt: result.lastSyncedAt });
+    if (manual && result.status !== 'local') showToast('기록 동기화 완료!');
+  } catch (error) {
+    renderAccountSyncState({ status: 'error', error });
+    if (manual) showToast(friendlyAccountSyncError(error));
+  }
+}
+
+function renderAccountSyncState(state = {}) {
+  const card = els['account-sync-card'];
+  if (!card) return;
+  const status = state.status || 'local';
+  const email = state.email || state.pendingEmail || '';
+  const messages = {
+    checking: {
+      label: '기록 상태 확인 중',
+      title: '기록 보호 확인 중',
+      copy: 'Supabase 연결 상태를 확인하고 있어요.',
+    },
+    local: {
+      label: '브라우저에만 저장 중',
+      title: '기록 보호',
+      copy: '지금 기록은 이 브라우저에 먼저 저장돼요. 이메일을 연결하면 브라우저를 바꿔도 점수와 꾸밈을 다시 불러올 수 있어요.',
+    },
+    guest: {
+      label: '게스트 기록 저장 중',
+      title: '게스트 저장 활성화',
+      copy: email
+        ? `${email} 인증 메일을 확인하면 이 기록이 이메일 계정으로 보호돼요.`
+        : 'Supabase에 게스트 기록을 저장 중이에요. 브라우저 데이터를 지우면 다시 찾기 어려우니 이메일 연결을 추천해요.',
+    },
+    email: {
+      label: '이메일로 기록 보호 중',
+      title: '기록 보호 완료',
+      copy: `${email || '연결된 이메일'} 계정으로 점수, 미션, 꾸밈을 조용히 동기화하고 있어요.`,
+    },
+    'not-configured': {
+      label: 'Supabase 설정 필요',
+      title: '기록 보호 준비 필요',
+      copy: 'Supabase 공개 설정 또는 프로필 저장 SQL이 필요해요.',
+    },
+    error: {
+      label: '동기화 확인 필요',
+      title: '기록 보호 확인 필요',
+      copy: friendlyAccountSyncError(state.error),
+    },
+  };
+  const message = messages[status] || messages.local;
+  card.dataset.accountStatus = status;
+  card.classList.toggle('syncing', status === 'checking');
+  els['account-sync-state'].textContent = message.label;
+  els['account-sync-title'].textContent = message.title;
+  els['account-sync-copy'].textContent = message.copy;
+  if (els['account-connect-button']) {
+    els['account-connect-button'].textContent = status === 'email' ? '이메일 확인' : '계정 연결하기';
+  }
+  if (els['account-refresh-button']) els['account-refresh-button'].disabled = status === 'checking';
+}
+
+function openAccountModal() {
+  const email = els['account-email-input']?.value || '';
+  if (!email && els['account-sync-card']?.dataset.accountStatus === 'email') {
+    els['account-email-input'].placeholder = '이미 이메일로 보호 중이에요';
+  }
+  setAccountModalStatus('현재 기록을 보호하려면 이메일을 입력하고 “보호 메일 보내기”를 눌러 주세요.');
+  openModal('account-modal');
+}
+
+function accountEmailValue() {
+  return String(els['account-email-input']?.value || '').trim();
+}
+
+async function connectAccountEmail() {
+  setAccountModalBusy(true, '현재 기록을 Supabase에 안전하게 저장하고 있어요...');
+  try {
+    const result = await requestEmailConnection(accountEmailValue());
+    setAccountModalStatus(`${result.email}로 인증 메일을 보냈어요. 메일의 링크를 누르면 이 기록이 이메일로 보호돼요.`);
+    showToast('기록 보호 메일을 보냈어요!');
+    await refreshAccountSync({ manual: false });
+  } catch (error) {
+    setAccountModalStatus(friendlyAccountSyncError(error), true);
+  } finally {
+    setAccountModalBusy(false);
+  }
+}
+
+async function loginAccountEmail() {
+  setAccountModalBusy(true, '기록을 불러올 로그인 메일을 보내고 있어요...');
+  try {
+    const result = await requestEmailLogin(accountEmailValue());
+    setAccountModalStatus(`${result.email}로 불러오기 메일을 보냈어요. 같은 브라우저에서 링크를 열면 기록을 병합해서 가져와요.`);
+    showToast('불러오기 메일을 보냈어요!');
+  } catch (error) {
+    setAccountModalStatus(friendlyAccountSyncError(error), true);
+  } finally {
+    setAccountModalBusy(false);
+  }
+}
+
+function setAccountModalBusy(busy, message = '') {
+  ['account-link-email-button', 'account-login-email-button'].forEach((id) => {
+    if (els[id]) els[id].disabled = busy;
+  });
+  if (message) setAccountModalStatus(message);
+}
+
+function setAccountModalStatus(message, error = false) {
+  if (!els['account-modal-status']) return;
+  els['account-modal-status'].textContent = message;
+  els['account-modal-status'].classList.toggle('error', error);
 }
 
 function updateRecord() {
@@ -1299,3 +1461,4 @@ function updateSoundButtons() {
 
 updateSoundButtons();
 updateRecord();
+refreshAccountSync({ manual: false });

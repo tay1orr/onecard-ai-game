@@ -35,6 +35,11 @@ import {
   applyMissionEvents,
   loadMissionDashboard,
 } from '../src/2026-07-07-missions.js';
+import {
+  mergeAccountBundles,
+  mergeMissionStates,
+  mergeProfiles,
+} from '../src/2026-07-07-account-sync.js';
 
 function card(suit, rank) { return { id: `${suit}-${rank}`, suit, rank }; }
 
@@ -286,4 +291,39 @@ assert.deepEqual(
 assert.equal(preservedCosmeticProfile.equipped.cardBack, 'back-antique-atlas', '해금한 새 카드 뒷면 장착 상태를 보존해야 함');
 assert.equal(Object.hasOwn(preservedCosmeticProfile.equipped, 'pile'), false, '예전 더미 장착값은 기록을 건드리지 않고 정규화 과정에서만 제외해야 함');
 
-console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 89개 통과');
+const mergedProfile = mergeProfiles(
+  { points: 1200, peakPoints: 2000, wins: 12, games: 20, losses: 8, aiWins: 8, aiGames: 12, multiWins: 4, multiGames: 8, equipped: { ...DEFAULT_EQUIPPED, cardBack: 'back-strawberry-milk' }, awardedMatchIds: ['local-a'] },
+  { points: 900, peakPoints: 1500, wins: 10, games: 18, losses: 8, aiWins: 7, aiGames: 11, multiWins: 3, multiGames: 7, equipped: { ...DEFAULT_EQUIPPED, cardBack: 'back-classic' }, awardedMatchIds: ['remote-a', 'local-a'] },
+);
+assert.deepEqual(
+  [mergedProfile.points, mergedProfile.peakPoints, mergedProfile.wins, mergedProfile.games, mergedProfile.aiWins, mergedProfile.multiWins],
+  [1200, 2000, 12, 20, 8, 4],
+  'Supabase 병합은 낮은 서버 값으로 기존 점수/승수/판수를 줄이면 안 됩니다.',
+);
+assert.equal(mergedProfile.equipped.cardBack, 'back-strawberry-milk', '현재 브라우저에 장착한 꾸밈은 동기화 후에도 유지되어야 합니다.');
+assert.deepEqual(mergedProfile.awardedMatchIds, ['remote-a', 'local-a'], '중복 지급 방지 ID는 서버와 로컬 값을 합쳐야 합니다.');
+
+const remoteEquippedProfile = mergeProfiles(
+  { points: 0, peakPoints: 0, wins: 0, games: 0, equipped: DEFAULT_EQUIPPED },
+  { points: 20000, peakPoints: 20000, wins: 9, games: 15, equipped: { ...DEFAULT_EQUIPPED, cardBack: 'back-space-whale' } },
+  { preferLocalEquipped: false },
+);
+assert.equal(remoteEquippedProfile.equipped.cardBack, 'back-space-whale', '새 브라우저에서 불러올 때는 서버 장착 꾸밈을 복원해야 합니다.');
+
+const mergedMissionState = mergeMissionStates(
+  { daily: { key: '2026-07-07', missionIds: ['a'], progress: { a: 1 }, claimed: {} }, weekly: { key: '2026-07-06', missionIds: ['w'], progress: { w: 2 }, claimed: { w: false } }, seenEventIds: ['local-event'] },
+  { daily: { key: '2026-07-07', missionIds: ['a'], progress: { a: 3 }, claimed: { a: true } }, weekly: { key: '2026-07-06', missionIds: ['w'], progress: { w: 1 }, claimed: { w: true } }, seenEventIds: ['remote-event', 'local-event'] },
+);
+assert.deepEqual(mergedMissionState.daily.progress, { a: 3 }, '미션 진행도는 더 큰 값을 유지해야 합니다.');
+assert.equal(mergedMissionState.daily.claimed.a, true, '완료된 미션 보상 상태는 유지되어야 합니다.');
+assert.deepEqual(mergedMissionState.seenEventIds, ['remote-event', 'local-event'], '미션 이벤트 중복 방지 목록은 합쳐져야 합니다.');
+
+const mergedBundle = mergeAccountBundles(
+  { profile: { points: 500, peakPoints: 900, wins: 5, games: 8, equipped: { ...DEFAULT_EQUIPPED, cardBack: 'back-classic' } }, missionState: null, hasProfile: false, hasMissionState: false },
+  { profile: { points: 700, peakPoints: 1200, wins: 6, games: 10, equipped: { ...DEFAULT_EQUIPPED, cardBack: 'back-strawberry-milk' } }, missionState: { daily: { key: 'remote', missionIds: ['r'], progress: { r: 1 }, claimed: {} } } },
+);
+assert.equal(mergedBundle.profile.points, 700, '계정 불러오기 병합은 더 높은 서버 점수를 보존해야 합니다.');
+assert.equal(mergedBundle.profile.equipped.cardBack, 'back-strawberry-milk', '로컬 프로필이 없으면 서버 장착 꾸밈을 우선해야 합니다.');
+assert.equal(mergedBundle.missionState.daily.key, 'remote', '로컬 미션 상태가 없으면 서버 미션 상태를 가져와야 합니다.');
+
+console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 97개 통과');
