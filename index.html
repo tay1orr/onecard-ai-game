@@ -21,6 +21,10 @@
       <header class="topbar">
         <a class="brand" href="#" aria-label="ONE 홈"><span>ONE</span><b>!</b></a>
         <div class="topbar-actions">
+          <button id="account-profile-button" class="account-profile-button" type="button" aria-label="기록 계정 관리">
+            <span id="account-profile-icon" aria-hidden="true">👤</span>
+            <small id="account-profile-label">기록</small>
+          </button>
           <button class="icon-button" data-open-modal="rules-modal" aria-label="게임 규칙">?</button>
           <button id="home-sound-button" class="icon-button sound-button" aria-label="소리 켜기 또는 끄기">♪</button>
         </div>
@@ -354,6 +358,11 @@
       <p class="step-label">ACCOUNT LINK</p>
       <h2 id="account-modal-title">이메일로 기록 연결</h2>
       <p class="account-modal-intro">이메일 링크로 로그인하면 어느 브라우저에서든 점수, 승수, 판수, 꾸밈, 미션을 다시 불러올 수 있어요. 새 계정이면 현재 기록을 보호하고, 이미 연결된 이메일이면 저장된 기록을 가져와 합쳐요.</p>
+      <div id="account-modal-summary" class="account-modal-summary hidden">
+        <strong id="account-modal-summary-title">기록 상태 확인 중</strong>
+        <small id="account-modal-summary-copy">Supabase 연결 상태를 확인하고 있어요.</small>
+        <button id="account-modal-sync-button" class="secondary-button" type="button">지금 동기화</button>
+      </div>
       <div class="account-email-field">
         <label for="account-email-input">이메일</label>
         <input id="account-email-input" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com">

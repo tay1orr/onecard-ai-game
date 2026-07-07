@@ -36,9 +36,11 @@ import {
   loadMissionDashboard,
 } from '../src/2026-07-07-missions.js';
 import {
+  friendlyAccountSyncError,
   mergeAccountBundles,
   mergeMissionStates,
   mergeProfiles,
+  normalizeEmailInput,
 } from '../src/2026-07-07-account-sync.js';
 
 function card(suit, rank) { return { id: `${suit}-${rank}`, suit, rank }; }
@@ -326,4 +328,14 @@ assert.equal(mergedBundle.profile.points, 700, '계정 불러오기 병합은 �
 assert.equal(mergedBundle.profile.equipped.cardBack, 'back-strawberry-milk', '로컬 프로필이 없으면 서버 장착 꾸밈을 우선해야 합니다.');
 assert.equal(mergedBundle.missionState.daily.key, 'remote', '로컬 미션 상태가 없으면 서버 미션 상태를 가져와야 합니다.');
 
-console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 97개 통과');
+assert.equal(normalizeEmailInput('  USER@GMAIL.COM  '), 'user@gmail.com', '이메일은 앞뒤 공백 제거와 소문자 정규화를 거쳐야 합니다.');
+assert.throws(() => normalizeEmailInput('not-an-email'), /INVALID_EMAIL/, '이메일 형식이 아니면 메일 발송 전에 막아야 합니다.');
+let typoMessage = '';
+try {
+  normalizeEmailInput('player@gmial.com');
+} catch (error) {
+  typoMessage = friendlyAccountSyncError(error);
+}
+assert.match(typoMessage, /player@gmail\.com/, '흔한 이메일 도메인 오타는 추천 주소를 안내해야 합니다.');
+
+console.log('원카드 규칙·레이아웃·AI 반응·기록·꾸미기 테스트 100개 통과');

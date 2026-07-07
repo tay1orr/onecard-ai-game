@@ -93,18 +93,24 @@ test('AI와 온라인 화면의 모든 요소 참조가 실제 HTML에 존재한
 
 test('메인 화면은 단일 이메일 기록 연결 카드와 모달을 제공한다', () => {
   assert.match(aiHtml, /2026-07-07-account-sync\.css/);
+  assert.match(aiHtml, /id="account-profile-button"/);
   assert.match(aiHtml, /id="account-sync-card"/);
   assert.match(aiHtml, /id="account-modal"/);
+  assert.match(aiHtml, /id="account-modal-summary"/);
+  assert.match(aiHtml, /id="account-modal-sync-button"/);
   assert.match(aiHtml, /id="account-link-email-button"/);
   assert.doesNotMatch(aiHtml, /id="account-login-email-button"/);
   assert.match(aiHtml, /account-modal-options single/);
   assert.match(aiMain, /requestEmailRecordLink/);
+  assert.match(aiMain, /updateAccountProfileButton/);
+  assert.match(aiMain, /renderAccountModalMode/);
   assert.doesNotMatch(aiMain, /loginAccountEmail/);
   assert.match(aiMain, /refreshAccountSync\(\{ manual: false \}\)/);
   assert.match(accountCss, /\.account-sync-card/);
+  assert.match(accountCss, /\.account-profile-button/);
   assert.match(accountCss, /\.account-modal-options/);
-  assert.match(accountCss, /\.account-sync-card\[data-account-status="email"\]/);
-  assert.match(accountCss, /border-radius: 999px/);
+  assert.match(accountCss, /\.account-sync-card\[data-account-status="email"\]\s*\{\s*display:\s*none/);
+  assert.match(accountCss, /\.account-modal-summary/);
 });
 
 test('프로필 동기화 SQL은 본인 row만 읽고 쓸 수 있게 제한한다', () => {
@@ -124,6 +130,8 @@ test('계정 동기화 모듈은 익명 저장, 이메일 연결, 매직링크 �
   assert.match(accountSyncMain, /shouldCreateUser: false/);
   assert.match(accountSyncMain, /requestEmailRecordLink/);
   assert.match(accountSyncMain, /isAlreadyRegisteredEmailError/);
+  assert.match(accountSyncMain, /normalizeEmailInput/);
+  assert.match(accountSyncMain, /EMAIL_DOMAIN_TYPO/);
   assert.match(accountSyncMain, /mergeProfiles/);
   assert.match(accountSyncMain, /mergeMissionStates/);
   assert.match(onlineMain, /hydrateOnlineAccountProfile/);

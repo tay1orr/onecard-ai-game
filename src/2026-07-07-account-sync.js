@@ -10,6 +10,27 @@ export const ACCOUNT_SYNC_LAST_SYNC_KEY = 'onecard-account-last-sync-v1';
 let clientPromise = null;
 let queuedSyncTimer = null;
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const EMAIL_DOMAIN_SUGGESTIONS = Object.freeze({
+  'gmial.com': 'gmail.com',
+  'gamil.com': 'gmail.com',
+  'gmai.com': 'gmail.com',
+  'gmal.com': 'gmail.com',
+  'gmail.con': 'gmail.com',
+  'gmail.co': 'gmail.com',
+  'gmail.comm': 'gmail.com',
+  'naver.con': 'naver.com',
+  'naver.co': 'naver.com',
+  'naver.comm': 'naver.com',
+  'navr.com': 'naver.com',
+  'daum.con': 'daum.net',
+  'hanmail.con': 'hanmail.net',
+  'kakao.con': 'kakao.com',
+  'icloud.con': 'icloud.com',
+  'outlook.con': 'outlook.com',
+  'hotmial.com': 'hotmail.com',
+});
+
 function defaultStorage() {
   return globalThis.localStorage;
 }
@@ -43,6 +64,21 @@ function writeStorage(storage, key, value) {
 
 function removeStorage(storage, key) {
   try { storage?.removeItem(key); } catch { /* storage can be blocked */ }
+}
+
+export function normalizeEmailInput(email) {
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  if (!EMAIL_PATTERN.test(cleanEmail)) throw new Error('INVALID_EMAIL');
+  const atIndex = cleanEmail.lastIndexOf('@');
+  const localPart = cleanEmail.slice(0, atIndex);
+  const domain = cleanEmail.slice(atIndex + 1);
+  const suggestedDomain = EMAIL_DOMAIN_SUGGESTIONS[domain];
+  if (suggestedDomain) {
+    const error = new Error(`EMAIL_DOMAIN_TYPO:${localPart}@${suggestedDomain}`);
+    error.suggestion = `${localPart}@${suggestedDomain}`;
+    throw error;
+  }
+  return cleanEmail;
 }
 
 function emailRedirectTo() {
@@ -291,8 +327,7 @@ export function queueAccountProfileSync(options = {}) {
 
 export async function requestEmailConnection(email, options = {}) {
   const storage = options.storage || defaultStorage();
-  const cleanEmail = String(email || '').trim().toLowerCase();
-  if (!cleanEmail || !cleanEmail.includes('@')) throw new Error('INVALID_EMAIL');
+  const cleanEmail = normalizeEmailInput(email);
   const client = options.client || await getAccountClient();
   await syncAccountProfile({ storage, client, ensureSession: true });
   const { error } = await client.auth.updateUser(
@@ -314,8 +349,7 @@ function isAlreadyRegisteredEmailError(error) {
 
 export async function requestEmailLogin(email, options = {}) {
   const storage = options.storage || defaultStorage();
-  const cleanEmail = String(email || '').trim().toLowerCase();
-  if (!cleanEmail || !cleanEmail.includes('@')) throw new Error('INVALID_EMAIL');
+  const cleanEmail = normalizeEmailInput(email);
   const client = options.client || await getAccountClient();
   const { error } = await client.auth.signInWithOtp({
     email: cleanEmail,
@@ -331,8 +365,7 @@ export async function requestEmailLogin(email, options = {}) {
 
 export async function requestEmailRecordLink(email, options = {}) {
   const storage = options.storage || defaultStorage();
-  const cleanEmail = String(email || '').trim().toLowerCase();
-  if (!cleanEmail || !cleanEmail.includes('@')) throw new Error('INVALID_EMAIL');
+  const cleanEmail = normalizeEmailInput(email);
   const client = options.client || await getAccountClient();
   const session = await ensureAccountSession(client);
   const currentEmail = session?.user?.email?.toLowerCase?.() || '';
@@ -356,6 +389,7 @@ export function friendlyAccountSyncError(error) {
   if (message.includes('ACCOUNT_SUPABASE_NOT_CONFIGURED')) return 'Supabase 공개 설정이 필요해요.';
   if (message.includes('relation') && message.includes(ACCOUNT_SYNC_TABLE)) return 'Supabase SQL을 먼저 실행해야 기록 보호를 사용할 수 있어요.';
   if (message.includes('INVALID_EMAIL')) return '이메일 주소를 다시 확인해 주세요.';
+  if (message.startsWith('EMAIL_DOMAIN_TYPO:')) return `혹시 ${message.replace('EMAIL_DOMAIN_TYPO:', '')} 인가요? 이메일 주소를 다시 확인해 주세요.`;
   if (message.includes('Email rate limit exceeded') || message.includes('For security purposes')) return '메일은 잠시 후 다시 보낼 수 있어요.';
   if (isAlreadyRegisteredEmailError(error)) return '이미 연결된 이메일이에요. 같은 이메일로 로그인 메일을 받아 기록을 불러와 주세요.';
   return message || '기록 보호 연결 중 문제가 생겼어요.';

@@ -94,57 +94,7 @@
 }
 
 .account-sync-card[data-account-status="email"] {
-  margin: 10px 0 4px;
-  padding: 10px 12px;
-  grid-template-columns: minmax(0, 1fr) auto;
-  border-radius: 999px;
-  background:
-    linear-gradient(135deg, rgba(123,255,191,.12), rgba(111,231,255,.065)),
-    rgba(255,255,255,.035);
-  box-shadow: 0 12px 36px rgba(3, 7, 22, .18), inset 0 0 0 1px rgba(255,255,255,.045);
-}
-
-.account-sync-card[data-account-status="email"]::after {
   display: none;
-}
-
-.account-sync-card[data-account-status="email"] .account-sync-copy {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  gap: 10px;
-}
-
-.account-sync-card[data-account-status="email"] .account-sync-copy h3 {
-  margin: 0;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.account-sync-card[data-account-status="email"] .account-sync-copy p {
-  overflow: hidden;
-  max-width: none;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12px;
-}
-
-.account-sync-card[data-account-status="email"] .account-sync-state {
-  flex: 0 0 auto;
-  padding: 5px 8px;
-  font-size: 11px;
-}
-
-.account-sync-card[data-account-status="email"] .account-sync-actions {
-  flex-wrap: nowrap;
-  gap: 6px;
-}
-
-.account-sync-card[data-account-status="email"] .account-sync-actions button {
-  min-height: 34px;
-  padding: 8px 11px;
-  border-radius: 999px;
-  font-size: 12px;
 }
 
 .account-sync-actions {
@@ -157,7 +107,102 @@
 }
 
 .account-sync-actions button {
+  min-height: 44px;
   white-space: nowrap;
+}
+
+.account-sync-actions .primary-button,
+.account-sync-actions .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-profile-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(141,240,255,.18), transparent 38%),
+    rgba(255,255,255,.065);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.035);
+  cursor: pointer;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.account-profile-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(141,240,255,.32);
+  background:
+    radial-gradient(circle at 20% 15%, rgba(141,240,255,.24), transparent 38%),
+    rgba(255,255,255,.09);
+}
+
+.account-profile-button small {
+  max-width: 78px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 900;
+  color: rgba(255,255,255,.82);
+}
+
+.account-profile-button[data-account-status="email"] {
+  border-color: rgba(123,255,191,.3);
+  background:
+    radial-gradient(circle at 20% 15%, rgba(123,255,191,.22), transparent 38%),
+    rgba(123,255,191,.08);
+}
+
+.account-profile-button[data-account-status="guest"],
+.account-profile-button[data-account-status="local"] {
+  border-color: rgba(255,211,107,.26);
+}
+
+.account-profile-button[data-account-status="checking"]::after {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8df0ff;
+  box-shadow: 0 0 12px rgba(141,240,255,.72);
+  animation: account-pulse 1s ease infinite;
+}
+
+.account-modal-summary {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(123,255,191,.24);
+  background:
+    radial-gradient(circle at 10% 8%, rgba(123,255,191,.16), transparent 34%),
+    rgba(255,255,255,.055);
+}
+
+.account-modal-summary strong {
+  font-size: 14px;
+}
+
+.account-modal-summary small {
+  color: rgba(255,255,255,.68);
+  line-height: 1.45;
+}
+
+.account-modal-summary button {
+  justify-self: start;
+  min-height: 40px;
 }
 
 .account-modal-card {
@@ -272,17 +317,13 @@
     grid-template-columns: 1fr;
   }
 
-  .account-sync-card[data-account-status="email"] {
-    border-radius: 22px;
-    grid-template-columns: 1fr;
+  .account-profile-button {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
   }
 
-  .account-sync-card[data-account-status="email"] .account-sync-copy {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .account-sync-card[data-account-status="email"] .account-sync-copy p {
-    white-space: normal;
+  .account-profile-button small {
+    display: none;
   }
 }

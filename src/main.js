@@ -83,6 +83,7 @@ let reactionPickerTimer = null;
 let aiReactionTimer = null;
 let aiReactionCooldownUntil = 0;
 let cosmeticPreviewTimer = null;
+let currentAccountSyncState = { status: 'checking' };
 
 const DIE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
@@ -123,8 +124,10 @@ els['exit-button'].addEventListener('click', goHome);
 els['match-again-button'].addEventListener('click', matchAgain);
 els['result-home-button'].addEventListener('click', goHome);
 els['cosmetics-button'].addEventListener('click', openCosmetics);
+els['account-profile-button']?.addEventListener('click', openAccountModal);
 els['account-connect-button']?.addEventListener('click', openAccountModal);
 els['account-refresh-button']?.addEventListener('click', refreshAccountSync);
+els['account-modal-sync-button']?.addEventListener('click', () => refreshAccountSync({ manual: true }));
 els['account-link-email-button']?.addEventListener('click', connectAccountEmail);
 els['account-email-input']?.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
@@ -1288,6 +1291,8 @@ function renderAccountSyncState(state = {}) {
   if (!card) return;
   const status = state.status || 'local';
   const email = state.email || state.pendingEmail || '';
+  const previousAccountStatus = currentAccountSyncState.status;
+  currentAccountSyncState = { ...state, status, email };
   const messages = {
     checking: {
       label: '기록 상태 확인 중',
@@ -1323,8 +1328,10 @@ function renderAccountSyncState(state = {}) {
     },
   };
   const message = messages[status] || messages.local;
-  card.dataset.accountStatus = status;
+  const cardStatus = status === 'checking' && previousAccountStatus === 'email' ? 'email' : status;
+  card.dataset.accountStatus = cardStatus;
   card.classList.toggle('syncing', status === 'checking');
+  updateAccountProfileButton(status, email);
   els['account-sync-state'].textContent = message.label;
   els['account-sync-title'].textContent = message.title;
   els['account-sync-copy'].textContent = message.copy;
@@ -1332,6 +1339,46 @@ function renderAccountSyncState(state = {}) {
     els['account-connect-button'].textContent = status === 'email' ? '관리' : '이메일로 기록 연결';
   }
   if (els['account-refresh-button']) els['account-refresh-button'].disabled = status === 'checking';
+  renderAccountModalMode(cardStatus === 'email' ? 'email' : status, email);
+}
+
+function updateAccountProfileButton(status, email = '') {
+  const button = els['account-profile-button'];
+  if (!button) return;
+  button.dataset.accountStatus = status;
+  button.classList.toggle('syncing', status === 'checking');
+  const labels = {
+    checking: '확인 중',
+    local: '기록',
+    guest: '게스트',
+    email: '보호됨',
+    'not-configured': '설정',
+    error: '확인',
+  };
+  els['account-profile-icon'].textContent = status === 'email' ? '✅' : status === 'guest' ? '👤' : status === 'checking' ? '⏳' : '👤';
+  els['account-profile-label'].textContent = labels[status] || '기록';
+  button.setAttribute('aria-label', status === 'email'
+    ? `${email || '이메일'} 기록 계정 관리`
+    : '이메일로 기록 연결');
+}
+
+function renderAccountModalMode(status = currentAccountSyncState.status, email = currentAccountSyncState.email || '') {
+  const connected = status === 'email';
+  const summary = els['account-modal-summary'];
+  const emailField = document.querySelector('.account-email-field');
+  const options = document.querySelector('.account-modal-options');
+  summary?.classList.toggle('hidden', !connected);
+  emailField?.classList.toggle('hidden', connected);
+  options?.classList.toggle('hidden', connected);
+  if (connected) {
+    els['account-modal-title'].textContent = '기록 보호 완료';
+    if (els['account-modal-summary-title']) els['account-modal-summary-title'].textContent = email ? `${email}로 보호 중` : '이메일로 보호 중';
+    if (els['account-modal-summary-copy']) els['account-modal-summary-copy'].textContent = '점수, 승수, 판수, 꾸밈, 미션을 조용히 동기화하고 있어요.';
+    if (els['account-modal-sync-button']) els['account-modal-sync-button'].disabled = status === 'checking';
+  } else {
+    els['account-modal-title'].textContent = '이메일로 기록 연결';
+    if (els['account-modal-sync-button']) els['account-modal-sync-button'].disabled = status === 'checking';
+  }
 }
 
 function openAccountModal() {
@@ -1339,7 +1386,10 @@ function openAccountModal() {
   if (!email && els['account-sync-card']?.dataset.accountStatus === 'email') {
     els['account-email-input'].placeholder = '이미 이메일로 보호 중이에요';
   }
-  setAccountModalStatus('이메일을 입력하고 “이메일로 기록 연결”을 누르면 현재 기록 보호 또는 기존 기록 불러오기를 자동으로 처리해요.');
+  renderAccountModalMode(currentAccountSyncState.status, currentAccountSyncState.email || '');
+  setAccountModalStatus(currentAccountSyncState.status === 'email'
+    ? '이 브라우저에서도 조용히 동기화하고 있어요.'
+    : '이메일을 입력하고 “이메일로 기록 연결”을 누르면 현재 기록 보호 또는 기존 기록 불러오기를 자동으로 처리해요.');
   openModal('account-modal');
 }
 
