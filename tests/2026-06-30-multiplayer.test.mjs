@@ -216,11 +216,12 @@ test('멀티 대전은 허용된 카드 뒷면 스킨만 상대에게 공유한�
   assert.match(sql, /'back-monochrome-wave', 'back-antique-library'/);
   assert.match(sql, /'back-rose-arbor'/);
   assert.match(sql, /'back-pink-cloud-pop', 'back-moon-rabbit-observatory', 'back-strawberry-toy-parade'/);
-  assert.match(sql, /'back-rose-ballroom', 'back-neon-deepsea-city', 'back-ancient-sun-temple'/);
+  assert.match(sql, /'back-rose-ballroom', 'back-real-rose-garden', 'back-neon-deepsea-city', 'back-ancient-sun-temple'/);
   assert.match(sql, /'cardBack', v_room\.host_card_back/);
   assert.match(multiplayerClient, /onecard_set_card_back/);
   assert.match(onlineMain, /renderOpponentHand\(opponent\.count, opponent\.cardBack\)/);
   assert.match(cosmeticsCss, /2026-07-06-pink-cloud-card-back\.webp/);
+  assert.match(cosmeticsCss, /2026-07-07-real-rose-garden-card-back\.webp/);
   assert.match(cosmeticsCss, /2026-07-06-sun-temple-table\.webp/);
 });
 
@@ -288,6 +289,20 @@ test('불꽃·색종이·네온·솜사탕·하이스코어는 서로 다른 전
   assert.match(cosmeticsCss, /animation:preview-cotton-left/);
   assert.match(cosmeticsCss, /animation:preview-highscore-burst/);
   assert.doesNotMatch(cosmeticsCss, /skin-victory-neon[^\n]+skin-victory-arcade[^\n]+animation/);
+});
+
+test('리얼 로즈가든과 신규 고점수 세트도 전용 이펙트와 승리 연출을 가진다', () => {
+  assert.match(cosmeticsCss, /\.skin-table-real-rose \.table/);
+  assert.match(cosmeticsCss, /\.skin-face-real-rose \.playing-card/);
+  assert.match(cosmeticsCss, /\.skin-effect-real-rose \.effect-particles i/);
+  assert.match(cosmeticsCss, /animation:victory-real-rose-petal-left/);
+  assert.match(cosmeticsCss, /animation:preview-rose-petal/);
+  assert.match(cosmeticsCss, /animation:victory-pink-heart-left/);
+  assert.match(cosmeticsCss, /animation:victory-moon-star/);
+  assert.match(cosmeticsCss, /animation:victory-strawberry-ribbon-left/);
+  assert.match(cosmeticsCss, /animation:victory-ballroom-waltz/);
+  assert.match(cosmeticsCss, /animation:victory-deepsea-bubble/);
+  assert.match(cosmeticsCss, /animation:victory-sun-rune/);
 });
 
 console.log(`멀티플레이 도우미·보안 테스트 ${passed}개 통과`);

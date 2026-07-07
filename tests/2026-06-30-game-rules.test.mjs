@@ -193,6 +193,7 @@ assert.equal(nextCosmeticUnlock(20000).threshold, 20700, '2만점 이후에는 �
 assert.equal(newlyUnlockedCosmetics(19999, 20000).length, 6, '2만점 달성 시 꿈빛 왕국 풀 세트 6종을 함께 해금해야 함');
 assert.equal(nextCosmeticUnlock(20699).threshold, 20700, '20,700점부터 신규 이미지 테이블 보상이 시작되어야 함');
 assert.equal(newlyUnlockedCosmetics(20699, 21200).map((item) => item.id).join(','), 'table-pink-cloud-pop,back-pink-cloud-pop', '핑크 구름 팝은 테이블과 카드 뒷면 순서로 해금되어야 함');
+assert.deepEqual(newlyUnlockedCosmetics(21200, 22400).map((item) => item.id), ['effect-pink-cloud-carnival', 'victory-pink-cloud-pop'], '핑크 구름 팝은 이펙트와 승리 연출까지 이어서 해금되어야 함');
 assert.equal(COSMETICS.filter((item) => item.concept).length >= 9, true, '서로 다른 신규 콘셉트 꾸미기가 충분히 제공되어야 함');
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-neon-arcade'), true, '네온 아케이드 카드 앞면을 제공해야 함');
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-dessert-cafe'), true, '디저트 카페 카드 앞면을 제공해야 함');
@@ -209,8 +210,13 @@ assert.equal(['table-rose-conservatory', 'back-rose-arbor', 'effect-rose-petal-s
 assert.equal(cosmeticSetForItem('face-rose-tea')?.id, 'rose-conservatory', '장미 티파티 앞면은 장미 온실 세트로 표시되어야 함');
 assert.equal(normalizeEquipped({ cardBack: 'back-rose-arbor' }, 14000).cardBack, 'back-rose-arbor', '해금한 장미 뒷면은 정상 장착되어야 함');
 const roseBallroomSet = COSMETIC_SETS.find((set) => set.id === 'rose-ballroom');
-assert.deepEqual(cosmeticSetProgress(roseBallroomSet, 30300), { unlocked: 2, total: 2 }, '장미 무도회 이미지 세트는 30,300점에 2종 모두 해금되어야 함');
-assert.equal(normalizeEquipped({ cardBack: 'back-ancient-sun-temple' }, 38500).cardBack, 'back-ancient-sun-temple', '고대 태양 신전 뒷면은 최고 구간에서 장착되어야 함');
+assert.deepEqual(cosmeticSetProgress(roseBallroomSet, 31600), { unlocked: 4, total: 4 }, '장미 무도회 이미지 세트는 효과와 승리 연출까지 4종으로 완성되어야 함');
+const realRoseSet = COSMETIC_SETS.find((set) => set.id === 'real-rose-garden');
+assert.deepEqual(cosmeticSetProgress(realRoseSet, 33400), { unlocked: 3, total: 5 }, '리얼 로즈가든은 앞면까지 단계적으로 해금되어야 함');
+assert.deepEqual(cosmeticSetProgress(realRoseSet, 34800), { unlocked: 5, total: 5 }, '리얼 로즈가든은 테이블·뒷면·앞면·효과·승리 연출 5종 풀세트여야 함');
+assert.equal(cosmeticSetForItem('face-real-rose-garden')?.id, 'real-rose-garden', '리얼 로즈가든 앞면은 리얼 로즈가든 세트로 표시되어야 함');
+assert.equal(normalizeEquipped({ cardFace: 'face-real-rose-garden', cardBack: 'back-real-rose-garden' }, 34800).cardFace, 'face-real-rose-garden', '해금한 리얼 로즈가든 앞면은 정상 장착되어야 함');
+assert.equal(normalizeEquipped({ cardBack: 'back-ancient-sun-temple' }, 40400).cardBack, 'back-ancient-sun-temple', '고대 태양 신전 뒷면은 최고 구간에서 장착되어야 함');
 
 const preservedCosmeticStorage = memoryStorage({
   [PROFILE_KEY]: JSON.stringify({

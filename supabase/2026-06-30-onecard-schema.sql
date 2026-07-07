@@ -271,7 +271,7 @@ begin
     'back-antique-atlas', 'back-bauhaus', 'back-jade-rune', 'back-brass-orbit',
     'back-monochrome-wave', 'back-antique-library', 'back-rose-arbor',
     'back-pink-cloud-pop', 'back-moon-rabbit-observatory', 'back-strawberry-toy-parade',
-    'back-rose-ballroom', 'back-neon-deepsea-city', 'back-ancient-sun-temple'
+    'back-rose-ballroom', 'back-real-rose-garden', 'back-neon-deepsea-city', 'back-ancient-sun-temple'
   ) then
     v_card_back := 'back-classic';
   end if;
