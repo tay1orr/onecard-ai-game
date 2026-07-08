@@ -58,6 +58,24 @@ const CARD_FACE_CLASS_NAMES = COSMETICS
   .filter((item) => item.slot === 'cardFace' && item.cssClass)
   .map((item) => item.cssClass);
 const VICTORY_RESULT_REVEAL_DELAY_MS = 2550;
+const ONLINE_TOY_LINES = {
+  jelly: ['말랑!', '뿌잉!', '또 눌러줘!'],
+  star: ['빙글!', '반짝!', '슈웅!'],
+  rose: ['향긋!', '사랑을 담아!', '장미 파워!'],
+  'rose-musicbox': ['딩딩딩♪', '태엽 감기!', '장미 왈츠!'],
+  'rose-teacup': ['살랑!', '이슬 톡!', '꽃잎 팡!'],
+  'crimson-clockwork': ['활짝!', '진홍 팡!', '꽃잎 폭발!'],
+};
+const ONLINE_TOY_VARIANTS = [
+  { base: 'star', cssClass: 'skin-charm-rose-musicbox', key: 'rose-musicbox' },
+  { base: 'jelly', cssClass: 'skin-charm-rose-teacup', key: 'rose-teacup' },
+  { base: 'rose', cssClass: 'skin-charm-crimson-clockwork', key: 'crimson-clockwork' },
+];
+const ONLINE_TOY_PARTICLE_COUNTS = {
+  'rose-musicbox': 16,
+  'rose-teacup': 14,
+  'crimson-clockwork': 18,
+};
 
 els['room-code-input'].addEventListener('input', () => {
   els['room-code-input'].value = normalizeRoomCode(els['room-code-input'].value);
@@ -1027,21 +1045,32 @@ function dieFace(value) { return value ? ['⚀','⚁','⚂','⚃','⚄','⚅'][v
 function suitName(suit) { return {hearts:'하트',diamonds:'다이아',spades:'스페이드',clubs:'클로버',joker:'조커'}[suit] || ''; }
 
 function playOnlineToy(button) {
-  const toy = button.dataset.onlineToy;
+  const baseToy = button.dataset.onlineToy;
+  const toy = activeOnlineToyKey(baseToy);
+  const lines = ONLINE_TOY_LINES[toy];
+  const count = Number(button.dataset.playCount || 0);
+  button.dataset.playCount = String(count + 1);
+  button.querySelector('.toy-bubble').textContent = lines[count % lines.length];
   button.classList.remove('is-playing'); void button.offsetWidth; button.classList.add('is-playing');
   playSound(`toy-${toy}`);
   burstOnlineToyParticles(button, toy);
   setTimeout(() => button.classList.remove('is-playing'),850);
 }
 
+function activeOnlineToyKey(baseToy) {
+  const variant = ONLINE_TOY_VARIANTS.find((item) => item.base === baseToy && document.body.classList.contains(item.cssClass));
+  return variant?.key || baseToy;
+}
+
 function burstOnlineToyParticles(button, toy) {
   button.querySelector('.toy-particles')?.remove();
   const burst = document.createElement('span');
   burst.className = `toy-particles toy-particles-${toy}`;
-  for (let index = 0; index < 10; index += 1) {
+  const particleCount = ONLINE_TOY_PARTICLE_COUNTS[toy] || 10;
+  for (let index = 0; index < particleCount; index += 1) {
     const spark = document.createElement('i');
-    const angle = (Math.PI * 2 * index) / 10;
-    const distance = 28 + (index % 3) * 8;
+    const angle = (Math.PI * 2 * index) / particleCount;
+    const distance = 28 + (index % 3) * 8 + (ONLINE_TOY_PARTICLE_COUNTS[toy] ? 8 : 0);
     spark.style.setProperty('--toy-px', `${Math.cos(angle) * distance}px`);
     spark.style.setProperty('--toy-py', `${Math.sin(angle) * distance}px`);
     spark.style.setProperty('--toy-delay', `${(index % 4) * 25}ms`);

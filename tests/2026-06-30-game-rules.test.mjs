@@ -214,6 +214,13 @@ assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-neon-
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-dessert-cafe'), true, '디저트 카페 카드 앞면을 제공해야 함');
 assert.equal(cosmeticsForSlot('pile').length, 0, '더미 꾸밈 아이템은 모두 제거되어야 함');
 assert.equal(Object.hasOwn(DEFAULT_EQUIPPED, 'pile'), false, '장착 정보에 더미 슬롯을 새로 저장하지 않아야 함');
+assert.deepEqual(
+  ['charm-rose-musicbox', 'charm-rose-teacup', 'charm-crimson-rose-clockwork'].map((id) => COSMETICS.find((item) => item.id === id)?.threshold),
+  [24900, 29200, 40000],
+  '리얼 장미 장난감 3종은 2~3만점대 2개와 4만점 1개로 배치되어야 함',
+);
+assert.equal(cosmeticsForSlot('charm').filter((item) => item.concept === '리얼 로즈 토이').length, 3, '리얼 장미 장난감 3종은 장난감·장식 슬롯에 제공되어야 함');
+assert.equal(COSMETICS.some((item) => item.id === 'charm-rose-teacup' && item.name.includes('티컵')), false, '새 장미 장난감은 컵이 아닌 꽃 단독 콘셉트여야 함');
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-royal-tarot'), true, '카드 전체를 바꾸는 왕실 타로 앞면을 제공해야 함');
 assert.equal(cosmeticsForSlot('cardBack').some((item) => item.id === 'back-antique-library'), true, '카드 전체를 바꾸는 고서관 뒷면을 제공해야 함');
 assert.equal(cosmeticsForSlot('victory').some((item) => item.id === 'victory-dual-fireworks'), true, '양쪽 폭죽 승리 연출을 제공해야 함');

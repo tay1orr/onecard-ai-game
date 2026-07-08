@@ -77,6 +77,7 @@ const reactionsCss = await readFile(new URL('../2026-07-01-reactions.css', impor
 const multiplayerClient = await readFile(new URL('../src/2026-06-30-multiplayer.js', import.meta.url), 'utf8');
 const accountSyncMain = await readFile(new URL('../src/2026-07-07-account-sync.js', import.meta.url), 'utf8');
 const accountSyncSql = await readFile(new URL('../supabase/2026-07-07-onecard-profile-sync.sql', import.meta.url), 'utf8');
+const audioMain = await readFile(new URL('../src/audio.js', import.meta.url), 'utf8');
 
 function assertReferencedIdsExist(html, source) {
   const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
@@ -407,6 +408,21 @@ test('리얼 로즈가든과 신규 고점수 세트도 전용 이펙트와 승�
   assert.match(cosmeticsCss, /animation:victory-ballroom-waltz/);
   assert.match(cosmeticsCss, /animation:victory-deepsea-bubble/);
   assert.match(cosmeticsCss, /animation:victory-sun-rune/);
+});
+
+test('리얼 장미 장난감 3종은 에셋·효과·사운드가 각각 연결되어 있다', () => {
+  assert.match(cosmeticsCss, /2026-07-08-rose-musicbox\.png/);
+  assert.match(cosmeticsCss, /2026-07-08-cute-peach-rose\.png/);
+  assert.match(cosmeticsCss, /2026-07-08-cute-crimson-rose\.png/);
+  assert.doesNotMatch(cosmeticsCss, /2026-07-08-rose-teacup\.png/);
+  assert.match(cosmeticsCss, /\.toy-particles-rose-musicbox i/);
+  assert.match(cosmeticsCss, /\.toy-particles-rose-teacup i/);
+  assert.match(cosmeticsCss, /\.toy-particles-crimson-clockwork i/);
+  assert.match(aiMain, /TOY_VARIANTS[\s\S]*skin-charm-rose-musicbox[\s\S]*skin-charm-rose-teacup[\s\S]*skin-charm-crimson-clockwork/);
+  assert.match(onlineMain, /ONLINE_TOY_VARIANTS[\s\S]*skin-charm-rose-musicbox[\s\S]*skin-charm-rose-teacup[\s\S]*skin-charm-crimson-clockwork/);
+  assert.match(audioMain, /toy-rose-musicbox/);
+  assert.match(audioMain, /toy-rose-teacup/);
+  assert.match(audioMain, /toy-crimson-clockwork/);
 });
 
 console.log(`멀티플레이 도우미·보안 테스트 ${passed}개 통과`);
