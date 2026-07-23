@@ -97,6 +97,7 @@ export const COSMETICS = Object.freeze([
   { id: 'back-ancient-sun-temple', slot: 'cardBack', threshold: 40400, name: '태양 신전 카드', icon: 'SUN', description: '태양 원반과 고대 룬이 빛나는 황금 석판 카드 뒷면', cssClass: 'skin-back-sun-temple', concept: '고대 태양 신전', legendary: true },
   { id: 'effect-ancient-sun-rune', slot: 'effect', threshold: 41400, name: '태양 룬 폭발', icon: '☀', description: '황금 룬과 모래빛 태양 조각이 강하게 터져요', cssClass: 'skin-effect-sun-temple', concept: '고대 태양 신전', legendary: true },
   { id: 'victory-ancient-sun-temple', slot: 'victory', threshold: 42600, name: '태양 신전 대관식', icon: 'SUN', description: '거대한 태양 원반과 황금 룬 기둥이 솟는 승리 연출', cssClass: 'skin-victory-sun-temple', concept: '고대 태양 신전', legendary: true },
+  { id: 'charm-royal-flower-fountain', slot: 'charm', threshold: 130000, name: '왕실 꽃정원 분수', icon: '⛲', description: '층층이 이어진 아이보리 분수에 꽃과 덩굴이 만개하고, 누르면 물방울과 꽃잎이 폭발하는 신화 등급 장난감', cssClass: 'skin-charm-royal-flower-fountain', concept: '왕실 꽃정원', legendary: true },
 ]);
 
 export const COSMETIC_SETS = Object.freeze([

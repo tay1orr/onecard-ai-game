@@ -36,6 +36,7 @@ export function playSound(name) {
   if (name === 'toy-rose-musicbox') { [659, 784, 988, 1319].forEach((note, i) => tone(note, 0.16, 'sine', 0.02, i * 0.045)); tone(330, 0.24, 'triangle', 0.012, 0.18); }
   if (name === 'toy-rose-teacup') { [587, 740, 880, 1175].forEach((note, i) => tone(note, 0.14, i % 2 ? 'sine' : 'triangle', 0.018, i * 0.045)); tone(392, 0.16, 'triangle', 0.012, 0.19); }
   if (name === 'toy-crimson-clockwork') { tone(196, 0.12, 'triangle', 0.018); [523, 698, 988, 1319].forEach((note, i) => tone(note, 0.18, 'triangle', 0.022, 0.06 + i * 0.045)); tone(1568, 0.1, 'sine', 0.016, 0.28); }
+  if (name === 'toy-royal-flower-fountain') { [1047, 880, 1175, 1397].forEach((note, i) => tone(note, 0.22, 'sine', 0.018, i * 0.055)); [523, 659, 784, 1047, 1319].forEach((note, i) => tone(note, 0.2, 'triangle', 0.017, 0.12 + i * 0.045)); tone(1760, 0.32, 'sine', 0.014, 0.34); }
   if (name === 'joker') { [180, 240, 360, 720].forEach((note, i) => tone(note, 0.2, i % 2 ? 'square' : 'sawtooth', 0.022, i * 0.055)); }
   if (name === 'onecard') { [523, 659, 784, 1047].forEach((note, i) => tone(note, 0.25, 'triangle', 0.032, i * 0.075)); }
   if (name === 'dice') { [180, 230, 190, 280].forEach((note, i) => tone(note, 0.08, 'square', 0.018, i * 0.08)); }

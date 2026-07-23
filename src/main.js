@@ -99,18 +99,23 @@ const TOY_LINES = {
   'rose-musicbox': ['딩딩딩♪', '태엽 감기!', '장미 왈츠!'],
   'rose-teacup': ['살랑!', '이슬 톡!', '꽃잎 팡!'],
   'crimson-clockwork': ['활짝!', '진홍 팡!', '꽃잎 폭발!'],
+  'royal-flower-fountain': ['촤르르르!', '꽃정원 만개!', '무지개 분수 팡!'],
 };
 
 const TOY_VARIANTS = [
   { base: 'star', cssClass: 'skin-charm-rose-musicbox', key: 'rose-musicbox' },
   { base: 'jelly', cssClass: 'skin-charm-rose-teacup', key: 'rose-teacup' },
   { base: 'rose', cssClass: 'skin-charm-crimson-clockwork', key: 'crimson-clockwork' },
+  { base: 'star', cssClass: 'skin-charm-royal-flower-fountain', key: 'royal-flower-fountain' },
 ];
 const TOY_PARTICLE_COUNTS = {
   'rose-musicbox': 16,
   'rose-teacup': 14,
   'crimson-clockwork': 18,
+  'royal-flower-fountain': 30,
 };
+const TOY_PLAY_DURATIONS = { 'royal-flower-fountain': 1400 };
+const TOY_PARTICLE_SPREADS = { 'royal-flower-fountain': 1.75 };
 
 const effects = createGameEffects({
   root: els['action-overlay'],
@@ -1109,7 +1114,7 @@ function playWithToy(button) {
   button.classList.add('is-playing');
   playSound(`toy-${toy}`);
   burstToyParticles(button, toy);
-  setTimeout(() => button.classList.remove('is-playing'), 850);
+  setTimeout(() => button.classList.remove('is-playing'), TOY_PLAY_DURATIONS[toy] || 850);
 }
 
 function activeToyKey(baseToy) {
@@ -1122,17 +1127,18 @@ function burstToyParticles(button, toy) {
   const burst = document.createElement('span');
   burst.className = `toy-particles toy-particles-${toy}`;
   const particleCount = TOY_PARTICLE_COUNTS[toy] || 10;
+  const spread = TOY_PARTICLE_SPREADS[toy] || 1;
   for (let index = 0; index < particleCount; index += 1) {
     const spark = document.createElement('i');
     const angle = (Math.PI * 2 * index) / particleCount;
-    const distance = 28 + (index % 3) * 8 + (TOY_PARTICLE_COUNTS[toy] ? 8 : 0);
+    const distance = (28 + (index % 3) * 8 + (TOY_PARTICLE_COUNTS[toy] ? 8 : 0)) * spread;
     spark.style.setProperty('--toy-px', `${Math.cos(angle) * distance}px`);
     spark.style.setProperty('--toy-py', `${Math.sin(angle) * distance}px`);
     spark.style.setProperty('--toy-delay', `${(index % 4) * 25}ms`);
     burst.append(spark);
   }
   button.append(burst);
-  setTimeout(() => burst.remove(), 850);
+  setTimeout(() => burst.remove(), TOY_PLAY_DURATIONS[toy] || 850);
 }
 
 function createCardElement(card, interactive) {

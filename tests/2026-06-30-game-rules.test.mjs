@@ -221,6 +221,15 @@ assert.deepEqual(
 );
 assert.equal(cosmeticsForSlot('charm').filter((item) => item.concept === '리얼 로즈 토이').length, 3, '리얼 장미 장난감 3종은 장난감·장식 슬롯에 제공되어야 함');
 assert.equal(COSMETICS.some((item) => item.id === 'charm-rose-teacup' && item.name.includes('티컵')), false, '새 장미 장난감은 컵이 아닌 꽃 단독 콘셉트여야 함');
+assert.deepEqual(
+  COSMETICS.find((item) => item.id === 'charm-royal-flower-fountain'),
+  {
+    id: 'charm-royal-flower-fountain', slot: 'charm', threshold: 130000, name: '왕실 꽃정원 분수', icon: '⛲',
+    description: '층층이 이어진 아이보리 분수에 꽃과 덩굴이 만개하고, 누르면 물방울과 꽃잎이 폭발하는 신화 등급 장난감',
+    cssClass: 'skin-charm-royal-flower-fountain', concept: '왕실 꽃정원', legendary: true,
+  },
+  '왕실 꽃정원 분수는 기존 기록 구조를 바꾸지 않는 13만점 장난감이어야 함',
+);
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-royal-tarot'), true, '카드 전체를 바꾸는 왕실 타로 앞면을 제공해야 함');
 assert.equal(cosmeticsForSlot('cardBack').some((item) => item.id === 'back-antique-library'), true, '카드 전체를 바꾸는 고서관 뒷면을 제공해야 함');
 assert.equal(cosmeticsForSlot('victory').some((item) => item.id === 'victory-dual-fireworks'), true, '양쪽 폭죽 승리 연출을 제공해야 함');

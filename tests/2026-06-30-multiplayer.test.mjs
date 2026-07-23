@@ -425,4 +425,15 @@ test('리얼 장미 장난감 3종은 에셋·효과·사운드가 각각 연결
   assert.match(audioMain, /toy-crimson-clockwork/);
 });
 
+test('13만점 왕실 꽃정원 분수는 AI·멀티에서 같은 에셋·대형 효과·전용 사운드를 사용한다', () => {
+  assert.match(cosmeticsCss, /2026-07-22-royal-flower-fountain\.png/);
+  assert.match(cosmeticsCss, /\.skin-charm-royal-flower-fountain/);
+  assert.match(cosmeticsCss, /\.toy-particles-royal-flower-fountain i/);
+  assert.match(aiMain, /TOY_VARIANTS[\s\S]*skin-charm-royal-flower-fountain[\s\S]*royal-flower-fountain/);
+  assert.match(onlineMain, /ONLINE_TOY_VARIANTS[\s\S]*skin-charm-royal-flower-fountain[\s\S]*royal-flower-fountain/);
+  assert.match(aiMain, /'royal-flower-fountain': 30/);
+  assert.match(onlineMain, /'royal-flower-fountain': 30/);
+  assert.match(audioMain, /toy-royal-flower-fountain/);
+});
+
 console.log(`멀티플레이 도우미·보안 테스트 ${passed}개 통과`);
