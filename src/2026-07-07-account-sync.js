@@ -144,7 +144,9 @@ function saveLocalAccountBundle(bundle, storage = defaultStorage()) {
 function mergeEquipped(localEquipped, remoteEquipped, peakPoints, preferLocal) {
   const primary = preferLocal ? localEquipped : remoteEquipped;
   const fallback = preferLocal ? remoteEquipped : localEquipped;
-  return normalizeEquipped({ ...DEFAULT_EQUIPPED, ...(fallback || {}), ...(primary || {}) }, peakPoints);
+  const merged = { ...DEFAULT_EQUIPPED, ...(fallback || {}), ...(primary || {}) };
+  if (!Array.isArray(primary?.charms) && primary?.charm) delete merged.charms;
+  return normalizeEquipped(merged, peakPoints);
 }
 
 export function mergeProfiles(localProfile = {}, remoteProfile = {}, options = {}) {

@@ -17,12 +17,15 @@ import {
   selectAiOpponent,
 } from '../src/2026-07-05-rating.js';
 import {
+  CHARM_SLOT_COUNT,
   COSMETICS,
   COSMETIC_SETS,
   DEFAULT_EQUIPPED,
+  charmToyConfig,
   cosmeticSetForItem,
   cosmeticSetProgress,
   cosmeticsForSlot,
+  equippedCharmIds,
   equippedClassNames,
   equippedSetBonuses,
   newlyUnlockedCosmetics,
@@ -194,6 +197,15 @@ const cosmeticProfile = loadPlayerProfile(cosmeticStorage);
 assert.equal(cosmeticProfile.peakPoints, 1800, '기존 점수를 역대 최고 점수로 안전하게 이전해야 함');
 assert.deepEqual([cosmeticProfile.wins, cosmeticProfile.games], [12, 20], '꾸미기 프로필 이전 중 기존 승수·판수가 유지되어야 함');
 assert.deepEqual(cosmeticProfile.equipped, DEFAULT_EQUIPPED, '처음에는 슬롯마다 기본 꾸미기를 장착해야 함');
+assert.equal(CHARM_SLOT_COUNT, 3, '장난감은 동시에 3개까지 장착할 수 있어야 함');
+assert.deepEqual(equippedCharmIds(cosmeticProfile.equipped), ['charm-classic', 'charm-classic', 'charm-classic'], '처음 세 장난감 자리는 기본 친구들로 채워져야 함');
+const migratedCharmLoadout = normalizeEquipped({ charm: 'charm-star-cat' }, 20000);
+assert.deepEqual(migratedCharmLoadout.charms, ['charm-star-cat', 'charm-classic', 'charm-classic'], '기존 단일 장난감은 1번 자리에 안전하게 이전되어야 함');
+assert.equal(migratedCharmLoadout.charm, 'charm-star-cat', '이전 버전 호환용 단일 장난감 값은 1번 자리와 같아야 함');
+const normalizedCharmLoadout = normalizeEquipped({ charms: ['charm-rose-musicbox', 'charm-rose-teacup', 'charm-rose-musicbox'] }, 130000);
+assert.deepEqual(normalizedCharmLoadout.charms, ['charm-rose-musicbox', 'charm-rose-teacup', 'charm-classic'], '같은 보상 장난감은 중복 장착되지 않아야 함');
+assert.deepEqual(charmToyConfig('charm-classic', 2), { base: 'rose', key: 'rose' }, '기본 장난감은 자리마다 젤리·별·장미 외형을 사용해야 함');
+assert.equal(charmToyConfig('charm-royal-flower-fountain', 0).key, 'royal-flower-fountain', '왕실 꽃정원 분수는 전용 소리와 파티클 키를 유지해야 함');
 assert.equal(cosmeticsForSlot('cardBack').some((item) => item.threshold === 300), true, '300점부터 첫 카드 스킨을 해금해야 함');
 assert.equal(nextCosmeticUnlock(700).threshold, 1200, '현재 최고 점수 다음 보상까지 정확히 안내해야 함');
 assert.deepEqual(newlyUnlockedCosmetics(250, 750).map((item) => item.threshold), [300, 700], '한 번에 여러 기준을 넘으면 모든 보상을 해금해야 함');
@@ -260,6 +272,15 @@ const realRoseEquipped = {
 assert.equal(equippedSetBonuses(realRoseEquipped).some((set) => set.id === 'real-rose-garden'), true, '리얼 로즈가든 풀 장착 시 세트 보너스를 감지해야 함');
 assert.equal(equippedClassNames(realRoseEquipped).includes('set-bonus-real-rose-garden'), true, '세트 보너스 CSS 클래스가 장착 클래스에 포함되어야 함');
 assert.equal(equippedClassNames(realRoseEquipped).includes('set-bonus-active'), true, '세트 보너스 공통 CSS 클래스가 장착 클래스에 포함되어야 함');
+const neonCharmSet = {
+  ...DEFAULT_EQUIPPED,
+  cardFace: 'face-neon-arcade',
+  effect: 'effect-pixel-combo',
+  victory: 'victory-high-score',
+  charms: ['charm-classic', 'charm-ufo-pet', 'charm-classic'],
+};
+assert.equal(equippedSetBonuses(neonCharmSet).some((set) => set.id === 'neon-arcade'), true, '세트 장난감은 2·3번 자리에 있어도 세트 보너스로 인정되어야 함');
+assert.equal(equippedClassNames(neonCharmSet).includes('skin-charm-ufo'), false, '서로 다른 장난감 외형 클래스는 게임 화면 전체에 한꺼번에 적용하지 않아야 함');
 
 const missionNow = new Date('2026-07-07T12:00:00+09:00');
 const missionStorage = memoryStorage({
@@ -327,6 +348,13 @@ const remoteEquippedProfile = mergeProfiles(
   { preferLocalEquipped: false },
 );
 assert.equal(remoteEquippedProfile.equipped.cardBack, 'back-space-whale', '새 브라우저에서 불러올 때는 서버 장착 꾸밈을 복원해야 합니다.');
+const remoteLegacyCharmProfile = mergeProfiles(
+  { points: 0, peakPoints: 0, wins: 0, games: 0, equipped: DEFAULT_EQUIPPED },
+  { points: 20000, peakPoints: 20000, wins: 14, games: 23, equipped: { charm: 'charm-star-cat' } },
+  { preferLocalEquipped: false },
+);
+assert.deepEqual(remoteLegacyCharmProfile.equipped.charms, ['charm-star-cat', 'charm-classic', 'charm-classic'], '서버의 예전 단일 장난감 기록도 새 브라우저에서 1번 자리로 이전되어야 합니다.');
+assert.deepEqual([remoteLegacyCharmProfile.wins, remoteLegacyCharmProfile.games], [14, 23], '장난감 3칸 이전 중 서버 승수와 판수는 그대로 보존되어야 합니다.');
 
 const mergedMissionState = mergeMissionStates(
   { daily: { key: '2026-07-07', missionIds: ['a'], progress: { a: 1 }, claimed: {} }, weekly: { key: '2026-07-06', missionIds: ['w'], progress: { w: 2 }, claimed: { w: false } }, seenEventIds: ['local-event'] },

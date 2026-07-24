@@ -115,9 +115,26 @@ export const COSMETIC_SETS = Object.freeze([
   { id: 'ancient-sun-temple', name: '고대 태양 신전 세트', icon: '☀', itemIds: ['table-ancient-sun-temple', 'back-ancient-sun-temple', 'effect-ancient-sun-rune', 'victory-ancient-sun-temple'] },
 ]);
 
-export const DEFAULT_EQUIPPED = Object.freeze(Object.fromEntries(
-  COSMETIC_SLOTS.map(({ key }) => [key, COSMETICS.find((item) => item.slot === key && item.threshold === 0).id]),
-));
+export const CHARM_SLOT_COUNT = 3;
+export const DEFAULT_CHARM_LOADOUT = Object.freeze(Array(CHARM_SLOT_COUNT).fill('charm-classic'));
+
+export const DEFAULT_EQUIPPED = Object.freeze({
+  ...Object.fromEntries(
+    COSMETIC_SLOTS.map(({ key }) => [key, COSMETICS.find((item) => item.slot === key && item.threshold === 0).id]),
+  ),
+  charms: DEFAULT_CHARM_LOADOUT,
+});
+
+const CHARM_TOY_CONFIGS = Object.freeze({
+  'charm-cafe-bear': { base: 'jelly', key: 'jelly' },
+  'charm-star-cat': { base: 'star', key: 'star' },
+  'charm-ufo-pet': { base: 'star', key: 'star' },
+  'charm-dream-kingdom': { base: 'star', key: 'star' },
+  'charm-rose-musicbox': { base: 'star', key: 'rose-musicbox' },
+  'charm-rose-teacup': { base: 'jelly', key: 'rose-teacup' },
+  'charm-crimson-rose-clockwork': { base: 'rose', key: 'crimson-clockwork' },
+  'charm-royal-flower-fountain': { base: 'star', key: 'royal-flower-fountain' },
+});
 
 export function cosmeticById(id) {
   return COSMETICS.find((item) => item.id === id) || null;
@@ -161,17 +178,57 @@ export function nextCosmeticUnlock(peakPoints) {
 
 export function normalizeEquipped(equipped, peakPoints) {
   const unlocked = new Set(unlockedCosmetics(peakPoints).map((item) => item.id));
-  return Object.fromEntries(COSMETIC_SLOTS.map(({ key }) => {
+  const normalized = Object.fromEntries(COSMETIC_SLOTS.map(({ key }) => {
     const candidate = equipped?.[key];
     const item = cosmeticById(candidate);
     return [key, item?.slot === key && unlocked.has(candidate) ? candidate : DEFAULT_EQUIPPED[key]];
   }));
+
+  const savedLoadout = Array.isArray(equipped?.charms) && equipped.charms.length
+    ? equipped.charms
+    : [equipped?.charm];
+  const used = new Set();
+  const charms = Array.from({ length: CHARM_SLOT_COUNT }, (_, index) => {
+    const candidate = savedLoadout[index] || DEFAULT_CHARM_LOADOUT[index];
+    const item = cosmeticById(candidate);
+    const valid = item?.slot === 'charm' && unlocked.has(candidate);
+    if (!valid || (candidate !== 'charm-classic' && used.has(candidate))) return 'charm-classic';
+    if (candidate !== 'charm-classic') used.add(candidate);
+    return candidate;
+  });
+
+  normalized.charms = charms;
+  normalized.charm = charms[0];
+  return normalized;
+}
+
+export function equippedCharmIds(equipped) {
+  const savedLoadout = Array.isArray(equipped?.charms) && equipped.charms.length
+    ? equipped.charms
+    : [equipped?.charm];
+  return Array.from({ length: CHARM_SLOT_COUNT }, (_, index) => {
+    const candidate = savedLoadout[index] || DEFAULT_CHARM_LOADOUT[index];
+    return cosmeticById(candidate)?.slot === 'charm' ? candidate : DEFAULT_CHARM_LOADOUT[index];
+  });
+}
+
+export function charmToyConfig(itemId, slotIndex = 0) {
+  if (itemId === 'charm-classic') {
+    const classic = [
+      { base: 'jelly', key: 'jelly' },
+      { base: 'star', key: 'star' },
+      { base: 'rose', key: 'rose' },
+    ];
+    return classic[Math.max(0, Math.min(CHARM_SLOT_COUNT - 1, Number(slotIndex) || 0))];
+  }
+  return CHARM_TOY_CONFIGS[itemId] || { base: 'star', key: 'star' };
 }
 
 export function equippedSetBonuses(equipped) {
+  const equippedCharms = equippedCharmIds(equipped);
   return COSMETIC_SETS.filter((set) => set.itemIds.every((id) => {
     const item = cosmeticById(id);
-    return item && equipped?.[item.slot] === id;
+    return item && (item.slot === 'charm' ? equippedCharms.includes(id) : equipped?.[item.slot] === id);
   }));
 }
 
@@ -193,7 +250,8 @@ export function allSetBonusClassNames() {
 export function equippedClassNames(equipped) {
   return [
     ...COSMETIC_SLOTS
-    .map(({ key }) => cosmeticById(equipped?.[key])?.cssClass)
+      .filter(({ key }) => key !== 'charm')
+      .map(({ key }) => cosmeticById(equipped?.[key])?.cssClass)
       .filter(Boolean),
     ...setBonusClassNames(equipped),
   ];

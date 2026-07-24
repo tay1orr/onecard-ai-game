@@ -69,6 +69,7 @@ const onlineHtml = await readFile(new URL('../2026-06-30-online.html', import.me
 const onlineMain = await readFile(new URL('../src/2026-06-30-online-main.js', import.meta.url), 'utf8');
 const aiHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const aiMain = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+const cosmeticsSource = await readFile(new URL('../src/2026-07-06-cosmetics.js', import.meta.url), 'utf8');
 const baseCss = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
 const cosmeticsCss = await readFile(new URL('../2026-07-06-cosmetics.css', import.meta.url), 'utf8');
 const missionsCss = await readFile(new URL('../2026-07-07-missions.css', import.meta.url), 'utf8');
@@ -160,7 +161,7 @@ test('꾸미기 보관함은 잠긴 아이템도 미리 보고 해금된 아이�
   assert.match(aiMain, /let previewCosmeticId = null/);
   assert.match(aiMain, /button\.addEventListener\('click', \(\) => \{[\s\S]*?previewCosmeticId = item\.id/);
   assert.match(aiMain, /if \(!item \|\| item\.threshold > \(playerProfile\.peakPoints \|\| 0\)\) return/);
-  assert.match(aiMain, /playerProfile\.equipped = \{ \.\.\.playerProfile\.equipped, \[item\.slot\]: item\.id \}/);
+  assert.match(aiMain, /playerProfile\.equipped = withPreviewedCosmetic\(playerProfile\.equipped, item\)/);
   assert.doesNotMatch(aiMain, /if \(item\.legendary\)[\s\S]*?equipped\[candidate\.slot\]/);
   assert.match(aiMain, /void root\.offsetWidth/);
   assert.match(aiMain, /\[\{ key: 'all', name: '전체보기' \}, \.\.\.COSMETIC_SLOTS\]/);
@@ -176,6 +177,11 @@ test('꾸미기 보관함은 잠긴 아이템도 미리 보고 해금된 아이�
   assert.match(cosmeticsCss, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
   assert.match(aiMain, /Number\(a\.threshold === 0\) - Number\(b\.threshold === 0\)/);
   assert.match(aiMain, /data\.cosmeticState|dataset\.cosmeticState/);
+  assert.match(aiHtml, /id="cosmetic-charm-slots"[\s\S]*data-charm-slot="0"[\s\S]*data-charm-slot="1"[\s\S]*data-charm-slot="2"/);
+  assert.equal((aiHtml.match(/data-toy-slot="[0-2]"/g) || []).length, 3);
+  assert.equal((onlineHtml.match(/data-online-toy-slot="[0-2]"/g) || []).length, 3);
+  assert.match(aiMain, /function applyToyLoadout\(\)[\s\S]*equippedCharmIds/);
+  assert.match(onlineMain, /function applyOnlineToyLoadout\(\)[\s\S]*equippedCharmIds/);
 });
 
 test('홈은 대전 선택을 꾸미기함보다 먼저 보여주고 게임 안내와 반응 도크를 또렷하게 배치한다', () => {
@@ -418,8 +424,9 @@ test('리얼 장미 장난감 3종은 에셋·효과·사운드가 각각 연결
   assert.match(cosmeticsCss, /\.toy-particles-rose-musicbox i/);
   assert.match(cosmeticsCss, /\.toy-particles-rose-teacup i/);
   assert.match(cosmeticsCss, /\.toy-particles-crimson-clockwork i/);
-  assert.match(aiMain, /TOY_VARIANTS[\s\S]*skin-charm-rose-musicbox[\s\S]*skin-charm-rose-teacup[\s\S]*skin-charm-crimson-clockwork/);
-  assert.match(onlineMain, /ONLINE_TOY_VARIANTS[\s\S]*skin-charm-rose-musicbox[\s\S]*skin-charm-rose-teacup[\s\S]*skin-charm-crimson-clockwork/);
+  assert.match(cosmeticsSource, /CHARM_TOY_CONFIGS[\s\S]*charm-rose-musicbox[\s\S]*charm-rose-teacup[\s\S]*charm-crimson-rose-clockwork/);
+  assert.match(aiMain, /applyCharmVisual[\s\S]*charmToyConfig/);
+  assert.match(onlineMain, /applyOnlineToyLoadout[\s\S]*charmToyConfig/);
   assert.match(audioMain, /toy-rose-musicbox/);
   assert.match(audioMain, /toy-rose-teacup/);
   assert.match(audioMain, /toy-crimson-clockwork/);
@@ -429,8 +436,9 @@ test('13만점 왕실 꽃정원 분수는 AI·멀티에서 같은 에셋·대형
   assert.match(cosmeticsCss, /2026-07-22-royal-flower-fountain\.png/);
   assert.match(cosmeticsCss, /\.skin-charm-royal-flower-fountain/);
   assert.match(cosmeticsCss, /\.toy-particles-royal-flower-fountain i/);
-  assert.match(aiMain, /TOY_VARIANTS[\s\S]*skin-charm-royal-flower-fountain[\s\S]*royal-flower-fountain/);
-  assert.match(onlineMain, /ONLINE_TOY_VARIANTS[\s\S]*skin-charm-royal-flower-fountain[\s\S]*royal-flower-fountain/);
+  assert.match(cosmeticsSource, /charm-royal-flower-fountain': \{ base: 'star', key: 'royal-flower-fountain' \}/);
+  assert.match(aiMain, /element\.dataset\.toy = config\.key/);
+  assert.match(onlineMain, /button\.dataset\.onlineToy = config\.key/);
   assert.match(aiMain, /'royal-flower-fountain': 30/);
   assert.match(onlineMain, /'royal-flower-fountain': 30/);
   assert.match(audioMain, /toy-royal-flower-fountain/);

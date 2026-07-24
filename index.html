@@ -127,16 +127,24 @@
         </section>
 
         <aside class="table-toys" aria-label="기다리는 동안 가지고 놀 수 있는 장난감">
-          <button class="table-toy jelly-toy" data-toy="jelly" type="button" aria-label="말랑 젤리 눌러보기">
+          <button class="table-toy toy-slot-1 jelly-toy" data-toy="jelly" data-toy-slot="0" type="button" aria-label="1번 말랑 젤리 눌러보기">
             <span class="toy-bubble" aria-hidden="true">말랑!</span>
             <span class="jelly-body" aria-hidden="true"><i></i><b></b></span>
-          </button>
-          <button class="table-toy star-toy" data-toy="star" type="button" aria-label="별 팽이 돌리기">
-            <span class="toy-bubble" aria-hidden="true">빙글!</span>
             <span class="star-body" aria-hidden="true">★</span>
+            <span class="rose-bloom" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><b></b></span>
+            <span class="rose-stem" aria-hidden="true"><i></i><b></b></span>
           </button>
-          <button class="table-toy rose-toy" data-toy="rose" type="button" aria-label="빨간 장미 흔들어보기">
+          <button class="table-toy toy-slot-2 star-toy" data-toy="star" data-toy-slot="1" type="button" aria-label="2번 별 팽이 돌리기">
+            <span class="toy-bubble" aria-hidden="true">빙글!</span>
+            <span class="jelly-body" aria-hidden="true"><i></i><b></b></span>
+            <span class="star-body" aria-hidden="true">★</span>
+            <span class="rose-bloom" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><b></b></span>
+            <span class="rose-stem" aria-hidden="true"><i></i><b></b></span>
+          </button>
+          <button class="table-toy toy-slot-3 rose-toy" data-toy="rose" data-toy-slot="2" type="button" aria-label="3번 빨간 장미 흔들어보기">
             <span class="toy-bubble" aria-hidden="true">향긋!</span>
+            <span class="jelly-body" aria-hidden="true"><i></i><b></b></span>
+            <span class="star-body" aria-hidden="true">★</span>
             <span class="rose-bloom" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><b></b></span>
             <span class="rose-stem" aria-hidden="true"><i></i><b></b></span>
           </button>
@@ -322,13 +330,22 @@
                 <span class="card-corner bottom"><b>A</b><i>♥</i></span>
               </div>
               <span class="cosmetic-card-caption cosmetic-face-caption" aria-hidden="true">내가 보는 앞면</span>
-              <div class="cosmetic-preview-charm" aria-hidden="true"><span class="star-body">★</span></div>
+              <div class="cosmetic-preview-charms" aria-hidden="true">
+                <div class="cosmetic-preview-charm" data-preview-charm-slot="0"><span class="jelly-body"><i></i><b></b></span><span class="star-body">★</span><span class="rose-bloom"><i></i><i></i><i></i><i></i><i></i><b></b></span><span class="rose-stem"><i></i><b></b></span></div>
+                <div class="cosmetic-preview-charm" data-preview-charm-slot="1"><span class="jelly-body"><i></i><b></b></span><span class="star-body">★</span><span class="rose-bloom"><i></i><i></i><i></i><i></i><i></i><b></b></span><span class="rose-stem"><i></i><b></b></span></div>
+                <div class="cosmetic-preview-charm" data-preview-charm-slot="2"><span class="jelly-body"><i></i><b></b></span><span class="star-body">★</span><span class="rose-bloom"><i></i><i></i><i></i><i></i><i></i><b></b></span><span class="rose-stem"><i></i><b></b></span></div>
+              </div>
             </div>
           </div>
           <div class="cosmetic-preview-copy">
             <span id="cosmetic-preview-status">장착 중</span>
             <strong id="cosmetic-preview-name">미드나잇 테이블</strong>
             <small id="cosmetic-preview-description">차분한 기본 게임 테이블</small>
+          </div>
+          <div id="cosmetic-charm-slots" class="cosmetic-charm-slots hidden" role="group" aria-label="장난감 장착 자리">
+            <button data-charm-slot="0" type="button" aria-pressed="true"><b>1번</b><small>기본 친구들</small></button>
+            <button data-charm-slot="1" type="button" aria-pressed="false"><b>2번</b><small>기본 친구들</small></button>
+            <button data-charm-slot="2" type="button" aria-pressed="false"><b>3번</b><small>기본 친구들</small></button>
           </div>
           <div class="cosmetic-preview-actions">
             <button id="cosmetic-preview-replay" class="secondary-button" type="button">연출 다시 보기</button>

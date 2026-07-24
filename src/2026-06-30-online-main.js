@@ -11,7 +11,7 @@ import { runDealAnimation } from './2026-06-30-deal-animation.js';
 import { REACTIONS, createReactionArtwork, createReactionButton, getReaction } from './2026-06-30-reactions.js';
 import { createCardCenter } from './2026-07-01-card-art.js';
 import { loadPlayerProfile, playerStarsForPoints, recordMatchResult, starsText } from './2026-07-05-rating.js';
-import { COSMETICS, allSetBonusClassNames, cosmeticById, equippedClassNames, nextCosmeticUnlock } from './2026-07-06-cosmetics.js';
+import { COSMETICS, allSetBonusClassNames, charmToyConfig, cosmeticById, equippedCharmIds, equippedClassNames, nextCosmeticUnlock } from './2026-07-06-cosmetics.js';
 import {
   applyMissionEvents,
   loadMissionDashboard,
@@ -57,6 +57,9 @@ const resultRatingCache = new Map();
 const CARD_FACE_CLASS_NAMES = COSMETICS
   .filter((item) => item.slot === 'cardFace' && item.cssClass)
   .map((item) => item.cssClass);
+const CHARM_CLASS_NAMES = COSMETICS
+  .filter((item) => item.slot === 'charm' && item.cssClass)
+  .map((item) => item.cssClass);
 const VICTORY_RESULT_REVEAL_DELAY_MS = 2550;
 const ONLINE_TOY_LINES = {
   jelly: ['말랑!', '뿌잉!', '또 눌러줘!'],
@@ -67,12 +70,6 @@ const ONLINE_TOY_LINES = {
   'crimson-clockwork': ['활짝!', '진홍 팡!', '꽃잎 폭발!'],
   'royal-flower-fountain': ['촤르르르!', '꽃정원 만개!', '무지개 분수 팡!'],
 };
-const ONLINE_TOY_VARIANTS = [
-  { base: 'star', cssClass: 'skin-charm-rose-musicbox', key: 'rose-musicbox' },
-  { base: 'jelly', cssClass: 'skin-charm-rose-teacup', key: 'rose-teacup' },
-  { base: 'rose', cssClass: 'skin-charm-crimson-clockwork', key: 'crimson-clockwork' },
-  { base: 'star', cssClass: 'skin-charm-royal-flower-fountain', key: 'royal-flower-fountain' },
-];
 const ONLINE_TOY_PARTICLE_COUNTS = {
   'rose-musicbox': 16,
   'rose-teacup': 14,
@@ -357,7 +354,24 @@ function applyOnlineCosmetics() {
   document.body.classList.remove(...allClasses, ...allSetBonusClassNames(), 'reduced-effects');
   document.body.classList.add(...equippedClassNames(playerProfile.equipped));
   document.body.classList.toggle('reduced-effects', Boolean(playerProfile.reducedEffects));
+  applyOnlineToyLoadout();
   applyOnlineDiscardFaceSkin();
+}
+
+function applyOnlineToyLoadout() {
+  const charms = equippedCharmIds(playerProfile.equipped);
+  document.querySelectorAll('[data-online-toy-slot]').forEach((button) => {
+    const slotIndex = Number(button.dataset.onlineToySlot) || 0;
+    const item = cosmeticById(charms[slotIndex]) || cosmeticById('charm-classic');
+    const config = charmToyConfig(item?.id, slotIndex);
+    button.classList.remove(...CHARM_CLASS_NAMES, 'jelly-toy', 'star-toy', 'rose-toy');
+    if (item?.cssClass) button.classList.add(item.cssClass);
+    button.classList.add(`${config.base}-toy`);
+    button.dataset.onlineToy = config.key;
+    button.setAttribute('aria-label', `${slotIndex + 1}번 ${item?.name || '장난감'} 눌러보기`);
+    const bubble = button.querySelector('.toy-bubble');
+    if (bubble) bubble.textContent = ONLINE_TOY_LINES[config.key]?.[0] || '반짝!';
+  });
 }
 
 function equippedCardFaceClassName() {
@@ -1050,9 +1064,8 @@ function dieFace(value) { return value ? ['⚀','⚁','⚂','⚃','⚄','⚅'][v
 function suitName(suit) { return {hearts:'하트',diamonds:'다이아',spades:'스페이드',clubs:'클로버',joker:'조커'}[suit] || ''; }
 
 function playOnlineToy(button) {
-  const baseToy = button.dataset.onlineToy;
-  const toy = activeOnlineToyKey(baseToy);
-  const lines = ONLINE_TOY_LINES[toy];
+  const toy = button.dataset.onlineToy;
+  const lines = ONLINE_TOY_LINES[toy] || ONLINE_TOY_LINES.star;
   const count = Number(button.dataset.playCount || 0);
   button.dataset.playCount = String(count + 1);
   button.querySelector('.toy-bubble').textContent = lines[count % lines.length];
@@ -1060,11 +1073,6 @@ function playOnlineToy(button) {
   playSound(`toy-${toy}`);
   burstOnlineToyParticles(button, toy);
   setTimeout(() => button.classList.remove('is-playing'),ONLINE_TOY_PLAY_DURATIONS[toy] || 850);
-}
-
-function activeOnlineToyKey(baseToy) {
-  const variant = ONLINE_TOY_VARIANTS.find((item) => item.base === baseToy && document.body.classList.contains(item.cssClass));
-  return variant?.key || baseToy;
 }
 
 function burstOnlineToyParticles(button, toy) {

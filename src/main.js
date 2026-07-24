@@ -23,13 +23,16 @@ import {
   starsText,
 } from './2026-07-05-rating.js';
 import {
+  CHARM_SLOT_COUNT,
   COSMETICS,
   COSMETIC_SLOTS,
   allSetBonusClassNames,
+  charmToyConfig,
   cosmeticById,
   cosmeticSetForItem,
   cosmeticSetProgress,
   cosmeticsForSlot,
+  equippedCharmIds,
   equippedClassNames,
   nextCosmeticUnlock,
 } from './2026-07-06-cosmetics.js';
@@ -60,6 +63,7 @@ let pendingMissionUnlocks = [];
 let matching = false;
 let activeCosmeticSlot = 'all';
 let previewCosmeticId = null;
+let selectedCharmSlot = 0;
 let cosmeticPreviewMode = 'normal';
 let startedAt = 0;
 let timerId = null;
@@ -88,6 +92,9 @@ let currentAccountSyncState = { status: 'checking' };
 const CARD_FACE_CLASS_NAMES = COSMETICS
   .filter((item) => item.slot === 'cardFace' && item.cssClass)
   .map((item) => item.cssClass);
+const CHARM_CLASS_NAMES = COSMETICS
+  .filter((item) => item.slot === 'charm' && item.cssClass)
+  .map((item) => item.cssClass);
 const VICTORY_RESULT_REVEAL_DELAY_MS = 2550;
 
 const DIE_FACES = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
@@ -102,12 +109,6 @@ const TOY_LINES = {
   'royal-flower-fountain': ['촤르르르!', '꽃정원 만개!', '무지개 분수 팡!'],
 };
 
-const TOY_VARIANTS = [
-  { base: 'star', cssClass: 'skin-charm-rose-musicbox', key: 'rose-musicbox' },
-  { base: 'jelly', cssClass: 'skin-charm-rose-teacup', key: 'rose-teacup' },
-  { base: 'rose', cssClass: 'skin-charm-crimson-clockwork', key: 'crimson-clockwork' },
-  { base: 'star', cssClass: 'skin-charm-royal-flower-fountain', key: 'royal-flower-fountain' },
-];
 const TOY_PARTICLE_COUNTS = {
   'rose-musicbox': 16,
   'rose-teacup': 14,
@@ -545,7 +546,37 @@ function matchAgain() {
   setTimeout(beginAiMatchmaking, 520);
 }
 
+function equippedCosmeticIdForSlot(slotKey) {
+  if (slotKey === 'charm') return equippedCharmIds(playerProfile.equipped)[selectedCharmSlot];
+  return playerProfile.equipped?.[slotKey];
+}
+
+function charmSlotIndexes(itemId, equipped = playerProfile.equipped) {
+  return equippedCharmIds(equipped)
+    .map((id, index) => id === itemId ? index : -1)
+    .filter((index) => index >= 0);
+}
+
+function withPreviewedCosmetic(equipped, item) {
+  if (item.slot !== 'charm') return { ...equipped, [item.slot]: item.id };
+  const charms = equippedCharmIds(equipped);
+  const existingIndex = item.id === 'charm-classic' ? -1 : charms.indexOf(item.id);
+  if (existingIndex >= 0 && existingIndex !== selectedCharmSlot) {
+    [charms[selectedCharmSlot], charms[existingIndex]] = [charms[existingIndex], charms[selectedCharmSlot]];
+  } else {
+    charms[selectedCharmSlot] = item.id;
+  }
+  return { ...equipped, charm: charms[0], charms };
+}
+
 function setupCosmeticTabs() {
+  document.querySelectorAll('[data-charm-slot]').forEach((button) => {
+    button.addEventListener('click', () => {
+      selectedCharmSlot = Math.max(0, Math.min(CHARM_SLOT_COUNT - 1, Number(button.dataset.charmSlot) || 0));
+      if (activeCosmeticSlot === 'charm') previewCosmeticId = equippedCosmeticIdForSlot('charm');
+      renderCosmeticsModal({ preserveGridScroll: els['cosmetics-grid'].scrollTop });
+    });
+  });
   els['cosmetics-tabs'].replaceChildren();
   [{ key: 'all', name: '전체보기' }, ...COSMETIC_SLOTS].forEach((slot) => {
     const button = document.createElement('button');
@@ -556,7 +587,7 @@ function setupCosmeticTabs() {
     button.textContent = slot.name;
     button.addEventListener('click', () => {
       activeCosmeticSlot = slot.key;
-      if (slot.key !== 'all') previewCosmeticId = playerProfile.equipped?.[slot.key] || cosmeticsForSlot(slot.key)[0]?.id;
+      if (slot.key !== 'all') previewCosmeticId = equippedCosmeticIdForSlot(slot.key) || cosmeticsForSlot(slot.key)[0]?.id;
       else previewCosmeticId ||= playerProfile.equipped?.table;
       renderCosmeticsModal();
     });
@@ -568,7 +599,7 @@ function openCosmetics() {
   playerProfile = loadPlayerProfile();
   previewCosmeticId = activeCosmeticSlot === 'all'
     ? previewCosmeticId || playerProfile.equipped?.table
-    : playerProfile.equipped?.[activeCosmeticSlot] || cosmeticsForSlot(activeCosmeticSlot)[0]?.id;
+    : equippedCosmeticIdForSlot(activeCosmeticSlot) || cosmeticsForSlot(activeCosmeticSlot)[0]?.id;
   renderCosmeticsModal();
   openModal('cosmetics-modal');
 }
@@ -600,7 +631,8 @@ function renderCosmeticsModal({ preserveGridScroll = null } = {}) {
     : cosmeticsForSlot(activeCosmeticSlot);
   visibleItems.forEach((item) => {
     const unlocked = item.threshold <= peak;
-    const equipped = playerProfile.equipped?.[item.slot] === item.id;
+    const equippedSlots = item.slot === 'charm' ? charmSlotIndexes(item.id) : [];
+    const equipped = item.slot === 'charm' ? equippedSlots.length > 0 : playerProfile.equipped?.[item.slot] === item.id;
     const selected = previewCosmeticId === item.id;
     const itemSet = cosmeticSetForItem(item.id);
     const slotName = COSMETIC_SLOTS.find((slot) => slot.key === item.slot)?.name || item.slot;
@@ -610,9 +642,12 @@ function renderCosmeticsModal({ preserveGridScroll = null } = {}) {
     button.dataset.cosmeticState = selected ? 'previewing' : equipped ? 'equipped' : unlocked ? 'unlocked' : 'locked';
     button.setAttribute('aria-pressed', String(selected));
     button.setAttribute('aria-label', `${item.name} 미리보기${unlocked ? '' : `, ${item.threshold}점에 해금`}`);
+    const equippedLabel = item.slot === 'charm'
+      ? `✓ ${equippedSlots.map((index) => `${index + 1}번`).join(' · ')} 장착`
+      : '✓ 현재 장착';
     const stateLabel = selected
-      ? equipped ? '✓ 현재 장착 · 미리보기' : unlocked ? '● 미리보기 중' : `● 미리보기 중 · ${item.threshold.toLocaleString('ko-KR')}점 잠금`
-      : equipped ? '✓ 현재 장착' : unlocked ? '눌러서 미리보기' : `🔒 ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
+      ? equipped ? `${equippedLabel} · 미리보기` : unlocked ? '● 미리보기 중' : `● 미리보기 중 · ${item.threshold.toLocaleString('ko-KR')}점 잠금`
+      : equipped ? equippedLabel : unlocked ? '눌러서 미리보기' : `🔒 ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
     button.innerHTML = `<span class="cosmetic-item-meta"><em>${slotName}</em>${itemSet || item.concept ? `<i>${itemSet?.name || item.concept}</i>` : ''}</span><span class="cosmetic-item-icon">${item.icon}</span><strong>${item.name}</strong><small>${item.description}</small><b>${stateLabel}</b>`;
     button.addEventListener('click', () => {
       const scrollTop = els['cosmetics-grid'].scrollTop;
@@ -633,44 +668,57 @@ function renderCosmeticsModal({ preserveGridScroll = null } = {}) {
 function equipCosmetic(item) {
   if (!item || item.threshold > (playerProfile.peakPoints || 0)) return;
   const scrollTop = els['cosmetics-grid'].scrollTop;
-  playerProfile.equipped = { ...playerProfile.equipped, [item.slot]: item.id };
+  playerProfile.equipped = withPreviewedCosmetic(playerProfile.equipped, item);
   playerProfile = savePlayerProfile(playerProfile);
   scheduleAccountSync();
   applyEquippedCosmetics();
   renderCosmeticsModal({ preserveGridScroll: scrollTop });
   playSound('card');
-  showToast(`${item.name} 장착 완료!`);
+  showToast(item.slot === 'charm' ? `${selectedCharmSlot + 1}번 자리에 ${item.name} 장착 완료!` : `${item.name} 장착 완료!`);
 }
 
 function renderCosmeticPreview() {
   const fallbackId = activeCosmeticSlot === 'all'
     ? playerProfile.equipped?.table
-    : playerProfile.equipped?.[activeCosmeticSlot] || cosmeticsForSlot(activeCosmeticSlot)[0]?.id;
+    : equippedCosmeticIdForSlot(activeCosmeticSlot) || cosmeticsForSlot(activeCosmeticSlot)[0]?.id;
   const item = cosmeticById(previewCosmeticId) || cosmeticById(fallbackId);
   if (!item) return;
   previewCosmeticId = item.id;
 
-  const previewEquipped = { ...playerProfile.equipped, [item.slot]: item.id };
+  const previewEquipped = withPreviewedCosmetic(playerProfile.equipped, item);
 
   const root = els['cosmetic-preview'];
   const allClasses = COSMETICS.map((candidate) => candidate.cssClass).filter(Boolean);
   root.classList.remove(...allClasses, ...allSetBonusClassNames(), 'preview-playing');
   root.classList.add(...equippedClassNames(previewEquipped));
+  applyPreviewCharmLoadout(previewEquipped);
 
   const unlocked = item.threshold <= (playerProfile.peakPoints || 0);
-  const equipped = playerProfile.equipped?.[item.slot] === item.id;
+  const equipped = item.slot === 'charm'
+    ? equippedCharmIds(playerProfile.equipped)[selectedCharmSlot] === item.id
+    : playerProfile.equipped?.[item.slot] === item.id;
   const itemSet = cosmeticSetForItem(item.id);
   const setProgress = cosmeticSetProgress(itemSet, playerProfile.peakPoints);
   els['cosmetic-preview-set'].classList.toggle('hidden', !itemSet);
   els['cosmetic-preview-set'].textContent = itemSet ? `${itemSet.icon} ${itemSet.name} ${setProgress.unlocked}/${setProgress.total}` : '';
-  els['cosmetic-preview-status'].textContent = unlocked ? equipped ? '미리보기 · 현재 장착' : '미리보기 · 장착 가능' : `미리보기 · ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
+  els['cosmetic-preview-status'].textContent = unlocked
+    ? equipped ? `미리보기 · ${item.slot === 'charm' ? `${selectedCharmSlot + 1}번 장착` : '현재 장착'}` : '미리보기 · 장착 가능'
+    : `미리보기 · ${item.threshold.toLocaleString('ko-KR')}점에 해금`;
   els['cosmetic-preview-name'].textContent = item.name;
   const slotName = COSMETIC_SLOTS.find((slot) => slot.key === item.slot)?.name || item.slot;
   els['cosmetic-preview-description'].textContent = `${slotName} · ${item.description}`;
+  els['cosmetic-charm-slots'].classList.toggle('hidden', item.slot !== 'charm');
+  document.querySelectorAll('[data-charm-slot]').forEach((button) => {
+    const slotIndex = Number(button.dataset.charmSlot);
+    const charm = cosmeticById(equippedCharmIds(previewEquipped)[slotIndex]);
+    button.classList.toggle('active', slotIndex === selectedCharmSlot);
+    button.setAttribute('aria-pressed', String(slotIndex === selectedCharmSlot));
+    button.querySelector('small').textContent = charm?.name || '기본 친구들';
+  });
   els['cosmetic-preview-equip'].disabled = !unlocked || equipped;
   els['cosmetic-preview-equip'].textContent = !unlocked
     ? `${item.threshold.toLocaleString('ko-KR')}점에 해금`
-    : equipped ? '✓ 현재 장착' : '이 아이템 장착';
+    : equipped ? `✓ ${item.slot === 'charm' ? `${selectedCharmSlot + 1}번에 장착됨` : '현재 장착'}` : item.slot === 'charm' ? `${selectedCharmSlot + 1}번 자리에 장착` : '이 아이템 장착';
   renderCosmeticPreviewMode();
 }
 
@@ -723,11 +771,46 @@ function renderReducedEffectsButton() {
   els['reduced-effects-button'].querySelector('b').textContent = reduced ? 'ON' : 'OFF';
 }
 
+function applyCharmVisual(element, itemId, slotIndex, { preview = false } = {}) {
+  const item = cosmeticById(itemId) || cosmeticById('charm-classic');
+  const config = charmToyConfig(item?.id, slotIndex);
+  element.classList.remove(
+    ...CHARM_CLASS_NAMES,
+    'jelly-toy', 'star-toy', 'rose-toy',
+    'toy-kind-jelly', 'toy-kind-star', 'toy-kind-rose',
+  );
+  if (item?.cssClass) element.classList.add(item.cssClass);
+  element.classList.add(preview ? `toy-kind-${config.base}` : `${config.base}-toy`);
+  if (!preview) {
+    element.dataset.toy = config.key;
+    element.setAttribute('aria-label', `${slotIndex + 1}번 ${item?.name || '장난감'} 눌러보기`);
+    const bubble = element.querySelector('.toy-bubble');
+    if (bubble) bubble.textContent = TOY_LINES[config.key]?.[0] || '반짝!';
+  }
+}
+
+function applyToyLoadout() {
+  const charms = equippedCharmIds(playerProfile.equipped);
+  document.querySelectorAll('[data-toy-slot]').forEach((button) => {
+    const slotIndex = Number(button.dataset.toySlot) || 0;
+    applyCharmVisual(button, charms[slotIndex], slotIndex);
+  });
+}
+
+function applyPreviewCharmLoadout(equipped) {
+  const charms = equippedCharmIds(equipped);
+  document.querySelectorAll('[data-preview-charm-slot]').forEach((element) => {
+    const slotIndex = Number(element.dataset.previewCharmSlot) || 0;
+    applyCharmVisual(element, charms[slotIndex], slotIndex, { preview: true });
+  });
+}
+
 function applyEquippedCosmetics() {
   const allClasses = COSMETICS.map((item) => item.cssClass).filter(Boolean);
   document.body.classList.remove(...allClasses, ...allSetBonusClassNames(), 'reduced-effects');
   document.body.classList.add(...equippedClassNames(playerProfile.equipped));
   document.body.classList.toggle('reduced-effects', Boolean(playerProfile.reducedEffects));
+  applyToyLoadout();
   applyDiscardFaceSkin();
 }
 
@@ -1103,9 +1186,8 @@ function renderHistory() {
 }
 
 function playWithToy(button) {
-  const baseToy = button.dataset.toy;
-  const toy = activeToyKey(baseToy);
-  const lines = TOY_LINES[toy];
+  const toy = button.dataset.toy;
+  const lines = TOY_LINES[toy] || TOY_LINES.star;
   const count = Number(button.dataset.playCount || 0);
   button.dataset.playCount = String(count + 1);
   button.querySelector('.toy-bubble').textContent = lines[count % lines.length];
@@ -1115,11 +1197,6 @@ function playWithToy(button) {
   playSound(`toy-${toy}`);
   burstToyParticles(button, toy);
   setTimeout(() => button.classList.remove('is-playing'), TOY_PLAY_DURATIONS[toy] || 850);
-}
-
-function activeToyKey(baseToy) {
-  const variant = TOY_VARIANTS.find((item) => item.base === baseToy && document.body.classList.contains(item.cssClass));
-  return variant?.key || baseToy;
 }
 
 function burstToyParticles(button, toy) {

@@ -1049,3 +1049,47 @@ body.skin-table-real-rose .ambient-b { background:#295c35; opacity:.24; }
 .matching-result.bonus { border-color:rgba(255,214,109,.72); background:radial-gradient(circle at 50% 0,rgba(255,214,109,.18),transparent 45%),rgba(9,12,25,.54); box-shadow:0 0 44px rgba(255,214,109,.2),inset 0 0 24px rgba(255,77,116,.08); }
 .matching-result.bonus::after { content:'BONUS MATCH · 승리 포인트 2배'; margin-top:5px; padding:7px 10px; border-radius:99px; color:#171827; background:#ffd66d; font:900 9px/1 'Noto Sans KR',sans-serif; letter-spacing:.04em; }
 .online-live-state.bonus { color:#ffd66d; border-color:rgba(255,214,109,.42); background:rgba(255,214,109,.1); }
+
+/* 장난감 3칸 장착: 장난감별 외형은 각 버튼에 직접 적용해 서로 다른 조합을 유지한다. */
+.table-toy.skin-charm-rose-musicbox { width:82px; height:82px; }
+.table-toy.skin-charm-rose-teacup { width:92px; height:92px; }
+.table-toy.skin-charm-crimson-clockwork { width:100px; height:100px; }
+.table-toy.skin-charm-royal-flower-fountain { width:128px; height:158px; z-index:6; filter:drop-shadow(0 16px 18px rgba(0,0,0,.36)); }
+.table-toy.skin-charm-rose-musicbox.is-playing .star-body { animation:rose-musicbox-waltz 1.1s cubic-bezier(.16,.86,.25,1.12); }
+.table-toy.skin-charm-rose-teacup.is-playing .jelly-body { animation:cute-peach-rose-bloom 1.04s cubic-bezier(.18,.8,.3,1.15); }
+.table-toy.skin-charm-crimson-clockwork.is-playing .rose-bloom { animation:cute-crimson-rose-bloom 1.12s cubic-bezier(.15,.8,.22,1.18); }
+.table-toy.skin-charm-royal-flower-fountain.is-playing .star-body { animation:royal-fountain-awaken 1.35s cubic-bezier(.16,.82,.22,1.08); }
+.table-toy.skin-charm-royal-flower-fountain.is-playing .star-body::before { animation:royal-fountain-water 1.28s ease-out .06s both; }
+.table-toy.skin-charm-royal-flower-fountain.is-playing .star-body::after { animation:royal-fountain-glints 1.18s ease-out .12s both; }
+.table-toy.skin-charm-cat .toy-bubble::before { content:'야옹!'; }
+
+.cosmetic-preview-charms { position:absolute; z-index:5; right:4%; top:9%; bottom:9%; width:54px; display:grid; grid-template-rows:repeat(3,1fr); align-items:center; justify-items:center; gap:3px; pointer-events:none; }
+.cosmetic-preview-charms .cosmetic-preview-charm { position:relative; right:auto; top:auto; width:42px; height:42px; transform-origin:center; filter:drop-shadow(0 5px 7px rgba(0,0,0,.3)); }
+.cosmetic-preview-charm > .jelly-body,.cosmetic-preview-charm > .star-body,.cosmetic-preview-charm > .rose-bloom,.cosmetic-preview-charm > .rose-stem { display:none; }
+.cosmetic-preview-charm.toy-kind-jelly > .jelly-body,.cosmetic-preview-charm.toy-kind-star > .star-body,.cosmetic-preview-charm.toy-kind-rose > .rose-bloom,.cosmetic-preview-charm.toy-kind-rose > .rose-stem { display:block; }
+.preview-playing .cosmetic-preview-charms .cosmetic-preview-charm:nth-child(2) { animation-delay:.1s; }
+.preview-playing .cosmetic-preview-charms .cosmetic-preview-charm:nth-child(3) { animation-delay:.2s; }
+.preview-playing .cosmetic-preview-charm.skin-charm-royal-flower-fountain .star-body::before { animation:royal-fountain-water 1.18s ease-out .04s both; }
+.preview-playing .cosmetic-preview-charm.skin-charm-royal-flower-fountain .star-body::after { animation:royal-fountain-glints 1.08s ease-out .1s both; }
+
+.cosmetic-charm-slots { flex:0 0 46px; min-height:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+.cosmetic-charm-slots button { min-width:0; padding:5px 7px; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:2px; overflow:hidden; border:1px solid rgba(255,255,255,.11); border-radius:10px; color:#c3c7d9; background:rgba(255,255,255,.035); cursor:pointer; text-align:left; transition:.18s ease; }
+.cosmetic-charm-slots button:hover { border-color:rgba(255,214,109,.42); transform:translateY(-1px); }
+.cosmetic-charm-slots button.active { border-color:#ffd66d; color:#fff; background:linear-gradient(135deg,rgba(255,214,109,.16),rgba(255,111,154,.1)); box-shadow:0 0 0 1px rgba(255,214,109,.08),0 7px 16px rgba(0,0,0,.14); }
+.cosmetic-charm-slots b { color:#ffd66d; font-size:9px; }
+.cosmetic-charm-slots small { width:100%; overflow:hidden; font-size:8px; text-overflow:ellipsis; white-space:nowrap; }
+
+@media (max-width:700px) {
+  .table-toy.skin-charm-rose-musicbox { --toy-scale:.58; }
+  .table-toy.skin-charm-rose-teacup { --toy-scale:.56; }
+  .table-toy.skin-charm-crimson-clockwork { --toy-scale:.54; }
+  .table-toy.skin-charm-royal-flower-fountain { --toy-scale:.44; }
+  .cosmetic-preview-charms { right:3%; top:6%; bottom:6%; width:42px; gap:1px; }
+  .cosmetic-preview-charms .cosmetic-preview-charm { width:32px; height:32px; }
+  .cosmetic-charm-slots { flex-basis:36px; gap:4px; }
+  .cosmetic-charm-slots button { padding:3px 5px; border-radius:8px; }
+  .cosmetic-charm-slots b { font-size:8px; }
+  .cosmetic-charm-slots small { font-size:6px; }
+  .cosmetics-workspace:has(.cosmetic-charm-slots:not(.hidden)) { grid-template-rows:306px minmax(0,1fr); }
+  .cosmetic-preview:has(.cosmetic-charm-slots:not(.hidden)) { height:306px; }
+}
