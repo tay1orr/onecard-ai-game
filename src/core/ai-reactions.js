@@ -1,6 +1,6 @@
 const DIFFICULTY_MULTIPLIER = Object.freeze({
   easy: 1.15, normal: 1, hard: 0.82,
-  star1: 1.15, star2: 1.07, star3: 1, star4: 0.9, star5: 0.82,
+  star1: 1.15, star2: 1.07, star3: 1, star4: 0.9, star5: 0.82, star6: 0.78, star7: 0.74, star8: 0.72,
 });
 
 const REACTION_RULES = Object.freeze({

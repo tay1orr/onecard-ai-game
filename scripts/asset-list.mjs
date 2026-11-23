@@ -5,7 +5,8 @@
 // 질감: ambientCG (CC0) · OpenGameArt felt backgrounds (CC0)
 
 // 앱 안 이름 → Fluent 폴더 이름
-export const FLUENT_STATIC = {
+// 시즌 2 실사 개편(11-24) 뒤로 Fluent 3D 는 반응 스티커 · 파비콘만 쓴다 — 나머지는 받지 않음
+const ALL_FLUENT_STATIC = {
   // AI 상대
   sloth: 'Sloth', 'cat-face': 'Cat face', owl: 'Owl', wolf: 'Wolf', 'dragon-face': 'Dragon face',
   // 내 캐릭터(아바타)
@@ -63,11 +64,7 @@ export const FLUENT_STATIC = {
 };
 
 // 움직이는 판 — 대전 상대 · 장착한 장난감 · 큰 연출에서만 그때 받는다.
-export const FLUENT_ANIMATED = [
-  'sloth', 'cat-face', 'owl', 'wolf', 'dragon-face',
-  'teddy-bear', 'cat', 'flying-saucer', 'unicorn', 'fountain', 'star', 'rocket', 'octopus', 'spouting-whale', 'crystal-ball',
-  'fire', 'high-voltage', 'party-popper', 'partying', 'rofl', 'star-struck', 'steam', 'crying', 'screaming', 'sunglasses',
-];
+export const FLUENT_ANIMATED = [];
 
 // OpenGameArt 에 Kenney 가 올린 소리 묶음(CC0)
 export const OGA_FILES = {
@@ -88,4 +85,48 @@ export const JINGLES = {
 };
 
 // ambientCG (CC0) 1K 질감
-export const AMBIENTCG = ['Wood052', 'Wood066', 'Leather026', 'Fabric026', 'Fabric030', 'Marble006', 'Paper005', 'Carpet006'];
+// ambientCG 재질은 REAL_TEXTURES(아래)로 옮김
+export const AMBIENTCG = [];
+
+// 실제 재질 사진(CC0) — 탁자 윗면 · 테두리 · 카드 종이. 키 → Poly Haven 또는 ambientCG 아이디
+export const REAL_TEXTURES = {
+  velvet: { polyhaven: 'velour_velvet' },
+  satin: { polyhaven: 'crepe_satin' },
+  'jacquard-floral': { polyhaven: 'floral_jacquard' },
+  'jacquard-quatrefoil': { polyhaven: 'quatrefoil_jacquard_fabric' },
+  gingham: { polyhaven: 'gingham_check' },
+  herringbone: { polyhaven: 'poly_wool_herringbone' },
+  suede: { polyhaven: 'scuba_suede' },
+  'leather-red': { ambientcg: 'Leather037' },
+  'leather-brown': { polyhaven: 'brown_leather' },
+  walnut: { polyhaven: 'black_walnut_veneer_01' },
+  cherry: { polyhaven: 'cherry_veneer' },
+  rosewood: { polyhaven: 'rosewood_veneer1' },
+  lacquer: { polyhaven: 'lacquered_cherry_wood' },
+  parquet: { polyhaven: 'herringbone_parquet' },
+  terrazzo: { polyhaven: 'terrazzo_tiles' },
+  sandstone: { polyhaven: 'large_sandstone_blocks' },
+  'petal-gravel': { polyhaven: 'flower_scattered_gravel' },
+  linen: { ambientcg: 'Fabric061' },
+  quilt: { ambientcg: 'Fabric048' },
+  'marble-white': { ambientcg: 'Marble012' },
+  'marble-black-gold': { ambientcg: 'Marble006' },
+  'marble-black': { ambientcg: 'Marble016' },
+  'onyx-white': { ambientcg: 'Onyx015' },
+  'onyx-black': { ambientcg: 'Onyx013' },
+  malachite: { ambientcg: 'Onyx011' },
+  travertine: { ambientcg: 'Travertine009' },
+  'checker-marble': { ambientcg: 'Tiles074' },
+  gold: { ambientcg: 'Metal034' },
+  brass: { ambientcg: 'Metal048B' },
+  'gold-pale': { ambientcg: 'Metal042A' },
+  'gold-foil': { ambientcg: 'Foil002' },
+  lawn: { ambientcg: 'Grass004' },
+  moss: { ambientcg: 'Moss002' },
+  pavers: { ambientcg: 'PavingStones138' },
+  'paper-white': { ambientcg: 'Paper001' },
+  'paper-cream': { ambientcg: 'Paper002' },
+};
+
+const KEEP_FLUENT = new Set(['spade', 'star-struck', 'fire', 'grimacing', 'rofl', 'saluting', 'steam']);
+export const FLUENT_STATIC = Object.fromEntries(Object.entries(ALL_FLUENT_STATIC).filter(([key]) => KEEP_FLUENT.has(key)));

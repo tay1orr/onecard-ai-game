@@ -9,8 +9,9 @@
     "preview": "vite preview",
     "assets:fetch": "node scripts/fetch-assets.mjs .asset-cache",
     "assets:build": "node scripts/build-assets.mjs .asset-cache public/assets/s2",
-    "test": "node tests/rules.test.mjs && node tests/season2.test.mjs",
-    "test:e2e": "node tests/e2e/play.mjs"
+    "test": "node tests/rules.test.mjs && node tests/season2.test.mjs && node tests/ai-strength.mjs --quick",
+    "test:e2e": "node tests/e2e/play.mjs",
+    "test:ai": "node tests/ai-strength.mjs"
   },
   "dependencies": {
     "@fontsource/big-shoulders-display": "5.3.0",

@@ -1,15 +1,12 @@
-// 상대 캐릭터 — 말풍선 · 표정 · 몸짓. 평소엔 정지 그림, 반응할 때만 움직이는 판으로 바꾼다(가볍게).
+// 상대 캐릭터 — 말풍선 · 몸짓. 실제 동물 사진 초상이라 표정 대신 몸짓으로 반응한다.
 import gsap from 'gsap';
-import { img } from '../data/assets.js';
 import { pickLine } from '../data/characters.js';
 import { settings } from './settings.js';
 
 export function createRivalController(table, rival) {
   let bubbleTimer = null;
-  let faceTimer = null;
   const portrait = table.rivalPortrait;
   const bubble = table.rivalBubble;
-  const faceBadge = table.rivalFace;
 
   function say(text, { hold = 1900 } = {}) {
     if (!text) return;
@@ -22,20 +19,8 @@ export function createRivalController(table, rival) {
     }, hold);
   }
 
-  function showFace(kind) {
-    const motif = rival.faces?.[kind];
-    if (!motif) return;
-    clearTimeout(faceTimer);
-    faceBadge.src = img(motif);
-    faceBadge.hidden = false;
-    gsap.fromTo(faceBadge, { scale: 0, rotation: -30 }, { scale: 1, rotation: 0, duration: 0.3, ease: 'back.out(2.4)' });
-    faceTimer = setTimeout(() => gsap.to(faceBadge, { scale: 0, duration: 0.2, onComplete: () => { faceBadge.hidden = true; } }), 1700);
-  }
-
   function react(kind, situation) {
     if (situation) say(pickLine(rival, situation));
-    showFace(kind);
-    table.swapAnimated(table.rivalImg, rival.motif, 2400);
     if (settings.reduced()) return;
     const target = table.rivalImg;
     gsap.killTweensOf(target);
@@ -52,5 +37,5 @@ export function createRivalController(table, rival) {
     if (on && Math.random() < 0.45) say(pickLine(rival, 'think'), { hold: 1100 });
   }
 
-  return { say, react, think, showFace };
+  return { say, react, think };
 }

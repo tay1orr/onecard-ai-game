@@ -144,12 +144,12 @@ function saveLocalAccountBundle(bundle, storage = defaultStorage()) {
   return { profile, missionState: bundle?.missionState || null };
 }
 
-function mergeEquipped(localEquipped, remoteEquipped, peakPoints, preferLocal) {
+function mergeEquipped(localEquipped, remoteEquipped, peakPoints, preferLocal, passTier = 0, boxItems = []) {
   const primary = preferLocal ? localEquipped : remoteEquipped;
   const fallback = preferLocal ? remoteEquipped : localEquipped;
   const merged = { ...DEFAULT_EQUIPPED, ...(fallback || {}), ...(primary || {}) };
   if (!Array.isArray(primary?.charms) && primary?.charm) delete merged.charms;
-  return normalizeEquipped(merged, peakPoints);
+  return normalizeEquipped(merged, peakPoints, passTier, boxItems);
 }
 
 export function mergeProfiles(localProfile = {}, remoteProfile = {}, options = {}) {
@@ -183,9 +183,14 @@ export function mergeProfiles(localProfile = {}, remoteProfile = {}, options = {
       safeArray(localProfile.awardedMatchIds),
     ).slice(-100),
     recentAiStars: safeArray(localProfile.recentAiStars).length
-      ? safeArray(localProfile.recentAiStars).filter((value) => value >= 1 && value <= 5).slice(-2)
-      : safeArray(remoteProfile.recentAiStars).filter((value) => value >= 1 && value <= 5).slice(-2),
-    equipped: mergeEquipped(localProfile.equipped, remoteProfile.equipped, peakPoints, preferLocalEquipped),
+      ? safeArray(localProfile.recentAiStars).filter((value) => value >= 1 && value <= 8).slice(-2)
+      : safeArray(remoteProfile.recentAiStars).filter((value) => value >= 1 && value <= 8).slice(-2),
+    boxItems: uniqueStrings(safeArray(remoteProfile.boxItems), safeArray(localProfile.boxItems)),
+    claimedBoxIds: uniqueStrings(safeArray(remoteProfile.claimedBoxIds), safeArray(localProfile.claimedBoxIds)).slice(-150),
+    seasonXp: Math.max(safeInteger(localProfile.seasonXp), safeInteger(remoteProfile.seasonXp)),
+    equipped: mergeEquipped(localProfile.equipped, remoteProfile.equipped, peakPoints, preferLocalEquipped,
+      tierForXp(Math.max(safeInteger(localProfile.seasonXp), safeInteger(remoteProfile.seasonXp))),
+      uniqueStrings(safeArray(remoteProfile.boxItems), safeArray(localProfile.boxItems))),
     reducedEffects: typeof localProfile.reducedEffects === 'boolean'
       ? localProfile.reducedEffects
       : Boolean(remoteProfile.reducedEffects),
@@ -240,7 +245,7 @@ export function mergeAccountBundles(localBundle = {}, remoteBundle = {}, base = 
   const profile = base && remoteBundle.hasProfile !== false
     ? (() => {
       const merged = mergeProfiles3(localBundle.profile || {}, remoteBundle.profile || {}, base);
-      return { ...merged, equipped: normalizeEquipped(merged.equipped || DEFAULT_EQUIPPED, merged.peakPoints, tierForXp(merged.seasonXp)) };
+      return { ...merged, equipped: normalizeEquipped(merged.equipped || DEFAULT_EQUIPPED, merged.peakPoints, tierForXp(merged.seasonXp), merged.boxItems) };
     })()
     : mergeProfiles(localBundle.profile || {}, remoteBundle.profile || {}, {
       preferLocalEquipped: localBundle.hasProfile !== false,

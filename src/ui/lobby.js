@@ -1,7 +1,9 @@
-// 로비 — 펠트 무대 위 다섯 상대 + 시즌 2 글자. 나머지(패스 · 미션 · 보관함)는 차분하게
+// 로비 — 장착한 맵 사진을 깐 무대 위에 지금 점수로 만나는 상대들 + 시즌 2 글자. 나머지(패스 · 미션 · 보관함)는 차분하게
 import gsap from 'gsap';
 import { h, formatNumber, stars } from './dom.js';
-import { img } from '../data/assets.js';
+import { cut } from '../data/assets.js';
+import { lookOf } from '../data/looks.js';
+import { mapVars } from './look-apply.js';
 import { RIVALS } from '../data/characters.js';
 import { loadMissionDashboard } from '../core/missions.js';
 import { tierProgress, isOpeningEventActive, openingEventDaysLeft, OPENING_EVENT, SEASON, PASS_REWARDS } from '../core/season.js';
@@ -30,10 +32,13 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
   const avatar = cosmeticById(profile.equipped.avatar) || cosmeticById('avatar-rabbit');
   const eventOn = isOpeningEventActive();
 
-  const rivals = RIVALS.map((rival, index) => {
-    const chance = weights[index] || 0;
+  // 이 점수에서 만날 수 있는 상대만 무대에 세운다(30만 점대면 ★5~★8)
+  const meetable = RIVALS.filter((rival) => (weights[rival.stars - 1] || 0) > 0);
+  const COUNT_WORD = ['', '한', '두', '세', '네', '다섯', '여섯', '일곱', '여덟'];
+  const rivals = meetable.map((rival, index) => {
+    const chance = weights[rival.stars - 1] || 0;
     return h(`button.stage-rival.r${index}`, {
-      type: 'button', vars: { '--rival': rival.color, '--bob-delay': `${(index * 0.37) % 1.4}s` },
+      type: 'button', vars: { '--rival': rival.color, '--bob-delay': `${(index * 0.37) % 1.4}s`, '--lineup': meetable.length, '--lift': `${Math.round((1 - Math.abs((meetable.length > 1 ? (2 * index) / (meetable.length - 1) : 1) - 1)) * 16)}%` },
       'aria-label': `${rival.title} ${rival.name}, ${rival.stars}성, 만날 확률 ${chance}%`,
       onClick: (event) => {
         play('select');
@@ -42,9 +47,9 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
       },
     },
     h('span.rival-spot'),
-    h('img.rival-art', { src: img(rival.motif), alt: '', draggable: 'false' }),
+    h('img.rival-art', { src: cut(rival.portrait), alt: '', draggable: 'false' }),
     h('span.rival-plate', {}, h('small', {}, rival.title), h('b', {}, rival.name)),
-    h('span.rival-meta', {}, h('i', {}, stars(rival.stars)), h('em', {}, chance ? `만날 확률 ${chance}%` : '지금 점수에선 안 나와요')));
+    h('span.rival-meta', {}, h('i', {}, stars(rival.stars)), h('em', {}, `만날 확률 ${chance}%`)));
   });
 
   const missionRows = missions.daily.missions.map((mission) => h(`li.mission-row${mission.completed ? '.is-done' : ''}`, {},
@@ -59,25 +64,26 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
       h('div.logo', { 'aria-label': 'ONE! 시즌 2' }, h('b.logo-word', {}, 'ONE!'), h('span.logo-season', {}, h('small', {}, 'SEASON'), h('b', {}, '2'))),
       h('div.top-right', {},
         h('button.profile-chip', { type: 'button', onClick: () => onAccount?.(), 'aria-label': `내 기록 ${formatNumber(profile.points)}점, ${statusLabel}` },
-          h('img', { src: img(avatar.motif), alt: '' }),
+          h('img', { src: cut(avatar.portrait), alt: '' }),
           h('span.chip-text', {}, h('b', {}, `${formatNumber(profile.points)}점`), h('small', {}, `${stars(progress.stars)} ${statusLabel}`))),
         h('button.icon-btn.sound-btn', { type: 'button', 'aria-label': '소리 켜기 끄기', html: soundIcon(), onClick: (event) => { onToggleSound?.(); event.currentTarget.innerHTML = soundIcon(); } }),
         h('button.icon-btn', { type: 'button', 'aria-label': '설정', html: ICON.gear, onClick: () => onSettings?.() }))),
     h('div.lobby-main', {},
       h('div.stage', {},
+        h('div.stage-scene', { 'aria-hidden': 'true' }),
         h('div.stage-felt', { 'aria-hidden': 'true' }),
         h('div.stage-copy', {},
-          h('h1.stage-title', {}, '다섯 상대가 기다려요'),
+          h('h1.stage-title', {}, `${COUNT_WORD[meetable.length] || meetable.length} 상대가 기다려요`),
           h('p.stage-sub', {}, `${formatNumber(profile.points)}점이면 이 확률로 만나요`),
           eventOn ? h('p.event-ribbon', {}, h('b', {}, OPENING_EVENT.name), h('span', {}, `${openingEventDaysLeft()}일 남음, 경험치 2배에 보너스판이 더 자주 나와요`)) : null),
         h('div.stage-lineup', {}, ...rivals)),
       h('aside.lobby-actions', {},
         h('button.play-btn.is-primary', { type: 'button', onClick: () => onAi?.() },
-          h('span.play-label', {}, h('b', {}, 'AI 대전'), h('small', {}, '점수에 맞는 상대와 바로 붙어요')),
-          h('img.play-art', { src: img('crossed-swords'), alt: '' })),
+          h('span.play-label', {}, h('b', {}, 'AI 대전'), h('small', {}, '끝나면 보상 상자 하나를 골라 열어요')),
+          h('img.play-art', { src: cut('sword'), alt: '' })),
         h('button.play-btn', { type: 'button', onClick: () => onOnline?.() },
           h('span.play-label', {}, h('b', {}, '친구와 대전'), h('small', {}, '방 코드 여섯 자리로 둘이서')),
-          h('img.play-art', { src: img('game-die'), alt: '' })),
+          h('img.play-art', { src: cut('dice'), alt: '' })),
         h('button.pass-card', { type: 'button', onClick: () => onPass?.() },
           h('div.pass-head', {}, h('b', {}, `${SEASON.name} 패스`), h('span', {}, pass.maxed ? '마지막 단계까지 왔어요' : pass.tier > 0 ? `${pass.tier}단계` : '첫 판부터 시작')),
           h('div.xp-bar', {}, h('i.xp-fill', { style: { transform: `scaleX(${pass.ratio})` } })),
@@ -89,6 +95,10 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
           h('div.locker-stack', { 'aria-hidden': 'true' }, itemPreview(cosmeticById(profile.equipped.cardBack)), itemPreview(cosmeticById(profile.equipped.cardFace))),
           h('span.locker-text', {}, h('b', {}, '보관함'), h('small', {}, nextUnlock ? `다음 보상 ${nextUnlock.items[0].name}까지 ${formatNumber(nextUnlock.remaining)}점` : '점수 보상을 모두 열었어요'))))));
 
+  // 무대 바닥 · 배경은 장착한 맵(사진 · 시즌 1 그림)
+  const map = lookOf('table', cosmeticById(profile.equipped.table)?.look);
+  Object.entries(mapVars(map)).forEach(([key, value]) => el.style.setProperty(key, value));
+  el.dataset.map = map.painted ? 'painted' : 'photo';
   host.replaceChildren(el);
   if (!settings.reduced()) {
     gsap.from(el.querySelectorAll('.stage-rival'), { y: 60, opacity: 0, duration: 0.6, stagger: 0.07, ease: 'back.out(1.6)' });

@@ -1,51 +1,74 @@
-// 아이템 작은 그림 — 보관함 · 결과 · 시즌 패스가 함께 쓴다
-import { h, setVars } from './dom.js';
-import { themeById } from '../data/themes.js';
-import { img } from '../data/assets.js';
-import { backVars, faceVars, tableVars, applyFaceStyle } from './theme-apply.js';
+// 아이템 작은 그림 — 보관함 · 결과 · 시즌 패스 · 로비가 함께 쓴다. 실제 에셋의 작은 판(-s)을 써서 가볍게.
+import { h } from './dom.js';
+import { lookOf } from '../data/looks.js';
+import { backArt, cut, paint, photo, scene } from '../data/assets.js';
+import { backVars, faceVars, applyFaceStyle, mapVars } from './look-apply.js';
 import { cardBack, cardFace } from './cards.js';
 import { charmToyConfig } from '../core/cosmetics.js';
 
-const FILTERS = {
-  peach: 'hue-rotate(28deg) saturate(.62) brightness(1.18)',
-  blush: 'hue-rotate(18deg) saturate(.5) brightness(1.3)',
-  crimson: 'saturate(1.3) brightness(.92)',
-};
+const url = (value) => `url("${value}")`;
+
+function setVars(el, vars) {
+  Object.entries(vars).forEach(([key, value]) => el.style.setProperty(key, value));
+}
+
+export function smallBackVars(back) {
+  const vars = backVars(back);
+  if (back.art) vars['--back-art'] = url(backArt(back.art, 's'));
+  else if (back.paint) vars['--back-art'] = url(paint(back.paint, 's'));
+  return vars;
+}
+
+function backdropThumb(backdrop) {
+  if (!backdrop) return null;
+  if (backdrop.scene) return scene(backdrop.scene, 's');
+  if (backdrop.paint) return paint(backdrop.paint, 's');
+  if (backdrop.photo) return photo(backdrop.photo, 'wide');
+  return null;
+}
 
 export function itemPreview(item) {
-  const theme = themeById(item.theme);
+  if (!item) return h('div.pv');
   if (item.slot === 'table') {
-    const el = h('div.pv.pv-table', {}, h('div.pv-felt', {}, h('div.felt-photo'), h('div.felt-cloth')), ...(theme.decor || []).slice(0, 2).map((motif, index) => h(`img.pv-decor.d${index}`, { src: img(motif), alt: '' })));
-    setVars(el, tableVars(theme));
+    const map = lookOf('table', item.look);
+    const el = h('div.pv.pv-map', { dataset: { map: map.painted ? 'painted' : 'photo', rim: !map.rim || map.rim === 'none' ? 'none' : 'on', shape: map.shape } },
+      h('i.pv-scene'), h('i.pv-rim', {}, h('i.pv-top')));
+    setVars(el, mapVars(map, { small: true }));
     return el;
   }
   if (item.slot === 'cardBack') {
     const el = h('div.pv.pv-card', {}, cardBack());
-    setVars(el, backVars(theme));
+    setVars(el, smallBackVars(lookOf('cardBack', item.look)));
     return el;
   }
   if (item.slot === 'cardFace') {
-    const el = h('div.pv.pv-card.pv-face', {}, cardFace({ id: `pv-${item.id}`, suit: 'hearts', rank: 'K' }), cardFace({ id: `pv2-${item.id}`, suit: 'spades', rank: '7' }));
-    setVars(el, faceVars(theme));
-    applyFaceStyle(el, theme);
+    const face = lookOf('cardFace', item.look);
+    const el = h('div.pv.pv-card.pv-face', {}, cardFace({ id: `pv-${item.id}`, suit: 'hearts', rank: 'A' }), cardFace({ id: `pv2-${item.id}`, suit: 'spades', rank: 'K' }));
+    setVars(el, faceVars(face));
+    applyFaceStyle(el, face);
     return el;
   }
   if (item.slot === 'effect') {
-    const motifs = theme.burst?.length ? theme.burst : ['sparkles'];
-    return h('div.pv.pv-burst', {}, ...motifs.slice(0, 3).map((motif, index) => h(`img.b${index}`, { src: img(motif), alt: '' })));
+    const effect = lookOf('effect', item.look);
+    const keys = effect.sprites.length ? effect.sprites.slice(0, 2) : [];
+    const el = h('div.pv.pv-burst', {}, ...keys.map((key, index) => h(`img.b${index}`, { src: cut(key, 's'), alt: '', loading: 'lazy' })));
+    if (effect.band) el.style.setProperty('--pv-band', url(scene(effect.band, 's')));
+    if (effect.band) el.classList.add('has-band');
+    return el;
   }
   if (item.slot === 'charm') {
-    const toy = charmToyConfig(item.id, 0);
-    const image = h('img', { src: img(toy.motif), alt: '' });
-    if (toy.filter) image.style.filter = FILTERS[toy.filter] || '';
-    if (item.id === 'charm-classic') return h('div.pv.pv-trio', {}, ...['custard', 'star', 'rose'].map((motif) => h('img', { src: img(motif), alt: '' })));
-    return h('div.pv.pv-toy', {}, image);
+    if (item.id === 'charm-classic') return h('div.pv.pv-trio', {}, ...[0, 1, 2].map((slot) => h('img', { src: cut(charmToyConfig(item.id, slot).img, 's'), alt: '', loading: 'lazy' })));
+    return h('div.pv.pv-toy', {}, h('img', { src: cut(charmToyConfig(item.id, 0).img, 's'), alt: '', loading: 'lazy' }));
   }
   if (item.slot === 'victory') {
-    return h('div.pv.pv-victory', { vars: { '--v-accent': theme.accent } }, h('i.pv-rays'), h('img', { src: img(theme.hero || 'trophy'), alt: '' }));
+    const victory = lookOf('victory', item.look);
+    const backdrop = backdropThumb(victory.backdrop);
+    const el = h('div.pv.pv-victory', { vars: { '--v-accent': victory.accent } }, h('i.pv-backdrop'), h('img', { src: cut(victory.hero, 's'), alt: '', loading: 'lazy' }));
+    if (backdrop) el.style.setProperty('--pv-backdrop', url(backdrop));
+    return el;
   }
   if (item.slot === 'avatar') {
-    return h('div.pv.pv-avatar', {}, h('img', { src: img(item.motif || 'rabbit-face'), alt: '' }));
+    return h('div.pv.pv-avatar', {}, h('img', { src: cut(item.portrait || 'rabbit', 's'), alt: '', loading: 'lazy' }));
   }
   return h('div.pv');
 }

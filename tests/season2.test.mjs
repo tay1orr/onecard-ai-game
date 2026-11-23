@@ -1,15 +1,15 @@
-// 시즌 2 — 기록 이어 가기 · 그림 파일 · 3방향 병합 · 시즌 패스 · 온라인 다시 받기
+// 시즌 2 — 기록 이어 가기 · 실사 에셋 파일 · 점수 사다리 · AI 상대 ★6~★8 · 3방향 병합 · 시즌 패스 · 온라인 다시 받기
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LEGACY_COSMETICS } from './legacy-cosmetics.mjs';
-import { COSMETICS, COSMETIC_SLOTS, TOYS, cosmeticById, isUnlocked, normalizeEquipped, DEFAULT_EQUIPPED } from '../src/core/cosmetics.js';
-import { THEMES } from '../src/data/themes.js';
+import { COSMETICS, COSMETIC_SLOTS, TOYS, cosmeticById, isUnlocked, normalizeEquipped, DEFAULT_EQUIPPED, charmToyConfig, nextCosmeticUnlock } from '../src/core/cosmetics.js';
+import { MAPS, BACKS, FACES, EFFECTS, VICTORIES, lookOf } from '../src/data/looks.js';
 import { RIVALS } from '../src/data/characters.js';
 import { mergeProfiles3, snapshotForBase } from '../src/core/profile-merge.js';
 import { SEASON, PASS_REWARDS, tierForXp, tierProgress, xpForMatch, isOpeningEventActive } from '../src/core/season.js';
-import { PROFILE_KEY, recordMatchResult, loadPlayerProfile } from '../src/core/rating.js';
+import { PROFILE_KEY, recordMatchResult, loadPlayerProfile, MATCH_BANDS, matchmakingWeights, playerStarsForPoints, AI_OPPONENTS, WIN_REWARDS } from '../src/core/rating.js';
 import { MultiplayerClient } from '../src/net/multiplayer.js';
 import { STICKERS } from '../src/ui/reactions.js';
 
@@ -37,24 +37,69 @@ check(new Set(COSMETICS.map((item) => item.id)).size === COSMETICS.length, '아�
 check(COSMETICS.length >= 87 + 30, `시즌 2 새 아이템이 30개 이상 더해져야 함(지금 ${COSMETICS.length - 87}개)`);
 check(COSMETIC_SLOTS.every(({ key }) => COSMETICS.some((item) => item.slot === key && item.threshold === 0)), '칸마다 기본 아이템이 있어야 함');
 
-// 2. 그림 파일 — 테마 · 캐릭터 · 장난감 · 스티커가 가리키는 그림이 모두 있어야 함
-for (const theme of Object.values(THEMES)) {
-  [...theme.decor, ...theme.burst, theme.hero, theme.ace, theme.court.J, theme.court.Q, theme.court.K, theme.back.emblem].forEach((value) => {
-    assert.ok(artExists(value), `테마 ${theme.id} 그림 ${value} 이 있어야 함`);
+// 2. 실사 에셋 파일 — 아이템 모습 · 캐릭터 · 장난감이 가리키는 그림이 모두 있어야 함(Fluent 3D 는 스티커만)
+const S2 = path.join(root, 'public/assets/s2');
+const has = (rel) => fs.existsSync(path.join(S2, rel));
+const missing = [];
+const need = (rel, why) => { if (!has(rel)) missing.push(`${rel} (${why})`); };
+const needCut = (key, why) => { need(`r/cut/${key}.webp`, why); need(`r/cut/${key}-s.webp`, why); };
+const needCourt = (value, set, why) => {
+  if (!value) return;
+  if (value.startsWith('cut:')) needCut(value.slice(4), why);
+  else if (value.startsWith('photo:')) need(`p/${value.slice(6)}-card.webp`, why);
+  else if (value.includes('/')) need(`r/court/${value}.webp`, why);
+  else need(`r/court/${set}/${value}.webp`, why);
+};
+Object.entries(MAPS).forEach(([key, map]) => {
+  if (map.painted) ['', '-m', '-s'].forEach((suffix) => need(`r/paint/${map.painted}${suffix}.webp`, `맵 ${key}`));
+  if (map.scene) ['', '-m', '-s'].forEach((suffix) => need(`r/scene/${map.scene}${suffix}.webp`, `맵 ${key}`));
+  [map.top, map.rim].filter((spec) => Array.isArray(spec)).forEach(([tex]) => need(`t/${tex}.webp`, `맵 ${key} 재질`));
+  (map.props || []).forEach(([cut]) => needCut(cut, `맵 ${key} 소품`));
+});
+Object.entries(BACKS).forEach(([key, back]) => {
+  if (back.art) ['', '-s'].forEach((suffix) => need(`r/back/${back.art}${suffix}.webp`, `뒷면 ${key}`));
+  if (back.paint) ['', '-s'].forEach((suffix) => need(`r/paint/${back.paint}${suffix}.webp`, `뒷면 ${key}`));
+  if (back.tex) need(`t/${back.tex}.webp`, `뒷면 ${key} 재질`);
+  if (back.paper) need(`t/${back.paper}.webp`, `뒷면 ${key} 종이`);
+});
+Object.entries(FACES).forEach(([key, face]) => {
+  if (face.paper) need(`t/${face.paper}.webp`, `앞면 ${key} 종이`);
+  const set = typeof face.court === 'string' ? face.court : null;
+  ['K', 'Q', 'J'].forEach((rank) => {
+    if (typeof face.court !== 'string') needCourt(face.court?.[rank], null, `앞면 ${key}`);
+    else if (face.perSuit) ['S', 'H', 'D', 'C'].forEach((suit) => needCourt(`${rank}${suit}`, set, `앞면 ${key}`));
+    else needCourt(rank, set, `앞면 ${key}`);
   });
-  if (theme.photo) assert.ok(photoExists(theme.photo), `테마 ${theme.id} 사진이 있어야 함`);
-}
+  const aces = typeof face.ace === 'string' ? [face.ace] : Object.values(face.ace || {});
+  aces.forEach((ace) => needCourt(ace, null, `앞면 ${key} 에이스`));
+  needCourt(face.joker || 'jokers/joker-1', null, `앞면 ${key} 조커`);
+  if (face.frame?.startsWith?.('paint:')) need(`r/paint/${face.frame.slice(6)}.webp`, `앞면 ${key} 테`);
+});
+Object.entries(EFFECTS).forEach(([key, effect]) => {
+  effect.sprites.forEach((cut) => needCut(cut, `효과 ${key}`));
+  if (effect.band) need(`r/scene/${effect.band}.webp`, `효과 ${key} 사진 띠`);
+});
+Object.entries(VICTORIES).forEach(([key, victory]) => {
+  needCut(victory.hero, `승리 ${key}`);
+  (victory.sprites || []).forEach((cut) => needCut(cut, `승리 ${key}`));
+  (victory.fireworks || []).forEach((scene) => need(`r/scene/${scene}.webp`, `승리 ${key} 불꽃`));
+  if (victory.backdrop?.scene) ['', '-s'].forEach((suffix) => need(`r/scene/${victory.backdrop.scene}${suffix}.webp`, `승리 ${key} 배경`));
+  if (victory.backdrop?.paint) need(`r/paint/${victory.backdrop.paint}.webp`, `승리 ${key} 배경`);
+});
+Object.entries(TOYS).forEach(([key, toy]) => { needCut(toy.img, `장난감 ${key}`); (toy.burst || []).forEach((cut) => needCut(cut, `장난감 ${key} 소품`)); });
+RIVALS.forEach((rival) => needCut(rival.portrait, `상대 ${rival.name}`));
+COSMETICS.filter((item) => item.slot === 'avatar').forEach((item) => needCut(item.portrait, `캐릭터 ${item.name}`));
+['fire', 'smoke', 'gift-box', 'confetti', 'lightning', 'sword', 'dice', 'box-heart', 'box-white', 'box-black', 'gold-coins'].forEach((cut) => needCut(cut, '연출 · 로비'));
+STICKERS.forEach((sticker) => need(`m/${sticker.motif}.webp`, `스티커 ${sticker.label}`));
+assert.deepEqual(missing, [], `없는 에셋 ${missing.length}개:\n  ${missing.slice(0, 40).join('\n  ')}`);
 count += 1;
-RIVALS.forEach((rival) => {
-  assert.ok(motifExists(rival.motif), `${rival.name} 그림`);
-  Object.values(rival.faces).forEach((face) => assert.ok(motifExists(face), `${rival.name} 표정 ${face}`));
-  assert.ok(fs.existsSync(path.join(root, 'public/assets/s2/a', `${rival.motif}.webp`)), `${rival.name} 움직이는 판`);
+// 모든 아이템은 자기 칸의 모습(또는 장난감 · 캐릭터 그림)을 가리켜야 함
+COSMETICS.forEach((item) => {
+  if (item.slot === 'charm') assert.ok(item.id === 'charm-classic' || TOYS[item.toy], `장난감 ${item.id} 의 toy`);
+  else if (item.slot === 'avatar') assert.ok(item.portrait, `캐릭터 ${item.id} 의 portrait`);
+  else assert.ok({ table: MAPS, cardBack: BACKS, cardFace: FACES, effect: EFFECTS, victory: VICTORIES }[item.slot][item.look], `${item.id} 의 모습 ${item.look}`);
 });
 count += 1;
-Object.values(TOYS).forEach((toy) => { assert.ok(motifExists(toy.motif), `장난감 ${toy.motif}`); (toy.burst || []).forEach((motif) => assert.ok(motifExists(motif), `장난감 소품 ${motif}`)); });
-COSMETICS.filter((item) => item.slot === 'avatar').forEach((item) => assert.ok(motifExists(item.motif), `캐릭터 ${item.motif}`));
-STICKERS.forEach((sticker) => assert.ok(motifExists(sticker.motif), `스티커 ${sticker.motif}`));
-count += 3;
 ['place', 'slide', 'shuffle', 'jingle-win', 'jingle-lose', 'jingle-onecard', 'jingle-season'].forEach((name) => {
   const file = name.startsWith('jingle') ? name : `card-${name === 'place' ? 'place-1' : name === 'slide' ? 'slide-1' : 'shuffle'}`;
   assert.ok(fs.existsSync(path.join(root, 'public/assets/s2/sfx', `${file}.mp3`)), `소리 ${file}`);
@@ -111,5 +156,60 @@ let emote = null;
 const emoteClient = new MultiplayerClient({ onEmote: (event) => { emote = event; } });
 emoteClient.handleEventInsert({ new: { id: 9, event_type: 'emote', actor_seat: 1, payload: { emote: 'gg' } } });
 check(emote?.payload?.emote === 'gg', '스티커는 알림 내용으로 바로 보여 줘야 함');
+
+// 6. 30만 점대 플레이어에 맞춘 사다리 · AI 상대
+const ladder = COSMETICS.filter((item) => !item.pass && item.threshold > 0).map((item) => item.threshold).sort((a, b) => a - b);
+check(ladder.at(-1) === 1000000, `점수 보상은 100만 점까지 이어져야 함(지금 끝 ${ladder.at(-1)})`);
+for (let score = 300000; score < 400000; score += 1000) {
+  const next = nextCosmeticUnlock(score);
+  assert.ok(next && next.remaining <= 10000, `30만~40만 사이 어디서든 다음 보상이 1만 점 안에 있어야 함(${score}점 → ${next?.remaining})`);
+}
+count += 1;
+const roseItems = COSMETICS.filter((item) => (item.tags || []).includes('rose'));
+check(roseItems.length >= 40, `장미 아이템이 넉넉해야 함(지금 ${roseItems.length}개)`);
+check(COSMETICS.filter((item) => item.threshold > 300000 && item.threshold <= 400000).every((item) => (item.tags || []).length), '30만~40만 보상은 모두 장미 · 꽃이어야 함');
+check(MATCH_BANDS.every((band) => band.weights.length === 8 && band.weights.reduce((sum, value) => sum + value, 0) === 100), '점수대별 상대 확률은 8명 합이 100이어야 함');
+check(matchmakingWeights(330000).slice(5).every((weight) => weight > 0), '33만 점이면 ★6 · ★7 · ★8 을 모두 만날 수 있어야 함');
+check(matchmakingWeights(10000).slice(5).every((weight) => weight === 0), '1만 점에서는 ★6~★8 이 나오지 않아야 함(학생 점수대 그대로)');
+check(playerStarsForPoints(330000) === 7 && playerStarsForPoints(400000) === 8, '33만 점은 ★7, 40만 점부터 ★8');
+check(AI_OPPONENTS.length === 8 && RIVALS.length === 8 && RIVALS.every((rival, index) => rival.stars === index + 1), '상대는 ★1~★8 여덟 명');
+check(WIN_REWARDS[8] > WIN_REWARDS[7] && WIN_REWARDS[7] > WIN_REWARDS[6] && WIN_REWARDS[6] > WIN_REWARDS[5], '센 상대일수록 승리 점수가 커야 함');
+const eliteStorage = memoryStorage({ [PROFILE_KEY]: JSON.stringify({ points: 330000, peakPoints: 330000, wins: 700, games: 900 }) });
+const eliteWin = recordMatchResult({ won: true, opponentStars: 7, mode: 'ai', matchId: 'elite-win' }, eliteStorage);
+check(eliteWin.delta === WIN_REWARDS[7], `★7 을 이기면 +${WIN_REWARDS[7]}점(지금 ${eliteWin.delta})`);
+const onlineWin = recordMatchResult({ won: true, opponentStars: 8, mode: 'multi', matchId: 'friend-win' }, eliteStorage);
+check(onlineWin.delta === WIN_REWARDS[5], '친구 대전 보상은 ★5 까지만(점수 몰아주기 막기)');
+const eliteLoss = recordMatchResult({ won: false, opponentStars: 8, mode: 'ai', matchId: 'elite-loss' }, eliteStorage);
+check(eliteLoss.delta < -50 && eliteLoss.delta >= -200, `★8 에게 지면 −50보다 조금 더 잃어야 함(지금 ${eliteLoss.delta})`);
+check(normalizeEquipped({ cardBack: 'back-s2-emblem', table: 'table-s2-arena' }, 0, 20).cardBack === 'back-classic', '없어진 미리 보기 아이템 ID 는 기본으로 돌아가야 함');
+check(charmToyConfig('charm-rose-dome', 0).img === 'rose-dome', '장난감 아이템은 실물 누끼를 가리켜야 함');
+check(lookOf('table', 'rose-ballroom').painted === 'rose-ballroom-table', '장미 무도회 맵은 시즌 1 그림을 그대로 써야 함');
+
+// 7. 보상 상자 — 셋 중 하나, 판마다 한 번, 상자 전용 아이템은 상자에서만
+const { rollRewardBoxes, boxBase } = await import('../src/core/reward-box.js');
+const { claimRewardBox } = await import('../src/core/rating.js');
+const { BOX_ITEMS } = await import('../src/core/cosmetics.js');
+const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+check(Object.entries(WIN_REWARDS).every(([stars, reward]) => boxBase({ won: true, stars: Number(stars) }) === reward), '상자 점수 기준은 승리 보상과 같아야 함');
+const someBoxes = rollRewardBoxes({ won: true, stars: 7 }, seeded(7));
+check(someBoxes.length === 3 && someBoxes.every((box) => box.amount >= 10), '상자는 셋, 모두 점수(또는 대신 줄 점수)가 있어야 함');
+check(boxBase({ won: true, stars: 7 }) > boxBase({ won: false, stars: 7 }) && boxBase({ won: true, stars: 7, bonus: true }) === 2 * boxBase({ won: true, stars: 7 }), '이기면 더 크고 보너스판은 두 배');
+const itemBoxes = rollRewardBoxes({ won: true, stars: 5 }, () => 0.01);
+check(itemBoxes.every((box) => box.kind === 'item') && new Set(itemBoxes.map((box) => box.itemId)).size === 3, '아이템 상자 셋은 서로 다른 상자 전용 아이템');
+check(rollRewardBoxes({ won: true, owned: BOX_ITEMS.map((entry) => entry.id) }, () => 0.01).every((box) => box.kind === 'points'), '상자 아이템을 다 가지면 점수만 나와야 함');
+check(BOX_ITEMS.length >= 30 && BOX_ITEMS.every((entry) => entry.threshold === null && !entry.pass), '상자 전용 아이템은 점수 · 패스로 안 열림');
+check(BOX_ITEMS.some((entry) => (entry.tags || []).includes('dessert')) && BOX_ITEMS.some((entry) => (entry.tags || []).includes('cute')) && BOX_ITEMS.some((entry) => (entry.tags || []).includes('flower')), '상자에는 디저트 · 귀여운 것 · 꽃이 모두 있어야 함');
+const boxStorage = memoryStorage({ [PROFILE_KEY]: JSON.stringify({ points: 330000, peakPoints: 330000, wins: 700, games: 900 }) });
+const pointsClaim = claimRewardBox({ matchId: 'm-1', box: { kind: 'points', amount: 2400 } }, boxStorage);
+check(pointsClaim.delta === 2400 && loadPlayerProfile(boxStorage).points === 332400, '점수 상자는 점수를 더해야 함');
+check(claimRewardBox({ matchId: 'm-1', box: { kind: 'points', amount: 2400 } }, boxStorage).duplicate, '같은 판 상자는 한 번만');
+const teddy = BOX_ITEMS.find((entry) => entry.id === 'charm-box-teddy-rose');
+check(!isUnlocked(teddy, 1000000, 20, []), '상자 전용 아이템은 점수가 높아도 상자 없이는 잠겨 있어야 함');
+const itemClaim = claimRewardBox({ matchId: 'm-2', box: { kind: 'item', itemId: teddy.id, amount: 3000 } }, boxStorage);
+check(itemClaim.item?.id === teddy.id && loadPlayerProfile(boxStorage).boxItems.includes(teddy.id), '아이템 상자는 상자 전용 아이템을 줘야 함');
+check(claimRewardBox({ matchId: 'm-3', box: { kind: 'item', itemId: teddy.id, amount: 3000 } }, boxStorage).delta === 3000, '이미 가진 아이템이면 대신 점수');
+check(normalizeEquipped({ charms: [teddy.id] }, 330000, 0, [teddy.id]).charms[0] === teddy.id && normalizeEquipped({ charms: [teddy.id] }, 330000, 0, []).charms[0] === 'charm-classic', '상자 아이템은 가졌을 때만 장착');
+const mergedBox = mergeProfiles3({ boxItems: ['charm-box-hedgehog'], claimedBoxIds: ['box:a'] }, { boxItems: ['charm-box-duckling'], claimedBoxIds: ['box:b'] }, base);
+check(mergedBox.boxItems.length === 2 && mergedBox.claimedBoxIds.length === 2, '두 기기의 상자 아이템 · 받은 상자를 모두 남겨야 함');
 
 console.log(`시즌 2 테스트 ${count}개 통과`);

@@ -1,7 +1,7 @@
-// 시즌 2 오프닝 — 카드 한 장이 떨어져 뒤집히면 「2」, 그 카드가 터지며 다섯 상대가 나오고 로고가 꽂힌다(처음 한 번 · 설정에서 다시 보기)
+// 시즌 2 오프닝 — 카드 한 장이 떨어져 뒤집히면 「2」, 그 카드가 터지며 상대들이 나오고 로고가 꽂힌다(처음 한 번 · 설정에서 다시 보기)
 import gsap from 'gsap';
 import { h } from './dom.js';
-import { img } from '../data/assets.js';
+import { cut } from '../data/assets.js';
 import { RIVALS } from '../data/characters.js';
 import { cardBack, cardFace } from './cards.js';
 import { play } from './sound.js';
@@ -10,9 +10,9 @@ import { settings } from './settings.js';
 export function playOpening({ host, themeVars = {} }) {
   return new Promise((resolve) => {
     const card = h('div.flip-card.op-card', {}, cardBack(), cardFace({ id: 'op-2', suit: 'spades', rank: '2' }));
-    const rivals = RIVALS.map((rival, index) => h(`img.op-rival.o${index}`, { src: img(rival.motif), alt: '' }));
+    const rivals = RIVALS.map((rival, index) => h(`img.op-rival.o${index}`, { src: cut(rival.portrait), alt: '' }));
     const logo = h('div.op-logo', {}, h('b.logo-word', {}, 'ONE!'), h('span.logo-season', {}, h('small', {}, 'SEASON'), h('b', {}, '2')));
-    const copy = h('p.op-copy', {}, '새 탁자, 다섯 상대, 시즌 패스가 열렸어요');
+    const copy = h('p.op-copy', {}, '장미 정원 맵과 명화 카드, 새 상대 셋이 기다려요');
     const start = h('button.btn.primary.op-start', { type: 'button' }, '시작하기');
     const skip = h('button.op-skip', { type: 'button' }, '건너뛰기');
     const overlay = h('div.opening', { 'aria-label': '시즌 2 시작' }, h('div.op-bg'), h('div.op-slab.a'), h('div.op-slab.b'), card, ...rivals, logo, copy, start, skip);
@@ -44,11 +44,11 @@ export function playOpening({ host, themeVars = {} }) {
     timeline.fromTo('.op-slab.b', { xPercent: 110 }, { xPercent: 0, duration: 0.4, ease: 'power3.out' }, 1.42);
     timeline.to(card, { scale: 0.2, opacity: 0, rotation: 30, duration: 0.3, ease: 'power3.in' }, 1.95);
     rivals.forEach((rival, index) => {
-      const angle = -150 + index * 30;
+      const angle = -160 + index * (140 / Math.max(1, rivals.length - 1));
       const rad = (angle * Math.PI) / 180;
       timeline.fromTo(rival, { x: 0, y: 0, opacity: 1, scale: 0.2, rotation: -30 }, {
         x: Math.cos(rad) * Math.min(440, innerWidth * 0.36), y: Math.sin(rad) * Math.min(220, innerHeight * 0.22) + 40,
-        scale: 1, rotation: [-8, 6, -3, 8, -5][index], duration: 0.6, ease: 'back.out(1.8)',
+        scale: 1, rotation: [-8, 6, -3, 8, -5, 4, -6, 7][index % 8], duration: 0.6, ease: 'back.out(1.8)',
       }, 2.05 + index * 0.06);
     });
     timeline.call(() => { play('chips', { volume: 0.7 }); }, null, 2.1);

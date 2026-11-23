@@ -19,6 +19,11 @@ export function installSuitSprite() {
   sprite.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
   sprite.innerHTML = Object.entries(PATHS).map(([suit, body]) => `<symbol id="suit-${suit}" viewBox="0 0 100 100">${body}</symbol>`).join('');
   document.body.prepend(sprite);
+  // 금박 · 은박 무늬를 오려 낼 모양(마스크)
+  ['hearts', 'diamonds', 'spades', 'clubs'].forEach((suit) => {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>${PATHS[suit]}</svg>`;
+    document.documentElement.style.setProperty(`--mask-${suit}`, `url("data:image/svg+xml,${encodeURIComponent(svg)}")`);
+  });
 }
 
 export function suitSvg(suit, className = 'suit') {

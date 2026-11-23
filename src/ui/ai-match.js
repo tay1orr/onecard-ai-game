@@ -4,20 +4,21 @@ import { OneCardGame } from '../core/game-engine.js';
 import { chooseAiMove } from '../core/ai-player.js';
 import { chooseAiReaction } from '../core/ai-reactions.js';
 import {
-  loadPlayerProfile, recordMatchResult, rememberAiOpponent, rewardForStars, selectAiOpponent, bonusMatchChance, playerStarsForPoints,
+  loadPlayerProfile, recordMatchResult, rememberAiOpponent, rewardForStars, selectAiOpponent, bonusMatchChance, playerStarsForPoints, claimRewardBox,
 } from '../core/rating.js';
+import { rollRewardBoxes } from '../core/reward-box.js';
 import { applyMissionEvents, missionEventsForCard, mergeUnlockedItems } from '../core/missions.js';
 import { bonusChanceWithEvent, isOpeningEventActive, OPENING_EVENT } from '../core/season.js';
 import { cosmeticById } from '../core/cosmetics.js';
 import { rivalByKey, pickLine } from '../data/characters.js';
-import { img } from '../data/assets.js';
-import { h, wait } from './dom.js';
+import { h, wait, formatNumber } from './dom.js';
+import { openRewardBoxes } from './reward-boxes.js';
 import { createTable } from './table.js';
 import { createFx } from './fx.js';
 import { createDirector } from './director.js';
 import { createRivalController } from './rival.js';
 import { mountToys } from './toys.js';
-import { applyEquipped, themeFor } from './theme-apply.js';
+import { applyEquipped, lookFor } from './look-apply.js';
 import { showVersus, runDice, closeVersus } from './intro.js';
 import { pickSuit, showHistory, playHint, blockedReason } from './play-ui.js';
 import { showResult } from './result.js';
@@ -25,7 +26,6 @@ import { confirmModal, toast } from './modal.js';
 import { stickerPicker, showSticker } from './reactions.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
-import { renderDecor } from './decor.js';
 
 const SPECIAL = new Set(['2', 'A', 'J', '7', 'JOKER']);
 
@@ -61,16 +61,15 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     onRules: () => openRules?.(),
     onEmoteToggle: () => toggleStickers(),
   });
-  const themes = applyEquipped(table.root, profile.equipped);
+  const looks = applyEquipped(table.root, profile.equipped, { propsEl: table.sceneProps });
   const fx = createFx({ layer: table.fxLayer, root: table.root, director });
   const rivalCtl = createRivalController(table, rival);
   host.replaceChildren(table.root);
-  renderDecor(table.decor, themes.table);
   const toys = mountToys({ layer: table.toysLayer, equipped: profile.equipped, fx });
 
   table.setMatch({ title: `${rival.title} ${rival.name}`, sub: `이기면 +${reward}점`, bonus });
-  table.setRival({ name: rival.name, starsCount: rival.stars, color: rival.color, motif: rival.motif, status: rival.blurb });
-  table.setMe({ name: '나', motif: avatar.motif, points: profile.points, starsCount: playerStarsForPoints(profile.points), color: '#f2b544' });
+  table.setRival({ name: rival.name, starsCount: rival.stars, color: rival.color, portrait: rival.portrait, status: rival.blurb });
+  table.setMe({ name: '나', portrait: avatar.portrait, points: profile.points, starsCount: playerStarsForPoints(profile.points), color: '#f2b544' });
   table.resetPile(null);
   table.setDeckCount(game.drawPile.length + 10);
   table.root.addEventListener('pointerdown', (event) => { if (event.target.closest('.fx-layer') && director.busy()) director.skip(); });
@@ -78,7 +77,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
   // ── 소개
   const overlay = await showVersus({
     host: table.root,
-    me: { motif: avatar.motif, points: profile.points, stars: playerStarsForPoints(profile.points), color: '#f2b544' },
+    me: { portrait: avatar.portrait, points: profile.points, stars: playerStarsForPoints(profile.points), color: '#f2b544' },
     rival, reward, bonus, eventName: isOpeningEventActive() ? `${OPENING_EVENT.name} 중, 경험치 2배` : '',
   });
   const first = await runDice({ overlay, rival });
@@ -199,8 +198,8 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     const card = result.card;
     sync();
     const at = table.rect.pile();
-    if (mine) fx.burst(themes.effect, at, { count: SPECIAL.has(card.rank) ? 7 : 4 });
-    else fx.burst(themeFor('effect-classic'), at, { count: 3, sizeScale: 0.7 });
+    if (mine) fx.burst(looks.effect, at, { count: SPECIAL.has(card.rank) ? null : Math.max(1, Math.ceil(looks.effect.count / 2)) });
+    else fx.burst(lookFor('effect-classic'), at, { count: 2, sizeScale: 0.7 });
     if (card.rank === 'JOKER') {
       await director.run(() => fx.jokerTime({ at, owner: mine ? 'me' : 'rival', card }));
       if (mine) rivalCtl.react('shock', 'joker'); else rivalCtl.react('smug', 'attack');
@@ -240,7 +239,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     showSticker(table.meBubble, key);
     missions([{ id: `${matchId}:emote:${key}:${Date.now()}`, type: 'emote' }]);
     const reply = chooseAiReaction({ type: 'player-emote', emote: key }, rival.key);
-    if (reply) setTimeout(() => { if (!ended) { showSticker(table.rivalBubble, reply); table.swapAnimated(table.rivalImg, rival.motif, 2000); } }, 700 + Math.random() * 500);
+    if (reply) setTimeout(() => { if (!ended) { showSticker(table.rivalBubble, reply); table.nudge(table.rivalImg, 0.8); } }, 700 + Math.random() * 500);
   }
 
   // ── 끝
@@ -264,12 +263,18 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     const profileNow = loadPlayerProfile();
     rivalCtl.react(won ? 'sad' : 'party', won ? 'lose' : 'win');
     const scene = won
-      ? fx.victory({ theme: themes.victory, avatarEl: table.meImg, title: '승리', sub: `${rival.name}를 이겼어요` })
+      ? fx.victory({ look: looks.victory, avatarEl: table.meImg, title: '승리', sub: `${rival.name}를 이겼어요` })
       : fx.defeat({ rival, portrait: table.rivalPortrait });
     await scene.timeline;
-    const unlocked = mergeUnlockedItems(rating.unlockedItems || [], missionUnlocks);
+    // 보상 상자 — 내용은 지금 정해 두고, 고른 하나만 받는다(같은 판은 한 번만)
+    const boxes = rollRewardBoxes({ won, stars: rival.stars, bonus, owned: loadPlayerProfile().boxItems });
+    const pickedBox = await openRewardBoxes({ host: table.root, boxes, won });
+    const claim = claimRewardBox({ matchId, box: pickedBox });
+    const profileAfter = loadPlayerProfile();
+    const boxLine = claim.duplicate ? null : h('p.res-box', {}, claim.item ? `보상 상자에서 ${claim.item.name}` : `보상 상자 +${formatNumber(claim.delta)}점`);
+    const unlocked = mergeUnlockedItems([...(rating.unlockedItems || []), ...(claim.unlockedItems || [])], missionUnlocks);
     showResult({
-      host: table.root, won, delta: rating.delta, bonus, profile: profileNow,
+      host: table.root, won, delta: rating.delta, bonus, profile: profileAfter, extra: boxLine,
       xpGained: profileNow.seasonXp - xpBefore, xpBefore, unlocked, missions: missionDone, missionPoints,
       stats: { time: Date.now() - startedAt, moves },
       subtitle: won ? `${rival.title} ${rival.name}를 이겼어요` : pickLine(rival, 'win'),

@@ -1,9 +1,9 @@
-// 연출 — 기울어진 띠(방송 그래픽) · 충격파 · 화면 흔들림 · 큰 3D 소품.
+// 연출 — 기울어진 띠(방송 그래픽) · 충격파 · 화면 흔들림 · 실물 누끼와 사진.
 // 빛 번짐 대신 무광 그림자 · 비대칭 기울기 · 조금씩 다른 간격으로(AI 티 피하기).
 import gsap from 'gsap';
 import { Physics2DPlugin } from 'gsap/Physics2DPlugin';
 import { h } from './dom.js';
-import { anim, artUrl, img, ANIMATED } from '../data/assets.js';
+import { cut, paint, photo, scene } from '../data/assets.js';
 import { cardFace } from './cards.js';
 import { SUIT_NAMES, RED_SUITS, suitSvg } from './suits.js';
 import { play } from './sound.js';
@@ -22,12 +22,14 @@ export function createFx({ layer, root, director }) {
     return { x: point.x - rect.left, y: point.y - rect.top };
   }
 
-  function sprite(motif, size, at, { animated = false } = {}) {
-    const el = h('img.fx-sprite', { src: animated && ANIMATED.has(motif) ? anim(motif) : (artUrl(motif) || img(motif)), alt: '', draggable: 'false' });
+  // 실물 누끼 하나를 연출 층에 — blend 로 사진(불 · 번개 · 불꽃)을 밝게 섞는다
+  function sprite(key, size, at, { blend = 'normal' } = {}) {
+    const el = h('img.fx-sprite', { src: cut(key), alt: '', draggable: 'false', decoding: 'async' });
     el.style.width = `${size}px`;
     el.style.height = `${size}px`;
     el.style.left = `${at.x - size / 2}px`;
     el.style.top = `${at.y - size / 2}px`;
+    if (blend && blend !== 'normal') el.style.mixBlendMode = blend;
     layer.append(el);
     return el;
   }
@@ -88,108 +90,107 @@ export function createFx({ layer, root, director }) {
     return timeline;
   }
 
-  // 테마 소품 터뜨리기 — 적게 · 크게(작은 조각이 떼로 퍼지지 않게)
-  function burst(theme, at, { count = 6, sizeScale = 1 } = {}) {
-    if (!theme) return null;
-    const physics = theme.physics;
-    if (physics === 'aurora') return aurora(theme, at);
-    if (physics === 'spotlight') return spotlight(theme, at);
-    if (physics === 'thunder') return thunder(theme, at);
-    if (physics === 'pixel') pixels(theme, at);
+  // ── 카드 효과(꾸미기) — 실물 몇 개를 크게. 작은 조각이 떼로 퍼지지 않게 개수는 적게
+  function burst(effect, at, { count = null, sizeScale = 1 } = {}) {
+    if (!effect) return null;
     const point = local(at);
-    const motifs = theme.burst || [];
-    const total = reduced() ? Math.min(2, count) : count;
+    const motion = effect.motion;
     const timeline = gsap.timeline();
+    if (effect.band) timeline.add(band(effect.band, at), 0);
+    if (motion === 'strike') return timeline.add(strike(effect, at), 0);
+    const total = reduced() ? Math.min(1, effect.count) : Math.max(0, count ?? effect.count);
+    const [min, max] = effect.size || [70, 110];
     for (let index = 0; index < total; index += 1) {
-      const size = rand(52, 92) * sizeScale;
-      const el = sprite(motifs[index % motifs.length], size, point);
-      const delay = index * rand(0.02, 0.05);
-      if (physics === 'float') {
-        timeline.fromTo(el, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.22, ease: 'back.out(2)' }, delay);
-        timeline.to(el, { y: -rand(160, 260), x: rand(-140, 140), rotation: rand(-25, 25), duration: rand(1.1, 1.5), ease: 'sine.out' }, delay);
-        timeline.to(el, { opacity: 0, duration: 0.4, onComplete: () => el.remove() }, delay + 0.9);
-      } else if (physics === 'pop') {
-        const angle = (index / total) * Math.PI * 2 + rand(-0.3, 0.3);
-        const distance = rand(90, 170);
-        timeline.fromTo(el, { scale: 0, rotation: rand(-40, 40) }, { scale: 1.15, x: Math.cos(angle) * distance, y: Math.sin(angle) * distance * 0.7, duration: 0.32, ease: 'back.out(2.4)' }, delay);
-        timeline.to(el, { scale: 0, rotation: rand(-90, 90), duration: 0.3, ease: 'power2.in', onComplete: () => el.remove() }, delay + 0.55);
-      } else if (physics === 'orbit' || physics === 'swirl') {
-        const startAngle = (index / total) * 360;
-        const radius = rand(110, 160);
-        const holder = { angle: startAngle, radius: 20 };
+      const key = effect.sprites[index % effect.sprites.length];
+      if (!key) continue;
+      const size = rand(min, max) * sizeScale;
+      const delay = index * rand(0.04, 0.08);
+      if (motion === 'drop') {
+        const el = sprite(key, size, point, { blend: effect.blend });
+        timeline.fromTo(el, { y: -Math.max(260, point.y + size), rotation: rand(-30, 30), scale: 1.25, opacity: 0 }, { y: 0, rotation: rand(-12, 12), scale: 1, opacity: 1, duration: 0.5, ease: 'bounce.out' }, delay);
+        timeline.to(el, { scale: 0.6, opacity: 0, y: 12, duration: 0.35, ease: 'power2.in', onComplete: () => el.remove() }, delay + 1.05);
+      } else if (motion === 'float') {
+        const el = sprite(key, size, point, { blend: effect.blend });
+        timeline.fromTo(el, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.25, ease: 'back.out(1.8)' }, delay);
+        timeline.to(el, { y: -rand(170, 260), x: rand(-150, 150), rotation: rand(-18, 18), duration: rand(1.3, 1.6), ease: 'sine.out' }, delay);
+        timeline.to(el, { opacity: 0, duration: 0.45, onComplete: () => el.remove() }, delay + 1.05);
+      } else if (motion === 'swirl' || motion === 'orbit') {
+        const el = sprite(key, size, point, { blend: effect.blend });
+        const startAngle = (index / Math.max(1, total)) * 360 + rand(-20, 20);
+        const holder = { angle: startAngle, radius: 24 };
+        const reach = motion === 'orbit' ? rand(120, 150) : rand(130, 190);
         const update = () => {
           const rad = (holder.angle * Math.PI) / 180;
-          gsap.set(el, { x: Math.cos(rad) * holder.radius, y: Math.sin(rad) * holder.radius * 0.62, rotation: holder.angle * 0.4 });
+          gsap.set(el, { x: Math.cos(rad) * holder.radius, y: Math.sin(rad) * holder.radius * 0.6, rotation: holder.angle * 0.5 });
         };
-        timeline.fromTo(el, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.2 }, delay);
-        timeline.to(holder, { angle: startAngle + (physics === 'swirl' ? 260 : 360), radius: physics === 'swirl' ? radius * 1.8 : radius, duration: 1.1, ease: 'power1.inOut', onUpdate: update }, delay);
-        timeline.to(el, { opacity: 0, duration: 0.3, onComplete: () => el.remove() }, delay + 0.9);
+        timeline.fromTo(el, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.22 }, delay);
+        timeline.to(holder, { angle: startAngle + (motion === 'orbit' ? 360 : 250), radius: reach, duration: motion === 'orbit' ? 1.4 : 1.15, ease: 'power1.inOut', onUpdate: update }, delay);
+        if (motion === 'swirl') timeline.to(el, { y: '+=90', duration: 0.6, ease: 'power1.in' }, delay + 1.05);
+        timeline.to(el, { opacity: 0, duration: 0.35, onComplete: () => el.remove() }, delay + (motion === 'orbit' ? 1.3 : 1.25));
+      } else if (motion === 'sweep-petals') {
+        const box = layer.getBoundingClientRect();
+        const el = sprite(key, size, { x: -60, y: point.y + rand(-140, 80) }, { blend: effect.blend });
+        timeline.fromTo(el, { x: 0, rotation: rand(-90, 90), opacity: 0 }, { x: box.width + 120, opacity: 1, rotation: `+=${rand(240, 420)}`, duration: rand(1.4, 1.9), ease: 'sine.inOut' }, delay * 1.6);
+        timeline.to(el, { y: `+=${rand(-70, 70)}`, duration: 0.45, yoyo: true, repeat: 3, ease: 'sine.inOut' }, delay * 1.6);
+        timeline.call(() => el.remove(), null, delay * 1.6 + 1.95);
       } else {
-        timeline.to(el, {
-          physics2D: { velocity: rand(520, 760), angle: rand(-155, -25), gravity: 1500 },
-          rotation: rand(-260, 260), duration: rand(0.9, 1.2), ease: 'none',
-        }, delay);
-        timeline.fromTo(el, { scale: 0.4 }, { scale: 1, duration: 0.18, ease: 'back.out(2)' }, delay);
-        timeline.to(el, { opacity: 0, duration: 0.25, onComplete: () => el.remove() }, delay + 0.78);
+        const el = sprite(key, size, point, { blend: effect.blend });
+        timeline.to(el, { physics2D: { velocity: rand(480, 700), angle: rand(-150, -30), gravity: 1500 }, rotation: rand(-200, 200), duration: rand(0.95, 1.2), ease: 'none' }, delay);
+        timeline.fromTo(el, { scale: 0.4 }, { scale: 1, duration: 0.2, ease: 'back.out(2)' }, delay);
+        timeline.to(el, { opacity: 0, duration: 0.25, onComplete: () => el.remove() }, delay + 0.85);
       }
     }
     return timeline;
   }
 
-  function pixels(theme, at) {
+  // 사진 한 줄기(오로라 · 무대 조명 · 불꽃)가 탁자를 가로질러 흐른다 — 사진을 밝게 섞어서
+  function band(key, at, { height = 300, duration = 1.2 } = {}) {
+    if (reduced()) return gsap.timeline();
     const point = local(at);
-    const colors = [theme.accent, theme.accent2, '#ffe66d', '#ffffff'];
-    for (let index = 0; index < (reduced() ? 4 : 14); index += 1) {
-      const el = h('i.fx-pixel');
-      const size = pick([10, 14, 18]);
-      Object.assign(el.style, { width: `${size}px`, height: `${size}px`, left: `${point.x}px`, top: `${point.y}px`, background: colors[index % colors.length] });
-      layer.append(el);
-      const angle = (index / 14) * Math.PI * 2;
-      gsap.to(el, { x: Math.cos(angle) * rand(80, 190), y: Math.sin(angle) * rand(60, 150), duration: 0.6, ease: 'steps(6)', onComplete: () => el.remove() });
-    }
+    const el = h('div.fx-band');
+    el.style.backgroundImage = `url("${scene(key)}")`;
+    el.style.top = `${point.y - height / 2}px`;
+    el.style.height = `${height}px`;
+    layer.append(el);
+    return gsap.timeline({ onComplete: () => el.remove() })
+      .fromTo(el, { opacity: 0, scaleY: 0.5 }, { opacity: 1, scaleY: 1, duration: 0.3, ease: 'power2.out' }, 0)
+      .fromTo(el, { backgroundPosition: '0% 50%' }, { backgroundPosition: '100% 50%', duration, ease: 'sine.inOut' }, 0)
+      .to(el, { opacity: 0, duration: 0.4 }, duration - 0.25);
   }
 
-  function aurora(theme, at) {
+  // 번개 — 진짜 번개 사진을 위에서 내리꽂고 화면을 하얗게
+  function strike(effect, at) {
     const point = local(at);
-    const svg = h('div.fx-aurora', { html: `<svg viewBox="0 0 600 240" preserveAspectRatio="none"><defs><linearGradient id="au1" x1="0" x2="1"><stop offset="0" stop-color="${theme.accent}" stop-opacity="0"/><stop offset=".5" stop-color="${theme.accent}"/><stop offset="1" stop-color="${theme.accent2}" stop-opacity="0"/></linearGradient></defs><path d="M0 150 C120 60 220 210 330 110 S520 60 600 120" fill="none" stroke="url(#au1)" stroke-width="22" stroke-linecap="round"/><path d="M0 180 C140 110 250 230 360 150 S500 110 600 160" fill="none" stroke="url(#au1)" stroke-width="12" stroke-linecap="round" opacity=".7"/></svg>` });
-    svg.style.left = `${point.x - 300}px`;
-    svg.style.top = `${point.y - 120}px`;
-    layer.append(svg);
-    const paths = svg.querySelectorAll('path');
-    paths.forEach((path) => { const length = path.getTotalLength(); path.style.strokeDasharray = length; path.style.strokeDashoffset = length; });
-    return gsap.timeline({ onComplete: () => svg.remove() })
-      .to(paths, { strokeDashoffset: 0, duration: 0.7, stagger: 0.1, ease: 'power2.out' })
-      .to(svg, { opacity: 0, y: -30, duration: 0.5 }, 0.75);
-  }
-
-  function spotlight(theme, at) {
-    const point = local(at);
-    const cone = h('div.fx-cone');
-    cone.style.left = `${point.x - 160}px`;
-    cone.style.top = `${point.y - 520}px`;
-    layer.append(cone);
-    const timeline = gsap.timeline({ onComplete: () => cone.remove() });
-    timeline.fromTo(cone, { opacity: 0, rotation: -24, transformOrigin: '50% 0%' }, { opacity: 1, rotation: 0, duration: 0.35, ease: 'power2.out' });
-    timeline.call(() => burst({ ...theme, physics: 'pop', burst: ['sparkles'] }, at, { count: 4, sizeScale: 0.8 }), null, 0.25);
-    timeline.to(cone, { opacity: 0, duration: 0.45 }, 0.8);
-    return timeline;
-  }
-
-  function thunder(theme, at) {
-    const point = local(at);
-    const bolt = h('div.fx-bolt', { html: '<svg viewBox="0 0 120 420"><path d="M70 0 L30 180 L72 176 L24 420 L102 150 L58 156 L94 0Z" fill="#ffe14d" stroke="#1b1d24" stroke-width="6" stroke-linejoin="round"/></svg>' });
-    bolt.style.left = `${point.x - 60}px`;
-    bolt.style.top = `${point.y - 420}px`;
-    layer.append(bolt);
-    flash('#fff6c4', 0.3);
+    const size = (effect.size || [200, 240])[1];
+    const el = sprite(effect.sprites[0] || 'lightning', size, { x: point.x, y: point.y - size * 0.45 }, { blend: 'screen' });
+    flash('#f4f1ff', 0.34);
     shake(0.7);
     play('glitch', { volume: 0.6 });
-    const timeline = gsap.timeline({ onComplete: () => bolt.remove() });
-    timeline.fromTo(bolt, { scaleY: 0, transformOrigin: '50% 0%' }, { scaleY: 1, duration: 0.12, ease: 'power4.in' });
-    timeline.to(bolt, { opacity: 0, duration: 0.3, delay: 0.18 });
-    const spark = sprite('high-voltage', 110, point, { animated: true });
-    timeline.fromTo(spark, { scale: 0 }, { scale: 1.2, duration: 0.25, ease: 'back.out(2)' }, 0.1);
-    timeline.to(spark, { opacity: 0, duration: 0.3, onComplete: () => spark.remove() }, 0.7);
+    return gsap.timeline({ onComplete: () => el.remove() })
+      .fromTo(el, { scaleY: 0, transformOrigin: '50% 0%', opacity: 1 }, { scaleY: 1, duration: 0.1, ease: 'power4.in' })
+      .to(el, { opacity: 0.2, duration: 0.05, yoyo: true, repeat: 3 }, 0.12)
+      .to(el, { opacity: 0, duration: 0.3 }, 0.5);
+  }
+
+  // 장난감을 누를 때 — 꽃잎 · 물보라 두세 개
+  function toyBurst(toy, at) {
+    if (reduced()) return null;
+    const point = local(at);
+    const timeline = gsap.timeline();
+    const keys = toy.burst || [];
+    const total = toy.motion === 'fountain' ? 4 : 2;
+    for (let index = 0; index < total; index += 1) {
+      const key = keys[index % keys.length];
+      const big = key === 'water-splash';
+      const el = sprite(key, big ? rand(110, 150) : rand(34, 52), point, { blend: big ? 'screen' : 'normal' });
+      if (big) {
+        timeline.fromTo(el, { scale: 0.2, y: 20, opacity: 0.95 }, { scale: 1.2, y: -50, duration: 0.5, ease: 'power2.out' }, index * 0.12);
+        timeline.to(el, { opacity: 0, duration: 0.35, onComplete: () => el.remove() }, index * 0.12 + 0.45);
+      } else {
+        timeline.fromTo(el, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, x: rand(-70, 70), y: -rand(50, 90), rotation: rand(-120, 120), duration: 0.45, ease: 'power2.out' }, index * 0.1);
+        timeline.to(el, { y: '+=110', rotation: '+=90', opacity: 0, duration: 0.8, ease: 'power1.in', onComplete: () => el.remove() }, index * 0.1 + 0.45);
+      }
+    }
     return timeline;
   }
 
@@ -202,8 +203,9 @@ export function createFx({ layer, root, director }) {
     const timeline = director.timeline();
     timeline.add(slab({ text: `+${added}`, sub: total > added ? `쌓인 공격 ${total}장` : '공격', color: '#e8483b', ink: '#fff', at, size: 'm', tilt: owner === 'me' ? -9 : 7, hold: 0.35, from: owner === 'me' ? 'left' : 'right' }), 0);
     if (total >= 5 && !reduced()) {
-      const fire = sprite('fire', 120, local({ x: at.x, y: at.y + 20 }), { animated: true });
-      timeline.fromTo(fire, { scale: 0, opacity: 1 }, { scale: 1.3, duration: 0.3, ease: 'back.out(2)' }, 0.05);
+      const fire = sprite('fire', 150, local({ x: at.x, y: at.y - 10 }), { blend: 'screen' });
+      timeline.fromTo(fire, { scaleY: 0.2, scaleX: 0.6, opacity: 1, transformOrigin: '50% 100%' }, { scaleY: 1.25, scaleX: 1, duration: 0.3, ease: 'back.out(2)' }, 0.05);
+      timeline.to(fire, { scaleY: 1.05, duration: 0.12, yoyo: true, repeat: 3 }, 0.35);
       timeline.to(fire, { opacity: 0, duration: 0.35, onComplete: () => fire.remove() }, 0.85);
     }
     if (joker) timeline.duration();
@@ -310,9 +312,8 @@ export function createFx({ layer, root, director }) {
     const timeline = director.timeline();
     timeline.add(slab({ text: `+${count}장`, sub: mine ? '공격을 받았어요' : '상대가 공격을 받았어요', color: '#1b1d24', ink: '#fff', size: 'm', tilt: mine ? 6 : -6, hold: 0.45, at }), 0);
     if (!reduced()) {
-      const dizzy = sprite('dizzy', 88, local({ x: at.x + 90, y: at.y - 40 }));
-      timeline.fromTo(dizzy, { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.3, ease: 'back.out(2)' }, 0.05);
-      timeline.to(dizzy, { opacity: 0, y: -30, duration: 0.35, onComplete: () => dizzy.remove() }, 0.8);
+      const puff = sprite('smoke', 160, local({ x: at.x, y: at.y }), { blend: 'screen' });
+      timeline.fromTo(puff, { scale: 0.3, opacity: 0.85 }, { scale: 1.3, opacity: 0, y: -40, duration: 0.9, ease: 'power2.out', onComplete: () => puff.remove() }, 0.02);
     }
     return timeline;
   }
@@ -323,123 +324,146 @@ export function createFx({ layer, root, director }) {
     const timeline = director.timeline();
     timeline.add(slab({ text: '보너스판', sub: '이기면 점수가 2배예요', color: '#f2b544', ink: '#121a2b', size: 'xl', tilt: -6, hold: 0.9 }), 0);
     if (!reduced()) {
-      [0.18, 0.82].forEach((ratio, index) => {
-        const popper = sprite('party-popper', 130, { x: box.width * ratio, y: box.height * 0.62 }, { animated: true });
-        timeline.fromTo(popper, { scale: 0, rotation: index ? 20 : -20 }, { scale: 1, duration: 0.35, ease: 'back.out(2)' }, 0.1);
-        timeline.to(popper, { opacity: 0, duration: 0.3, onComplete: () => popper.remove() }, 1.4);
+      [0.16, 0.84].forEach((ratio, index) => {
+        const popper = sprite('gift-box', 140, { x: box.width * ratio, y: box.height * 0.64 });
+        timeline.fromTo(popper, { scale: 0, rotation: index ? 35 : -35 }, { scale: 1, rotation: index ? 18 : -18, duration: 0.35, ease: 'back.out(2)' }, 0.1);
+        const confetti = sprite('confetti', 170, { x: box.width * ratio + (index ? -60 : 60), y: box.height * 0.5 });
+        timeline.fromTo(confetti, { scale: 0.2, opacity: 0 }, { scale: 1.1, opacity: 1, y: -60, duration: 0.45, ease: 'power2.out' }, 0.25);
+        timeline.to([popper, confetti], { opacity: 0, duration: 0.3, onComplete: () => { popper.remove(); confetti.remove(); } }, 1.4);
       });
     }
     return timeline;
   }
 
   // ── 승리 · 패배
-  function victory({ theme, avatarEl = null, title = '승리', sub = '' }) {
-    play('win');
-    const box = layer.getBoundingClientRect();
-    const center = { x: box.width / 2, y: box.height * 0.38 };
-    const scene = h('div.fx-victory', { vars: { '--v-accent': theme.accent, '--v-accent2': theme.accent2 || '#ffffff' } },
-      h('i.v-dim'), h('i.v-band.band-a'), h('i.v-band.band-b'), h('i.v-band.band-c'));
-    layer.append(scene);
-    const timeline = director.timeline();
-    timeline.fromTo(scene.querySelector('.v-dim'), { opacity: 0 }, { opacity: 0.72, duration: 0.3 }, 0);
-    scene.querySelectorAll('.v-band').forEach((band, index) => {
-      timeline.fromTo(band, { xPercent: index % 2 ? 120 : -120 }, { xPercent: 0, duration: 0.42, ease: 'power3.out' }, 0.05 + index * 0.07);
-    });
-    let rays = null;
-    if (['sunburst', 'champion', 'celestial'].includes(theme.victory) && !reduced()) {
-      rays = h('div.v-rays');
-      scene.append(rays);
-      gsap.set(rays, { left: center.x, top: center.y, xPercent: -50, yPercent: -50 });
-      timeline.fromTo(rays, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.6 }, 0.2);
-      gsap.to(rays, { rotation: 360, duration: 14, ease: 'none', repeat: -1 });
-    }
-    const hero = sprite(theme.hero || 'trophy', Math.min(260, box.width * 0.42), center, { animated: true });
-    hero.classList.add('v-hero');
-    timeline.fromTo(hero, { y: box.height * 0.6, scale: 0.4, rotation: -14 }, { y: 0, scale: 1, rotation: 0, duration: 0.7, ease: 'back.out(1.5)' }, 0.25);
-    const sweep = h('i.v-sweep');
-    scene.append(sweep);
-    gsap.set(sweep, { left: center.x, top: center.y, xPercent: -50, yPercent: -50 });
-    timeline.fromTo(sweep, { x: -220, opacity: 0 }, { x: 220, opacity: 0.5, duration: 0.6, ease: 'power2.inOut' }, 0.95);
-    timeline.to(sweep, { opacity: 0, duration: 0.2 }, 1.5);
-    timeline.call(() => { shake(1); shockwave({ x: box.left + center.x, y: box.top + center.y }, theme.accent, { size: 380, rings: 2 }); }, null, 0.85);
-
-    const motifs = theme.burst?.length ? theme.burst : ['star'];
-    const style = reduced() ? 'none' : theme.victory;
-    if (style === 'cannons' || style === 'classic' || style === 'champion') {
-      [[0.04, -60], [0.96, -120]].forEach(([ratio, angle], side) => {
-        for (let index = 0; index < 9; index += 1) {
-          const el = sprite(pick(style === 'champion' ? ['trophy', 'medal', 'sparkles'] : motifs), rand(56, 96), { x: box.width * ratio, y: box.height * 0.95 });
-          timeline.to(el, { physics2D: { velocity: rand(900, 1250), angle: angle + rand(-14, 14), gravity: 1300 }, rotation: rand(-360, 360), duration: 1.9, ease: 'none' }, 0.5 + index * 0.06 + side * 0.04);
-          timeline.to(el, { opacity: 0, duration: 0.3, onComplete: () => el.remove() }, 2.15 + index * 0.05);
-        }
-      });
-    } else if (style === 'fireworks' || style === 'laser') {
-      for (let index = 0; index < 5; index += 1) {
-        const at = { x: box.width * rand(0.12, 0.88), y: box.height * rand(0.12, 0.5) };
-        const el = sprite(style === 'laser' ? pick(motifs) : pick(['fireworks', 'sparkler']), rand(120, 180), at);
-        timeline.fromTo(el, { scale: 0, rotation: rand(-30, 30) }, { scale: 1.2, duration: 0.35, ease: 'back.out(2)' }, 0.45 + index * 0.22);
-        timeline.call(() => play('pluck', { rate: rand(1.4, 2), volume: 0.4 }), null, 0.45 + index * 0.22);
-        timeline.to(el, { scale: 0.2, opacity: 0, duration: 0.4, onComplete: () => el.remove() }, 0.95 + index * 0.22);
-      }
-      if (style === 'laser') {
-        [0, 1, 2, 3].forEach((index) => {
-          const beam = h('i.v-beam');
-          scene.append(beam);
-          gsap.set(beam, { left: `${15 + index * 23}%`, top: '-10%', rotation: index % 2 ? 24 : -24, transformOrigin: '50% 0%' });
-          timeline.fromTo(beam, { scaleY: 0 }, { scaleY: 1, duration: 0.35, ease: 'power3.out' }, 0.3 + index * 0.08);
-          timeline.to(beam, { rotation: index % 2 ? -24 : 24, duration: 1.2, ease: 'sine.inOut' }, 0.6);
-        });
-      }
-    } else if (style === 'rain' || style === 'arcade' || style === 'bloom' || style === 'coronation') {
-      for (let index = 0; index < 14; index += 1) {
-        const el = sprite(pick(motifs), rand(52, 92), { x: box.width * rand(0.04, 0.96), y: -80 });
-        timeline.to(el, { y: box.height + 160, rotation: rand(-220, 220), x: `+=${rand(-80, 80)}`, duration: rand(1.6, 2.3), ease: 'power1.in' }, 0.4 + index * 0.07);
-        timeline.call(() => el.remove(), null, 2.8);
-      }
-      if (style === 'coronation' && avatarEl) {
-        const rect = avatarEl.getBoundingClientRect();
-        const crown = sprite('crown', 110, local({ x: rect.left + rect.width / 2, y: rect.top - 260 }));
-        timeline.to(crown, { y: 230, duration: 0.7, ease: 'bounce.out' }, 0.9);
-        timeline.to(crown, { opacity: 0, duration: 0.3, onComplete: () => crown.remove() }, 2.5);
-      }
-    } else if (style === 'celestial' || style === 'sunburst' || style === 'rise') {
-      for (let index = 0; index < 12; index += 1) {
-        const angle = (index / 12) * Math.PI * 2;
-        const el = sprite(pick(motifs), rand(48, 80), center);
-        timeline.fromTo(el, { scale: 0 }, { scale: 1, x: Math.cos(angle) * rand(220, 360), y: Math.sin(angle) * rand(150, 260) + (style === 'rise' ? -120 : 0), rotation: rand(-120, 120), duration: 0.9, ease: 'power3.out' }, 0.75 + index * 0.02);
-        timeline.to(el, { opacity: 0, duration: 0.4, onComplete: () => el.remove() }, 1.9 + index * 0.02);
-      }
-    }
-
-    const word = h('div.v-word', {}, h('b', {}, title), sub ? h('small', {}, sub) : null);
-    scene.append(word);
-    gsap.set(word, { left: box.width / 2, top: box.height * 0.66, xPercent: -50, yPercent: -50 });
-    timeline.fromTo(word, { scale: 2.2, opacity: 0, rotation: -8 }, { scale: 1, opacity: 1, rotation: -4, duration: 0.42, ease: 'back.out(2.4)' }, 0.6);
-    timeline.call(() => play('stack', { volume: 0.7 }), null, 0.62);
-    timeline.to({}, { duration: 0.6 }, '>');
-    timeline.eventCallback('onComplete', () => {});
-    return { timeline, scene, finish: () => { gsap.killTweensOf(rays); scene.remove(); hero.remove(); } };
+  function backdropUrl(backdrop) {
+    if (!backdrop) return null;
+    if (backdrop.scene) return scene(backdrop.scene);
+    if (backdrop.paint) return paint(backdrop.paint);
+    if (backdrop.photo) return photo(backdrop.photo, 'wide');
+    return null;
   }
 
+  // 화면 전체 배경(사진 · 시즌 1 그림)이 천천히 다가오고, 가운데 실물이 솟거나 피어난다
+  function victory({ look, avatarEl = null, title = '승리', sub = '' }) {
+    play('win');
+    const box = layer.getBoundingClientRect();
+    const center = { x: box.width / 2, y: box.height * 0.4 };
+    const stage = h('div.fx-victory', { vars: { '--v-accent': look.accent } }, h('i.v-dim'));
+    layer.append(stage);
+    const timeline = director.timeline();
+    const extras = [];
+    const bgUrl = backdropUrl(look.backdrop);
+    let bg = null;
+    if (bgUrl) {
+      bg = h('div.v-backdrop');
+      bg.style.backgroundImage = `url("${bgUrl}")`;
+      stage.append(bg, h('i.v-veil'));
+      timeline.fromTo(bg, { opacity: 0, scale: 1.14 }, { opacity: 1, scale: 1.02, duration: reduced() ? 0.2 : 1.1, ease: 'power2.out' }, 0.05);
+      if (look.zoom && !reduced()) gsap.to(bg, { scale: 1.12, duration: 9, ease: 'none', delay: 1.1 });
+    }
+    timeline.fromTo(stage.querySelector('.v-dim'), { opacity: 0 }, { opacity: bg ? 0.25 : 0.74, duration: 0.3 }, 0);
+
+    const heroPx = Math.min(340, box.width * 0.42, box.height * 0.44) * (look.heroSize || 1);
+    const hero = sprite(look.hero || 'trophy', heroPx, center);
+    hero.classList.add('v-hero');
+    const motion = reduced() ? 'rise' : look.motion;
+    if (motion === 'bloom') {
+      timeline.fromTo(hero, { scale: 0.08, rotation: -28, opacity: 0 }, { scale: 1, rotation: 0, opacity: 1, duration: 1.1, ease: 'elastic.out(1, 0.55)' }, 0.35);
+    } else if (motion === 'drop') {
+      timeline.fromTo(hero, { y: -box.height * 0.7, rotation: 12 }, { y: 0, rotation: 0, duration: 0.8, ease: 'bounce.out' }, 0.3);
+    } else if (motion === 'crown') {
+      const rect = avatarEl?.getBoundingClientRect();
+      const target = rect ? local({ x: rect.left + rect.width / 2, y: rect.top - rect.height * 0.12 }) : center;
+      gsap.set(hero, { width: heroPx * 0.62, height: heroPx * 0.62, left: target.x - heroPx * 0.31, top: target.y - heroPx * 0.31 });
+      timeline.fromTo(hero, { y: -box.height * 0.6, rotation: -16, scale: 1.6 }, { y: 0, rotation: 0, scale: 1, duration: 0.9, ease: 'power3.out' }, 0.35);
+      timeline.to(hero, { y: 6, duration: 0.12, yoyo: true, repeat: 1 }, 1.25);
+    } else {
+      timeline.fromTo(hero, { y: box.height * 0.62, scale: 0.5, rotation: -10 }, { y: 0, scale: 1, rotation: 0, duration: 0.8, ease: 'back.out(1.4)' }, 0.3);
+    }
+    const sweep = h('i.v-sweep');
+    stage.append(sweep);
+    gsap.set(sweep, { left: center.x, top: center.y, xPercent: -50, yPercent: -50 });
+    timeline.fromTo(sweep, { x: -240, opacity: 0 }, { x: 240, opacity: 0.45, duration: 0.6, ease: 'power2.inOut' }, 1.05);
+    timeline.to(sweep, { opacity: 0, duration: 0.2 }, 1.6);
+    timeline.call(() => shake(0.8), null, 0.95);
+
+    if (motion === 'fireworks') {
+      (look.fireworks || ['fireworks-1']).forEach((key, index) => {
+        const at = { x: box.width * (index % 2 ? rand(0.66, 0.84) : rand(0.16, 0.34)), y: box.height * rand(0.16, 0.36) };
+        const burstEl = h('img.v-firework', { src: scene(key), alt: '' });
+        const size = Math.min(520, box.width * 0.42);
+        Object.assign(burstEl.style, { width: `${size}px`, height: `${size * 0.6}px`, left: `${at.x - size / 2}px`, top: `${at.y - size * 0.3}px` });
+        stage.append(burstEl);
+        extras.push(burstEl);
+        const startAt = 0.4 + index * 0.45;
+        timeline.fromTo(burstEl, { scale: 0.25, opacity: 0 }, { scale: 1.15, opacity: 1, duration: 0.5, ease: 'power3.out' }, startAt);
+        timeline.call(() => play('pluck', { rate: rand(1.4, 2), volume: 0.4 }), null, startAt);
+        timeline.to(burstEl, { opacity: 0, scale: 1.3, duration: 0.7, ease: 'power1.in' }, startAt + 0.7);
+      });
+    } else if (motion === 'cannons') {
+      [[0.06, -62], [0.94, -118]].forEach(([ratio, angle], side) => {
+        for (let index = 0; index < 3; index += 1) {
+          const key = (look.sprites || [])[index % Math.max(1, look.sprites.length)] || 'confetti';
+          const el = sprite(key, rand(90, 130), { x: box.width * ratio, y: box.height * 0.95 });
+          extras.push(el);
+          timeline.to(el, { physics2D: { velocity: rand(950, 1200), angle: angle + rand(-10, 10), gravity: 1250 }, rotation: rand(-300, 300), duration: 1.9, ease: 'none' }, 0.5 + index * 0.12 + side * 0.06);
+          timeline.to(el, { opacity: 0, duration: 0.3 }, 2.2 + index * 0.08);
+        }
+      });
+    } else if (motion === 'rain') {
+      for (let index = 0; index < 6; index += 1) {
+        const key = (look.sprites || [])[index % Math.max(1, look.sprites.length)] || look.hero;
+        const depth = rand(0.7, 1.25);
+        const el = sprite(key, 110 * depth, { x: box.width * rand(0.06, 0.94), y: -120 });
+        el.style.zIndex = depth > 1 ? 4 : 2;
+        extras.push(el);
+        timeline.to(el, { y: box.height + 240, rotation: rand(-160, 160), x: `+=${rand(-90, 90)}`, duration: rand(2, 2.6) / depth, ease: 'power1.in' }, 0.4 + index * 0.16);
+      }
+    } else if (motion === 'curtain' || motion === 'bloom') {
+      const count = motion === 'curtain' ? 3 : 4;
+      for (let index = 0; index < count; index += 1) {
+        const key = (look.sprites || [])[index % Math.max(1, look.sprites.length)];
+        if (!key) break;
+        const fromLeft = index % 2 === 0;
+        const el = sprite(key, rand(70, 110), { x: fromLeft ? -80 : box.width + 80, y: box.height * 0.9 });
+        extras.push(el);
+        const land = { x: (fromLeft ? 1 : -1) * rand(box.width * 0.3, box.width * 0.46), y: -rand(20, box.height * 0.12) };
+        timeline.to(el, { x: land.x, y: land.y, rotation: rand(-220, 220), duration: 0.9, ease: 'power2.out' }, 0.7 + index * 0.18);
+        timeline.to(el, { y: land.y + 26, duration: 0.25, ease: 'bounce.out' }, 1.6 + index * 0.18);
+      }
+    }
+
+    const word = h('div.v-word', {}, h('b', {}, look.word || title), sub ? h('small', {}, sub) : null);
+    stage.append(word);
+    gsap.set(word, { left: box.width / 2, top: box.height * 0.7, xPercent: -50, yPercent: -50 });
+    timeline.fromTo(word, { scale: 2.2, opacity: 0, rotation: -8 }, { scale: 1, opacity: 1, rotation: -4, duration: 0.42, ease: 'back.out(2.4)' }, 0.7);
+    timeline.call(() => play('stack', { volume: 0.7 }), null, 0.72);
+    timeline.to({}, { duration: 0.8 }, '>');
+    return { timeline, scene: stage, finish: () => { if (bg) gsap.killTweensOf(bg); stage.remove(); hero.remove(); extras.forEach((el) => el.remove()); } };
+  }
+
+  // 패배 — 상대 초상이 가운데로 다가오고, 이긴 상대 이름
   function defeat({ rival, portrait }) {
     play('lose');
     const box = layer.getBoundingClientRect();
-    const scene = h('div.fx-defeat', {}, h('i.d-dim'));
-    layer.append(scene);
+    const stage = h('div.fx-defeat', {}, h('i.d-dim'));
+    layer.append(stage);
     const timeline = director.timeline();
-    timeline.fromTo(scene.querySelector('.d-dim'), { opacity: 0 }, { opacity: 0.66, duration: 0.4 }, 0);
-    const face = sprite(rival.motif, Math.min(220, box.width * 0.4), { x: box.width / 2, y: box.height * 0.4 }, { animated: true });
-    timeline.fromTo(face, { scale: 0.3, y: 80, opacity: 0 }, { scale: 1, y: 0, opacity: 1, duration: 0.6, ease: 'back.out(1.8)' }, 0.15);
-    const smug = sprite(rival.faces?.smug || 'smirking', 90, { x: box.width / 2 + 110, y: box.height * 0.3 });
-    timeline.fromTo(smug, { scale: 0, rotation: -40 }, { scale: 1, rotation: 0, duration: 0.35, ease: 'back.out(2)' }, 0.55);
+    timeline.fromTo(stage.querySelector('.d-dim'), { opacity: 0 }, { opacity: 0.7, duration: 0.4 }, 0);
+    const size = Math.min(300, box.width * 0.46, box.height * 0.42);
+    const face = sprite(rival.portrait, size, { x: box.width / 2, y: box.height * 0.4 });
+    face.classList.add('d-portrait');
+    timeline.fromTo(face, { scale: 0.5, y: 70, opacity: 0 }, { scale: 1, y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, 0.15);
+    timeline.to(face, { rotation: -3, duration: 0.18, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 0.85);
     if (portrait) timeline.to(portrait, { y: -8, duration: 0.2, yoyo: true, repeat: 3 }, 0.3);
     const word = h('div.v-word.is-defeat', {}, h('b', {}, '패배'), h('small', {}, `${rival.name}의 승리`));
-    scene.append(word);
-    gsap.set(word, { left: box.width / 2, top: box.height * 0.66, xPercent: -50, yPercent: -50 });
+    stage.append(word);
+    gsap.set(word, { left: box.width / 2, top: box.height * 0.7, xPercent: -50, yPercent: -50 });
     timeline.fromTo(word, { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' }, 0.5);
     timeline.to({}, { duration: 0.5 }, '>');
-    return { timeline, scene, finish: () => { scene.remove(); face.remove(); smug.remove(); } };
+    return { timeline, scene: stage, finish: () => { stage.remove(); face.remove(); } };
   }
 
-  return { burst, attack, jokerTime, suitChange, skip, oneCard, penalty, bonusStart, victory, defeat, slab, shockwave, shake, flash, sprite, local };
+  return { burst, band, toyBurst, attack, jokerTime, suitChange, skip, oneCard, penalty, bonusStart, victory, defeat, slab, shockwave, shake, flash, sprite, local };
 }

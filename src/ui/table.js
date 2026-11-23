@@ -4,7 +4,7 @@ import { h, stars as starText, formatNumber } from './dom.js';
 import { cardBack, cardFace, cardLabel } from './cards.js';
 import { fanLayout, sortHand } from '../core/hand-layout.js';
 import { SUIT_NAMES, RED_SUITS, suitSvg } from './suits.js';
-import { anim, img, ANIMATED } from '../data/assets.js';
+import { cut } from '../data/assets.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
 
@@ -41,13 +41,12 @@ export function createTable({ mode = 'ai', onPlay, onDraw, onPileTap, onExit, on
 
   // ── 상대
   const rivalImg = h('img.portrait-img', { alt: '', draggable: 'false' });
-  const rivalFace = h('img.face-badge', { alt: '', hidden: true });
   const rivalBubble = h('div.bubble', { role: 'status', 'aria-live': 'polite' });
   const rivalName = h('strong.who-name', {}, '');
   const rivalStars = h('span.who-stars', {}, '');
   const rivalCount = h('b.count-chip', {}, '5');
   const rivalStatus = h('span.who-status', {}, '');
-  const rivalPortrait = h('div.portrait', {}, h('div.portrait-disc'), rivalImg, rivalFace);
+  const rivalPortrait = h('div.portrait', {}, h('div.portrait-disc'), rivalImg);
   const rivalHand = h('div.rival-hand', { 'aria-label': '상대 카드' });
   const rivalZone = h('section.zone.rival-zone', { 'aria-label': '상대' },
     h('div.who', {}, rivalPortrait, h('div.who-text', {}, h('div.who-line', {}, rivalName, rivalStars), rivalStatus), h('div.who-count', {}, rivalCount, h('small', {}, '장'))),
@@ -65,11 +64,12 @@ export function createTable({ mode = 'ai', onPlay, onDraw, onPileTap, onExit, on
   const attackValue = h('b.attack-value', {}, '+0');
   const attackMeter = h('div.attack-meter', { hidden: true, role: 'status', 'aria-live': 'assertive' }, h('small', {}, '공격'), attackValue);
   const hint = h('p.table-hint', { role: 'status', 'aria-live': 'polite' }, '');
-  const decor = h('div.felt-decor', { 'aria-hidden': 'true' });
+  // 맵 장면 — 화면 전체 배경 사진(또는 시즌 1 그림) · 양옆 소품 · 조명. 탁자 뒤에 깔린다
+  const sceneProps = h('div.scene-props');
+  const sceneEl = h('div.scene', { 'aria-hidden': 'true' }, h('div.scene-photo'), sceneProps, h('div.scene-light'), h('div.scene-shade'));
   const toysLayer = h('div.toys-layer');
   const felt = h('div.felt', {},
-    h('div.felt-photo', { 'aria-hidden': 'true' }), h('div.felt-cloth', { 'aria-hidden': 'true' }), h('div.felt-light', { 'aria-hidden': 'true' }),
-    decor,
+    h('div.felt-light', { 'aria-hidden': 'true' }),
     h('div.pile-area', {}, deck, h('div.pile-wrap', {}, pile, medallion), attackMeter),
     hint, toysLayer);
   const tableWrap = h('div.table-wrap', {}, h('div.rim', {}, felt));
@@ -89,7 +89,7 @@ export function createTable({ mode = 'ai', onPlay, onDraw, onPileTap, onExit, on
 
   const flyLayer = h('div.fly-layer', { 'aria-hidden': 'true' });
   const fxLayer = h('div.fx-layer', { 'aria-hidden': 'true' });
-  const root = h('section.game', { dataset: { mode }, 'aria-label': '원카드 게임판' }, top, rivalZone, tableWrap, meZone, flyLayer, fxLayer);
+  const root = h('section.game', { dataset: { mode }, 'aria-label': '원카드 게임판' }, sceneEl, top, rivalZone, tableWrap, meZone, flyLayer, fxLayer);
 
   // ── 크기
   // 카드 폭은 실제 덱 크기로 잰다(CSS 변수 값은 clamp() 글자 그대로라 숫자로 못 쓴다)
@@ -408,27 +408,25 @@ export function createTable({ mode = 'ai', onPlay, onDraw, onPileTap, onExit, on
 
   // ── 바깥에서 부르는 것
   const api = {
-    root, fxLayer, flyLayer, felt, decor, toysLayer, deck, pile, hand, rivalZone, meZone, rivalPortrait, rivalBubble, meBubble,
-    rivalFace, rivalImg, meImg,
+    root, fxLayer, flyLayer, felt, sceneProps, toysLayer, deck, pile, hand, rivalZone, meZone, rivalPortrait, rivalBubble, meBubble,
+    rivalImg, meImg,
     setMatch({ title, sub, bonus }) {
       matchTitle.textContent = title || '';
       matchSub.textContent = sub || '';
       bonusTag.hidden = !bonus;
     },
-    setRival({ name, starsCount, color, motif, status }) {
+    setRival({ name, starsCount, color, portrait, status }) {
       rivalName.textContent = name;
       rivalStars.textContent = starsCount ? starText(starsCount) : '';
       rivalStatus.textContent = status || '';
       rivalZone.style.setProperty('--who-color', color);
-      rivalImg.src = img(motif);
-      rivalImg.dataset.motif = motif;
+      rivalImg.src = cut(portrait);
     },
     setRivalStatus(text) { rivalStatus.textContent = text || ''; },
-    setMe({ name = '나', motif, points, starsCount, color }) {
+    setMe({ name = '나', portrait, points, starsCount, color }) {
       meName.textContent = name;
       meStars.textContent = starsCount ? `${starText(starsCount)} ${formatNumber(points)}점` : '';
-      meImg.src = img(motif);
-      meImg.dataset.motif = motif;
+      meImg.src = cut(portrait);
       if (color) meZone.style.setProperty('--who-color', color);
     },
     setMeStatus(text) { meStatus.textContent = text || ''; },
@@ -468,12 +466,10 @@ export function createTable({ mode = 'ai', onPlay, onDraw, onPileTap, onExit, on
     get turn() { return turn; },
     flyMine, flyRival, drawMine, drawRival, deal,
     layout() { layoutHand(false); layoutRival(false); },
-    swapAnimated(el, motif, ms = 2400) {
-      if (!ANIMATED.has(motif) || settings.reduced()) return;
-      const still = img(motif);
-      el.src = anim(motif);
-      clearTimeout(el._swapTimer);
-      el._swapTimer = setTimeout(() => { el.src = still; }, ms);
+    // 초상이 반응하듯 살짝 들썩 — 실사 초상이라 표정 대신 몸짓으로
+    nudge(el, power = 1) {
+      if (settings.reduced()) return;
+      gsap.fromTo(el, { y: 0, rotation: 0 }, { y: -7 * power, rotation: 3 * power, duration: 0.16, yoyo: true, repeat: 3, ease: 'sine.inOut', clearProps: 'transform' });
     },
     rect: { deck: () => centerOf(deck), pile: () => centerOf(pile), rival: () => centerOf(rivalPortrait), me: () => centerOf(hand) },
     cardWidth,

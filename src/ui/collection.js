@@ -6,28 +6,26 @@ import {
   equippedCharmIds, isUnlocked, nextCosmeticUnlock,
 } from '../core/cosmetics.js';
 
-const TOY_FILTERS = {
-  peach: 'hue-rotate(28deg) saturate(.62) brightness(1.18)',
-  blush: 'hue-rotate(18deg) saturate(.5) brightness(1.3)',
-  crimson: 'saturate(1.3) brightness(.92)',
-};
 import { loadPlayerProfile, savePlayerProfile } from '../core/rating.js';
 import { tierForXp } from '../core/season.js';
-import { themeById } from '../data/themes.js';
-import { img } from '../data/assets.js';
+import { lookOf } from '../data/looks.js';
+import { cut } from '../data/assets.js';
 import { itemPreview } from './item-preview.js';
-import { applyEquipped, themeFor } from './theme-apply.js';
-import { renderDecor } from './decor.js';
+import { applyEquipped } from './look-apply.js';
+import { toyMotion, toySound } from './toys.js';
 import { cardBack, cardFace } from './cards.js';
 import { createFx } from './fx.js';
 import { createDirector } from './director.js';
 import { play } from './sound.js';
 import { toast } from './modal.js';
 
-const TABS = [{ key: 'all', name: '전체' }, ...COSMETIC_SLOTS];
+// 장미와 꽃 — 가장 많이 하는 플레이어가 좋아하는 것만 모아 보기
+const TABS = [{ key: 'all', name: '전체' }, { key: 'flower', name: '장미와 꽃' }, { key: 'box', name: '상자 전용' }, ...COSMETIC_SLOTS];
+const isFlower = (item) => (item.tags || []).some((tag) => tag === 'rose' || tag === 'flower');
 
 function stateText(item, profile, passTier) {
-  if (isUnlocked(item, profile.peakPoints, passTier)) return '';
+  if (isUnlocked(item, profile.peakPoints, passTier, profile.boxItems)) return '';
+  if (item.box) return 'AI 대전 보상 상자에서만 나와요';
   if (item.pass) return `시즌 패스 ${item.pass}단계`;
   return `${formatNumber(item.threshold)}점에 열려요`;
 }
@@ -45,10 +43,13 @@ export function openCollection({ host, onClose, onChanged }) {
   const previewPile = h('div.pv-pile', {}, cardFace({ id: 'pv-a', suit: 'spades', rank: 'A' }), cardFace({ id: 'pv-q', suit: 'hearts', rank: 'Q' }));
   const previewAvatar = h('img.pv-me', { alt: '' });
   const previewToys = h('div.pv-toys');
-  const previewDecor = h('div.felt-decor');
-  const previewFelt = h('div.felt', {}, h('div.felt-photo'), h('div.felt-cloth'), h('div.felt-light'), previewDecor, h('div.pv-play', {}, previewDeck, previewPile), previewToys, previewAvatar);
+  const previewProps = h('div.scene-props');
+  const previewFelt = h('div.felt', {}, h('div.felt-light'), h('div.pv-play', {}, previewDeck, previewPile), previewToys, previewAvatar);
   const fxLayer = h('div.fx-layer');
-  const preview = h('div.locker-preview', {}, h('div.rim', {}, previewFelt), fxLayer);
+  // 미리보기도 맵 그대로 — 배경 사진(또는 시즌 1 그림) · 소품 · 조명 위에 작은 탁자
+  const preview = h('div.locker-preview.show-caption', {},
+    h('div.scene', { 'aria-hidden': 'true' }, h('div.scene-photo'), previewProps, h('div.scene-light'), h('div.scene-shade')),
+    h('div.rim', {}, previewFelt), fxLayer);
   const fx = createFx({ layer: fxLayer, root: preview, director });
 
   const selName = h('strong.sel-name', {}, '');
@@ -90,25 +91,26 @@ export function openCollection({ host, onClose, onChanged }) {
 
   function renderPreview() {
     const equipped = previewEquipped();
-    const themes = applyEquipped(preview, equipped);
-    renderDecor(previewDecor, themes.table);
-    previewAvatar.src = img((cosmeticById(equipped.avatar) || cosmeticById('avatar-rabbit')).motif);
+    applyEquipped(preview, equipped, { propsEl: previewProps });
+    previewAvatar.src = cut((cosmeticById(equipped.avatar) || cosmeticById('avatar-rabbit')).portrait);
     // 자리마다 그 자리에 실제로 나오는 장난감 하나씩(기본 친구들은 푸딩 · 별 · 장미)
     previewToys.replaceChildren(...equippedCharmIds(equipped).map((id, slot) => {
       const toy = charmToyConfig(id, slot);
-      return h('div.pv.pv-toy', {}, h('img', { src: img(toy.motif), alt: '', style: toy.filter ? { filter: TOY_FILTERS[toy.filter] || '' } : {} }));
+      return h('div.pv.pv-toy', { vars: { '--toy-size': toy.size || 1 } }, h('img', { src: cut(toy.img), alt: '' }));
     }));
   }
 
   function renderGrid() {
     tabsEl.querySelectorAll('.tab').forEach((button) => button.setAttribute('aria-selected', String(button.dataset.tab === tab)));
     const items = tab === 'all'
-      ? [...COSMETICS].sort((a, b) => Number(!isUnlocked(a, profile.peakPoints, passTier)) - Number(!isUnlocked(b, profile.peakPoints, passTier)) || (a.pass ? a.pass * 1000 : a.threshold) - (b.pass ? b.pass * 1000 : b.threshold))
-      : COSMETICS.filter((item) => item.slot === tab);
+      ? [...COSMETICS].sort((a, b) => Number(!isUnlocked(a, profile.peakPoints, passTier, profile.boxItems)) - Number(!isUnlocked(b, profile.peakPoints, passTier, profile.boxItems)) || (a.pass ? a.pass * 1000 : a.box ? 2e9 : a.threshold) - (b.pass ? b.pass * 1000 : b.box ? 2e9 : b.threshold))
+      : tab === 'flower' ? COSMETICS.filter(isFlower).sort((a, b) => (a.pass ? a.pass * 1000 : a.box ? 9e9 : a.threshold) - (b.pass ? b.pass * 1000 : b.box ? 9e9 : b.threshold))
+        : tab === 'box' ? COSMETICS.filter((item) => item.box).sort((a, b) => Number(!isUnlocked(a, profile.peakPoints, passTier, profile.boxItems)) - Number(!isUnlocked(b, profile.peakPoints, passTier, profile.boxItems)))
+        : COSMETICS.filter((item) => item.slot === tab);
     grid.replaceChildren(...items.map((item) => {
-      const locked = !isUnlocked(item, profile.peakPoints, passTier);
+      const locked = !isUnlocked(item, profile.peakPoints, passTier, profile.boxItems);
       const slotName = COSMETIC_SLOTS.find((slot) => slot.key === item.slot)?.name || '';
-      return h(`button.item-tile${locked ? '.is-locked' : ''}${item.legendary ? '.is-legend' : ''}${item.season ? '.is-s2' : ''}`, {
+      return h(`button.item-tile${locked ? '.is-locked' : ''}${item.legendary ? '.is-legend' : ''}${item.box ? '.is-box' : item.season ? '.is-s2' : ''}`, {
         type: 'button', role: 'option', dataset: { id: item.id }, onClick: () => select(item),
       }, itemPreview(item), h('span.tile-text', {}, h('small', {}, slotName), h('b', {}, item.name), h('em.tile-state', {}, stateText(item, profile, passTier))));
     }));
@@ -131,7 +133,7 @@ export function openCollection({ host, onClose, onChanged }) {
 
   function refreshSelection() {
     if (!selected) return;
-    const locked = !isUnlocked(selected, profile.peakPoints, passTier);
+    const locked = !isUnlocked(selected, profile.peakPoints, passTier, profile.boxItems);
     const charms = equippedCharmIds(profile.equipped);
     const on = selected.slot === 'charm' ? charms[charmSlot] === selected.id : profile.equipped[selected.slot] === selected.id;
     selName.textContent = selected.name;
@@ -139,7 +141,7 @@ export function openCollection({ host, onClose, onChanged }) {
     selState.textContent = locked ? stateText(selected, profile, passTier) : on ? '장착 중' : '장착할 수 있어요';
     selState.dataset.state = locked ? 'locked' : on ? 'on' : 'ready';
     const set = cosmeticSetForItem(selected.id);
-    const progress = set ? cosmeticSetProgress(set, profile.peakPoints, passTier) : null;
+    const progress = set ? cosmeticSetProgress(set, profile.peakPoints, passTier, profile.boxItems) : null;
     selSet.textContent = set ? `${set.name} 세트 ${progress.unlocked}/${progress.total}` : '';
     selSet.hidden = !set;
     charmSlots.hidden = selected.slot !== 'charm';
@@ -164,21 +166,21 @@ export function openCollection({ host, onClose, onChanged }) {
 
   function replay() {
     if (!selected) return;
-    const theme = themeById(selected.theme);
     const at = (() => { const rect = previewPile.getBoundingClientRect(); return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }; })();
-    if (selected.slot === 'effect') fx.burst(theme, at, { count: 6, sizeScale: 0.8 });
+    if (selected.slot === 'effect') fx.burst(lookOf('effect', selected.look), at, { sizeScale: 0.8 });
     else if (selected.slot === 'victory') {
-      const scene = fx.victory({ theme, title: '승리', sub: selected.name });
-      scene.timeline.then(() => setTimeout(() => scene.finish(), 400));
+      const shown = fx.victory({ look: lookOf('victory', selected.look), avatarEl: previewAvatar, title: '승리', sub: selected.name });
+      shown.timeline.then(() => setTimeout(() => shown.finish(), 600));
     } else if (selected.slot === 'charm') {
-      const toyEl = previewToys.children[charmSlot];
-      if (toyEl) gsap.fromTo(toyEl, { y: 0 }, { y: -20, duration: 0.18, yoyo: true, repeat: 1 });
-      play('pluck');
+      const toy = charmToyConfig(selected.id, charmSlot);
+      const toyEl = previewToys.children[charmSlot]?.querySelector('img');
+      if (toyEl) toyMotion(toyEl, toy);
+      toySound(toy);
     }
   }
 
   function equip() {
-    if (!selected || !isUnlocked(selected, profile.peakPoints, passTier)) return;
+    if (!selected || !isUnlocked(selected, profile.peakPoints, passTier, profile.boxItems)) return;
     const equipped = previewEquipped();
     profile = savePlayerProfile({ ...profile, equipped });
     passTier = tierForXp(profile.seasonXp);
@@ -200,4 +202,4 @@ export function openCollection({ host, onClose, onChanged }) {
   return { close };
 }
 
-export { COSMETIC_SETS, themeFor };
+export { COSMETIC_SETS };

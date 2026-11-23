@@ -1,4 +1,4 @@
-// 카드 그리기 — 숫자 카드는 실제 카드처럼 무늬를 배치하고, 그림카드 · A 는 테마 그림을 쓴다
+// 카드 그리기 — 숫자 카드는 실제 카드처럼 무늬를 배치하고, 그림카드 · 에이스 · 조커는 꾸미기(실제 옛 카드 · 명화 · 사진) 그림을 쓴다
 import { PIP_LAYOUTS, RED_SUITS, SUIT_NAMES, suitSvg } from './suits.js';
 
 const RANK_LABEL = { A: 'A', J: 'J', Q: 'Q', K: 'K' };
@@ -22,16 +22,16 @@ export function cardFace(card, { tag = 'div' } = {}) {
   if (tag === 'button') el.type = 'button';
   el.setAttribute('aria-label', joker ? '조커, 공격 다섯 장' : cardLabel(card));
   if (joker) {
-    el.innerHTML = '<span class="joker-band"><b>JOKER</b></span><span class="joker-art"></span><b class="joker-power">+5</b><span class="joker-band bottom"><b>JOKER</b></span>';
+    el.innerHTML = '<i class="face-frame"></i><span class="joker-band"><b>JOKER</b></span><span class="joker-art"></span><b class="joker-power">+5</b><span class="joker-band bottom"><b>JOKER</b></span>';
     return el;
   }
   const label = RANK_LABEL[card.rank] || card.rank;
   const index = `<b>${label}</b>${suitSvg(card.suit)}`;
   let center;
   if (PIP_LAYOUTS[card.rank]) center = `<span class="pips">${pipsHtml(card)}</span>`;
-  else if (card.rank === 'A') center = `<span class="ace-art"></span><span class="ace-suit">${suitSvg(card.suit)}</span>`;
-  else center = `<span class="court"><b class="court-letter">${label}</b><span class="court-art"></span>${suitSvg(card.suit, 'suit court-suit')}</span>`;
-  el.innerHTML = `<span class="idx tl">${index}</span><span class="center">${center}</span><span class="idx br">${index}</span>`;
+  else if (card.rank === 'A') center = `<span class="ace-art"></span><span class="pip ace-suit">${suitSvg(card.suit)}</span>`;
+  else center = '<span class="court"><span class="court-art"></span></span>';
+  el.innerHTML = `<i class="face-frame"></i><span class="idx tl">${index}</span><span class="center">${center}</span><span class="idx br">${index}</span>`;
   return el;
 }
 
@@ -39,6 +39,6 @@ export function cardBack() {
   const el = document.createElement('div');
   el.className = 'card back';
   el.setAttribute('aria-hidden', 'true');
-  el.innerHTML = '<i class="back-photo"></i><i class="back-pattern"></i><i class="back-frame"></i><b class="back-emblem"></b>';
+  el.innerHTML = '<i class="back-art"></i><i class="back-foil"></i><b class="back-emblem"></b><span class="back-caption"></span>';
   return el;
 }

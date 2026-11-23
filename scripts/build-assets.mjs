@@ -39,16 +39,9 @@ await pool(Object.keys(FLUENT_STATIC), 6, async (key) => {
 });
 
 // 2) 질감 → WebP
+// 나머지 재질(벨벳 · 대리석 · 원목 · 금속 …)은 scripts/fetch-textures.mjs → build-real.mjs 가 만든다
 const textures = {
   felt: ['felt/felt_grey.jpg', 1024],
-  'felt-pink': ['felt/felt_pink.jpg', 1024],
-  walnut: ['ambientcg/Wood066/Wood066_1K-JPG_Color.jpg', 768],
-  maple: ['ambientcg/Wood052/Wood052_1K-JPG_Color.jpg', 768],
-  leather: ['ambientcg/Leather026/Leather026_1K-JPG_Color.jpg', 768],
-  marble: ['ambientcg/Marble006/Marble006_1K-JPG_Color.jpg', 768],
-  kraft: ['ambientcg/Paper005/Paper005_1K-JPG_Color.jpg', 768],
-  linen: ['ambientcg/Fabric030/Fabric030_1K-JPG_Color.jpg', 768],
-  corduroy: ['ambientcg/Fabric026/Fabric026_1K-JPG_Color.jpg', 768],
 };
 ensure(path.join(OUT, 't'));
 for (const [name, [file, size]] of Object.entries(textures)) {

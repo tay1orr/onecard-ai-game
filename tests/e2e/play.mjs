@@ -81,6 +81,7 @@ try {
   while (Date.now() - started < 240000) {
     const state = await page.evaluate(() => {
       if (document.querySelector('.result-panel')) return 'done';
+      if (document.querySelector('.reward-boxes .rb-box:not(:disabled)')) return 'box';
       if (document.querySelector('.suit-sheet')) return 'suit';
       const game = document.querySelector('.game');
       const deck = document.querySelector('.deck');
@@ -88,6 +89,18 @@ try {
       return 'wait';
     });
     if (state === 'done') break;
+    if (state === 'box') {
+      // 보상 상자 — 하나 고르고, 열리는 모습을 찍고, 받기
+      await sleep(1200);
+      await shot('07b-boxes');
+      await page.locator('.reward-boxes .rb-box').nth(1).click({ timeout: 5000 });
+      await page.waitForSelector('.rb-take:not([hidden])', { timeout: 12000 });
+      await sleep(700);
+      await shot('07c-box-open');
+      await page.click('.rb-take');
+      await sleep(600);
+      continue;
+    }
     if (state === 'suit') { await page.locator('.suit-btn.is-best, .suit-btn').first().click({ timeout: 5000 }); await sleep(200); continue; }
     if (state !== 'mine') { await sleep(250); continue; }
     turns += 1;

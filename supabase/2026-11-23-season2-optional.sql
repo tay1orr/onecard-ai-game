@@ -1,6 +1,6 @@
 -- ONE! 시즌 2 — 선택 SQL (넣지 않아도 시즌 2는 그대로 돌아간다)
 -- 넣으면 좋아지는 것
---   1) 시즌 2 새 카드 뒷면(엠블럼 · 홀로그램 · 블랙 오닉스)이 온라인 상대에게도 그대로 보인다
+--   1) 시즌 2 새 카드 뒷면(장미 도감 · 명화 · 블랙 오닉스 …, 모두 53종)이 온라인 상대에게도 그대로 보인다
 --      (지금은 서버 허용 목록에 없어서 상대 화면에는 클래식으로 보인다)
 --   2) 기한이 지난 방 · 패 · 기록을 매시간 지운다(지금은 지우는 함수만 있고 예약이 없다)
 -- 넣는 법: Supabase 대시보드 → SQL Editor 에 이 파일 전체를 붙여 실행
@@ -17,12 +17,17 @@ declare
   v_card_back text := coalesce(p_card_back, 'back-classic');
 begin
   if v_card_back not in (
-    'back-classic', 'back-strawberry-milk', 'back-star-candy', 'back-space-whale', 'back-dream-kingdom',
-    'back-antique-atlas', 'back-bauhaus', 'back-jade-rune', 'back-brass-orbit',
-    'back-monochrome-wave', 'back-antique-library', 'back-rose-arbor',
-    'back-pink-cloud-pop', 'back-moon-rabbit-observatory', 'back-strawberry-toy-parade',
-    'back-rose-ballroom', 'back-real-rose-garden', 'back-neon-deepsea-city', 'back-ancient-sun-temple',
-    'back-s2-emblem', 'back-s2-holo', 'back-obsidian'
+    'back-classic', 'back-strawberry-milk', 'back-antique-atlas', 'back-star-candy', 'back-bauhaus',
+    'back-jade-rune', 'back-rose-arbor', 'back-brass-orbit', 'back-monochrome-wave', 'back-space-whale',
+    'back-antique-library', 'back-dream-kingdom', 'back-pink-cloud-pop', 'back-moon-rabbit-observatory', 'back-strawberry-toy-parade',
+    'back-rose-ballroom', 'back-real-rose-garden', 'back-neon-deepsea-city', 'back-ancient-sun-temple', 'back-s2-mucha',
+    'back-s2-hubble', 'back-obsidian', 'back-vangogh-almond', 'back-japanese-cherry', 'back-vangogh-irises',
+    'back-monet-waterlilies', 'back-japanese-peony', 'back-bosschaert-flowers', 'back-ruysch-flowers', 'back-huysum-flowers',
+    'back-redoute-01', 'back-redoute-02', 'back-redoute-03', 'back-redoute-04', 'back-redoute-05',
+    'back-redoute-06', 'back-redoute-07', 'back-redoute-08', 'back-redoute-09', 'back-redoute-10',
+    'back-redoute-11', 'back-redoute-12', 'back-fantin-roses', 'back-vangogh-roses', 'back-mucha-rose',
+    'back-rose-window', 'back-klimt-roses', 'back-morris-rose', 'back-renoir-roses', 'back-black-rose',
+    'back-rose-damask', 'back-golden-rose', 'back-morris-strawberry'
   ) then
     v_card_back := 'back-classic';
   end if;

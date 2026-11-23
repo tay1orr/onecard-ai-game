@@ -1,6 +1,20 @@
 import { SUITS } from './game-engine.js';
+import { chooseEliteMove, eliteThinkMs, ELITE_KEYS } from './ai-elite.js';
+
+// 단계 안내 — thinkMs: 한 수에 쓰는 계산 시간 상한(0 = 바로 정함)
+export const AI_LEVELS = [
+  { key: 'star1', stars: 1, thinkMs: 0, summary: '낼 수 있는 카드 중 아무거나' },
+  { key: 'star2', stars: 2, thinkMs: 0, summary: '점수 높은 절반 중 아무거나' },
+  { key: 'star3', stars: 3, thinkMs: 0, summary: '점수 상위 3장 중 고름' },
+  { key: 'star4', stars: 4, thinkMs: 0, summary: '다음 수까지 보는 점수 · 상위 2장' },
+  { key: 'star5', stars: 5, thinkMs: 0, summary: '한 수 앞 점수 · 가끔 차선' },
+  { key: 'star6', stars: 6, thinkMs: eliteThinkMs('star6'), summary: '나온 카드를 세고 상대가 못 낸 무늬를 기억 · 막기 카드를 아낌' },
+  { key: 'star7', stars: 7, thinkMs: eliteThinkMs('star7'), summary: '보이는 정보에 맞는 판을 여러 벌 뽑아 후보 수마다 끝까지 두어 봄' },
+  { key: 'star8', stars: 8, thinkMs: eliteThinkMs('star8'), summary: '7성보다 열 배 넘게 두어 보고, 좋은 후보에 판을 몰아 씀' },
+];
 
 export function chooseAiMove(game, difficulty = 'normal', random = Math.random) {
+  if (ELITE_KEYS.includes(difficulty)) return chooseEliteMove(game, difficulty, random);
   const player = 1;
   const playable = game.playableCards(player);
   if (playable.length === 0) return { type: 'draw' };

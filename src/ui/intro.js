@@ -1,8 +1,9 @@
 // 대전 소개 — 상대가 정해지는 VS 화면과 선공을 정하는 주사위
 import gsap from 'gsap';
 import { h, stars, formatNumber, wait } from './dom.js';
-import { img } from '../data/assets.js';
+import { cut } from '../data/assets.js';
 import { RIVALS } from '../data/characters.js';
+import { matchmakingWeights } from '../core/rating.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
 
@@ -33,13 +34,13 @@ export async function rollDie(die, value) {
 
 // 상대 결정 룰렛 + VS — 끝나면 { el, rollStage } 를 돌려준다
 export async function showVersus({ host, me, rival, reward, bonus, eventName }) {
-  const rivalImg = h('img.vs-portrait', { src: img(RIVALS[0].motif), alt: '' });
+  const rivalImg = h('img.vs-portrait', { src: cut(rival.portrait), alt: '' });
   const rivalName = h('strong.vs-name', {}, '');
   const rivalTitle = h('small.vs-title', {}, '');
   const rivalStars = h('span.vs-stars', {}, '');
   const rivalSide = h('div.vs-side.vs-rival', {}, h('div.vs-plate', {}, rivalImg), h('div.vs-text', {}, rivalTitle, rivalName, rivalStars));
   const meSide = h('div.vs-side.vs-me', { vars: { '--side': me.color || '#f2b544' } },
-    h('div.vs-plate', {}, h('img.vs-portrait', { src: img(me.motif), alt: '' })),
+    h('div.vs-plate', {}, h('img.vs-portrait', { src: cut(me.portrait), alt: '' })),
     h('div.vs-text', {}, h('small.vs-title', {}, `${formatNumber(me.points)}점`), h('strong.vs-name', {}, '나'), h('span.vs-stars', {}, stars(me.stars))));
   const vsMark = h('b.vs-mark', {}, 'VS');
   const rewardLine = h('div.vs-reward', {}, '');
@@ -55,11 +56,14 @@ export async function showVersus({ host, me, rival, reward, bonus, eventName }) 
   gsap.fromTo(rivalSide, { xPercent: 120 }, { xPercent: 0, duration: 0.45, ease: 'power3.out' });
 
   // 룰렛 — 점점 느려지다 멈춘다
-  const sequence = reduced ? [] : Array.from({ length: 11 }, (_, index) => RIVALS[(index * 2 + Math.floor(Math.random() * 5)) % 5]);
+  // 이 점수에서 만날 수 있는 상대만 돌린다
+  const weights = matchmakingWeights(me.points || 0);
+  const pool = RIVALS.filter((candidate) => weights[candidate.stars - 1] > 0);
+  const sequence = reduced || pool.length < 2 ? [] : Array.from({ length: 11 }, (_, index) => pool[(index * 2 + Math.floor(Math.random() * pool.length)) % pool.length]);
   sequence.push(rival);
   for (let index = 0; index < sequence.length; index += 1) {
     const candidate = sequence[index];
-    rivalImg.src = img(candidate.motif);
+    rivalImg.src = cut(candidate.portrait);
     rivalName.textContent = candidate.name;
     rivalTitle.textContent = candidate.title;
     rivalStars.textContent = stars(candidate.stars);

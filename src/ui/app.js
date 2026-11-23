@@ -14,9 +14,10 @@ import { playOpening } from './opening.js';
 import { openSettings, openRules, openMissions, openCredits, openAccount } from './panels.js';
 import { loadPlayerProfile } from '../core/rating.js';
 import { hasAuthCallbackInUrl, hasStoredSession } from '../net/supabase.js';
-import { warm, img } from '../data/assets.js';
+import { warm, cut } from '../data/assets.js';
 import { RIVALS } from '../data/characters.js';
-import { applyEquipped } from './theme-apply.js';
+import { applyEquipped } from './look-apply.js';
+import { showSeasonGift } from './season-gift.js';
 
 export function createApp(root) {
   installSuitSprite();
@@ -29,7 +30,7 @@ export function createApp(root) {
   let accountModule = null;
 
   document.addEventListener('pointerdown', () => { unlockAudio(); preloadSounds(); }, { once: true });
-  warm(RIVALS.map((rival) => img(rival.motif)));
+  warm(RIVALS.map((rival) => cut(rival.portrait)));
 
   async function loadAccount() {
     if (!accountModule) accountModule = await import('../net/account.js');
@@ -78,6 +79,11 @@ export function createApp(root) {
       onAccount: () => openAccountPanel(),
       onToggleSound: () => settings.set({ sound: !settings.get().sound }),
     });
+    // 최고 점수로 이미 열린 시즌 2 새 아이템이 있으면 한 번 보여 준다
+    setTimeout(() => {
+      if (current !== 'lobby' || document.querySelector('.opening')) return;
+      showSeasonGift(profile, { onOpenCollection: () => openCollection({ host: overlayHost, onClose: () => { showLobby(); requestSync(); }, onChanged: () => requestSync(2500) }) });
+    }, 700);
   }
 
   function openSettingsPanel() {

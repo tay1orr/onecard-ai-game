@@ -57,6 +57,8 @@ export function mergeProfiles3(local = {}, remote = {}, base = null) {
     version: Math.max(int(local.version), int(remote.version), 4),
     seasonId: local.seasonId || remote.seasonId || 's2',
     awardedMatchIds: unique(list(remote.awardedMatchIds), list(local.awardedMatchIds)).slice(-150),
+    boxItems: unique(list(remote.boxItems), list(local.boxItems)),
+    claimedBoxIds: unique(list(remote.claimedBoxIds), list(local.claimedBoxIds)).slice(-150),
     recentAiStars: list(local.recentAiStars).length ? list(local.recentAiStars).slice(-2) : list(remote.recentAiStars).slice(-2),
     equipped: equipped || null,
     reducedEffects: typeof local.reducedEffects === 'boolean' ? local.reducedEffects : Boolean(remote.reducedEffects),

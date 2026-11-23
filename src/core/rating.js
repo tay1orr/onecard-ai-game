@@ -1,12 +1,15 @@
-import { DEFAULT_EQUIPPED, newlyUnlockedByPass, newlyUnlockedCosmetics, normalizeEquipped } from './cosmetics.js';
+import { DEFAULT_EQUIPPED, cosmeticById, isBoxItemId, newlyUnlockedByPass, newlyUnlockedCosmetics, normalizeEquipped } from './cosmetics.js';
 import { tierForXp, xpForMatch } from './season.js';
 
 export const LEGACY_RECORD_KEY = 'onecard-record';
 export const LEGACY_BACKUP_KEY = 'onecard-record-backup-v1';
 export const PROFILE_KEY = 'onecard-player-profile-v2';
 
-export const WIN_REWARDS = Object.freeze({ 1: 125, 2: 180, 3: 250, 4: 340, 5: 500 });
+// ★6~★8 은 5만 점부터 만나는 상대 — 더 세고, 이기면 더 많이, 지면 조금 더 잃는다
+export const WIN_REWARDS = Object.freeze({ 1: 125, 2: 180, 3: 250, 4: 340, 5: 500, 6: 700, 7: 1000, 8: 1400 });
 export const LOSS_PENALTY = -50;
+export const LOSS_PENALTIES = Object.freeze({ 6: -80, 7: -120, 8: -160 });
+export const MAX_AI_STARS = 8;
 export const BONUS_MATCH_MULTIPLIER = 2;
 
 export const AI_OPPONENTS = Object.freeze([
@@ -15,21 +18,33 @@ export const AI_OPPONENTS = Object.freeze([
   { key: 'star3', stars: 3, name: '영리한 네오', icon: '✦', status: '좋은 수를 생각하고 있어요', delay: 1030 },
   { key: 'star4', stars: 4, name: '냉철한 아스트라', icon: '♛', status: '최선과 차선의 흐름을 계산해요', delay: 1160 },
   { key: 'star5', stars: 5, name: '무결한 오르비스', icon: '◈', status: '공개된 정보로 다음 수를 읽어요', delay: 1280 },
+  { key: 'star6', stars: 6, name: '우아한 세레나', icon: '◇', status: '지나간 카드를 모두 기억해요', delay: 1320 },
+  { key: 'star7', stars: 7, name: '그림자 녹턴', icon: '◆', status: '나올 카드를 수백 번 그려 봐요', delay: 1380 },
+  { key: 'star8', stars: 8, name: '장미 정원의 로제아', icon: '❀', status: '가장 깊이 읽고 골라요', delay: 1440 },
 ]);
 
+// 점수대별로 만나는 상대(★1~★8) 확률. 2만 점 아래는 시즌 1 그대로, 5만 점부터 ★6~★8 이 섞인다
 export const MATCH_BANDS = Object.freeze([
-  { min: 0, max: 499, weights: [55, 35, 10, 0, 0] },
-  { min: 500, max: 1499, weights: [20, 45, 30, 5, 0] },
-  { min: 1500, max: 3499, weights: [5, 25, 45, 22, 3] },
-  { min: 3500, max: 6999, weights: [0, 8, 42, 40, 10] },
-  { min: 7000, max: 10999, weights: [0, 2, 25, 48, 25] },
-  { min: 11000, max: 14999, weights: [0, 0, 12, 48, 40] },
-  { min: 15000, max: 19999, weights: [0, 0, 5, 40, 55] },
-  { min: 20000, max: Number.POSITIVE_INFINITY, weights: [0, 0, 0, 30, 70] },
+  { min: 0, max: 499, weights: [55, 35, 10, 0, 0, 0, 0, 0] },
+  { min: 500, max: 1499, weights: [20, 45, 30, 5, 0, 0, 0, 0] },
+  { min: 1500, max: 3499, weights: [5, 25, 45, 22, 3, 0, 0, 0] },
+  { min: 3500, max: 6999, weights: [0, 8, 42, 40, 10, 0, 0, 0] },
+  { min: 7000, max: 10999, weights: [0, 2, 25, 48, 25, 0, 0, 0] },
+  { min: 11000, max: 14999, weights: [0, 0, 12, 48, 40, 0, 0, 0] },
+  { min: 15000, max: 19999, weights: [0, 0, 5, 40, 55, 0, 0, 0] },
+  { min: 20000, max: 49999, weights: [0, 0, 0, 30, 70, 0, 0, 0] },
+  { min: 50000, max: 99999, weights: [0, 0, 0, 15, 55, 30, 0, 0] },
+  { min: 100000, max: 199999, weights: [0, 0, 0, 0, 35, 50, 15, 0] },
+  { min: 200000, max: 299999, weights: [0, 0, 0, 0, 15, 45, 40, 0] },
+  { min: 300000, max: 399999, weights: [0, 0, 0, 0, 5, 30, 50, 15] },
+  { min: 400000, max: 599999, weights: [0, 0, 0, 0, 0, 20, 50, 30] },
+  { min: 600000, max: Number.POSITIVE_INFINITY, weights: [0, 0, 0, 0, 0, 10, 45, 45] },
 ]);
 
-const PLAYER_STAR_THRESHOLDS = [0, 500, 1500, 3500, 11000];
-const PROGRESS_TARGETS = [500, 1500, 3500, 11000, 20000];
+// 내 별 — ★5 까지는 시즌 1 그대로, ★6 5만 · ★7 15만 · ★8 40만. 100만 점이 끝
+const PLAYER_STAR_THRESHOLDS = [0, 500, 1500, 3500, 11000, 50000, 150000, 400000];
+const PROGRESS_TARGETS = [500, 1500, 3500, 11000, 50000, 150000, 400000, 1000000];
+export const FINAL_TARGET = 1000000;
 
 function safeParse(value) {
   try { return value ? JSON.parse(value) : null; } catch { return null; }
@@ -38,6 +53,11 @@ function safeParse(value) {
 function safeInteger(value, fallback = 0) {
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 ? Math.floor(number) : fallback;
+}
+
+// 상자에서 얻은 아이템 — 목록에 있는 상자 전용 아이템만, 겹치지 않게
+export function boxItemList(value) {
+  return Array.isArray(value) ? [...new Set(value.map(String))].filter(isBoxItemId) : [];
 }
 
 function defaultStorage() {
@@ -78,8 +98,10 @@ export function loadPlayerProfile(storage = defaultStorage()) {
     multiWins: safeInteger(saved.multiWins),
     multiGames: safeInteger(saved.multiGames),
     awardedMatchIds: Array.isArray(saved.awardedMatchIds) ? saved.awardedMatchIds.slice(-150) : [],
-    recentAiStars: Array.isArray(saved.recentAiStars) ? saved.recentAiStars.filter((value) => value >= 1 && value <= 5).slice(-2) : [],
-    equipped: normalizeEquipped(saved.equipped || DEFAULT_EQUIPPED, peakPoints, tierForXp(seasonXp)),
+    recentAiStars: Array.isArray(saved.recentAiStars) ? saved.recentAiStars.filter((value) => value >= 1 && value <= MAX_AI_STARS).slice(-2) : [],
+    boxItems: boxItemList(saved.boxItems),
+    claimedBoxIds: Array.isArray(saved.claimedBoxIds) ? saved.claimedBoxIds.map(String).slice(-150) : [],
+    equipped: normalizeEquipped(saved.equipped || DEFAULT_EQUIPPED, peakPoints, tierForXp(seasonXp), boxItemList(saved.boxItems)),
     reducedEffects: Boolean(saved.reducedEffects),
   };
   // 읽을 때마다 다시 쓰지 않는다 — 옛 형식에서 옮겨 올 때만 저장
@@ -96,7 +118,9 @@ export function savePlayerProfile(profile, storage = defaultStorage()) {
     seasonId: 's2',
     peakPoints,
     seasonXp,
-    equipped: normalizeEquipped(profile.equipped || DEFAULT_EQUIPPED, peakPoints, tierForXp(seasonXp)),
+    boxItems: boxItemList(profile.boxItems),
+    claimedBoxIds: Array.isArray(profile.claimedBoxIds) ? profile.claimedBoxIds.map(String).slice(-150) : [],
+    equipped: normalizeEquipped(profile.equipped || DEFAULT_EQUIPPED, peakPoints, tierForXp(seasonXp), boxItemList(profile.boxItems)),
     reducedEffects: Boolean(profile.reducedEffects),
   };
   write(storage, PROFILE_KEY, JSON.stringify(normalized));
@@ -112,12 +136,13 @@ export function savePlayerProfile(profile, storage = defaultStorage()) {
 
 export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId, bonusMultiplier: requestedMultiplier = 1 }, storage = defaultStorage()) {
   const profile = loadPlayerProfile(storage);
-  const safeStars = Math.min(5, Math.max(1, safeInteger(opponentStars, 1)));
+  // 친구 대전은 ★5 보상까지(서로 점수 몰아주기 막기), AI 대전은 ★8 까지
+  const safeStars = Math.min(mode === 'multi' ? 5 : MAX_AI_STARS, Math.max(1, safeInteger(opponentStars, 1)));
   const id = String(matchId || `${mode}:${Date.now()}`);
   if (profile.awardedMatchIds.includes(id)) return { profile, delta: 0, duplicate: true };
 
   const bonusMultiplier = Math.max(1, Math.min(BONUS_MATCH_MULTIPLIER, safeInteger(requestedMultiplier, 1)));
-  const baseDelta = won ? WIN_REWARDS[safeStars] : LOSS_PENALTY;
+  const baseDelta = won ? WIN_REWARDS[safeStars] : lossForStars(safeStars);
   const requestedDelta = won ? baseDelta * bonusMultiplier : baseDelta;
   const previousPoints = profile.points;
   const previousPeak = profile.peakPoints;
@@ -152,6 +177,28 @@ export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId
   };
 }
 
+// 보상 상자 받기 — 판마다 한 번(matchId). 점수 상자는 점수를, 아이템 상자는 상자 전용 아이템을(이미 있으면 대신 점수)
+export function claimRewardBox({ matchId, box }, storage = defaultStorage()) {
+  const profile = loadPlayerProfile(storage);
+  const id = `box:${String(matchId || '')}`;
+  if (!box || !matchId || profile.claimedBoxIds.includes(id)) return { profile, delta: 0, item: null, duplicate: true, unlockedItems: [] };
+  const previousPeak = profile.peakPoints;
+  let delta = 0;
+  let item = null;
+  const boxItem = box.kind === 'item' ? cosmeticById(box.itemId) : null;
+  if (boxItem?.box && !profile.boxItems.includes(boxItem.id)) {
+    item = boxItem;
+    profile.boxItems = [...profile.boxItems, boxItem.id];
+  } else {
+    delta = Math.max(0, Math.min(20000, safeInteger(box.amount)));
+    profile.points += delta;
+    profile.peakPoints = Math.max(profile.peakPoints, profile.points);
+  }
+  profile.claimedBoxIds = [...profile.claimedBoxIds, id].slice(-150);
+  const saved = savePlayerProfile(profile, storage);
+  return { profile: saved, delta, item, duplicate: false, unlockedItems: [...(item ? [item] : []), ...newlyUnlockedCosmetics(previousPeak, saved.peakPoints)] };
+}
+
 export function playerStarsForPoints(points) {
   const score = safeInteger(points);
   let stars = 1;
@@ -166,7 +213,7 @@ export function ratingProgress(points) {
   const stars = playerStarsForPoints(score);
   const floor = PLAYER_STAR_THRESHOLDS[stars - 1];
   const target = PROGRESS_TARGETS[stars - 1];
-  if (score >= 20000) return { stars: 5, floor: 20000, target: null, ratio: 1, remaining: 0 };
+  if (score >= FINAL_TARGET) return { stars: PLAYER_STAR_THRESHOLDS.length, floor: FINAL_TARGET, target: null, ratio: 1, remaining: 0 };
   return {
     stars,
     floor,
@@ -210,7 +257,11 @@ export function rememberAiOpponent(profile, stars, storage = defaultStorage()) {
 }
 
 export function rewardForStars(stars) {
-  return WIN_REWARDS[Math.min(5, Math.max(1, safeInteger(stars, 1)))];
+  return WIN_REWARDS[Math.min(MAX_AI_STARS, Math.max(1, safeInteger(stars, 1)))];
+}
+
+export function lossForStars(stars) {
+  return LOSS_PENALTIES[safeInteger(stars, 1)] ?? LOSS_PENALTY;
 }
 
 export function bonusMatchChance(points) {
@@ -223,5 +274,5 @@ export function rollBonusMatch(points, random = Math.random) {
 }
 
 export function starsText(stars) {
-  return '★'.repeat(Math.min(5, Math.max(1, safeInteger(stars, 1))));
+  return '★'.repeat(Math.min(MAX_AI_STARS, Math.max(1, safeInteger(stars, 1))));
 }

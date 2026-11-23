@@ -1,10 +1,9 @@
-// AI 상대 다섯 — 그림은 Fluent Emoji 3D(MIT)
-// 대사는 상황마다 몇 개씩, 표정은 Fluent 얼굴 그림 이름
+// AI 상대 — 실제 동물 사진 초상(누끼). ★1~★5 는 시즌 1부터의 상대, ★6~★8 은 높은 점수(5만 점 이상) 상대
+// 대사는 상황마다 몇 개씩
 export const RIVALS = Object.freeze([
   {
-    key: 'star1', stars: 1, name: '루미', title: '느긋한', motif: 'sloth', color: '#9cc9a6', deep: '#21483a',
+    key: 'star1', stars: 1, name: '루미', title: '느긋한', portrait: 'sloth', color: '#9cc9a6', deep: '#21483a',
     blurb: '마음 가는 카드를 천천히 고르는 나무늘보',
-    faces: { think: 'sleeping', happy: 'squinting', shock: 'astonished', sad: 'crying', smug: 'smirking', party: 'partying', angry: 'grimacing' },
     lines: {
       intro: ['천천히 해도 괜찮아요', '오늘은 느긋하게 한 판'],
       think: ['음…', '어디 보자', '하암…'],
@@ -19,9 +18,8 @@ export const RIVALS = Object.freeze([
     },
   },
   {
-    key: 'star2', stars: 2, name: '미오', title: '재빠른', motif: 'cat-face', color: '#f4a93b', deep: '#5a3608',
+    key: 'star2', stars: 2, name: '미오', title: '재빠른', portrait: 'cat', color: '#f4a93b', deep: '#5a3608',
     blurb: '무늬와 공격 카드를 재빨리 살피는 고양이',
-    faces: { think: 'zany', happy: 'rofl', shock: 'screaming', sad: 'crying', smug: 'squinting', party: 'partying', angry: 'steam' },
     lines: {
       intro: ['빨리빨리! 시작하자', '내가 더 빠를걸'],
       think: ['요거!', '흠흠', '이거다!'],
@@ -36,9 +34,8 @@ export const RIVALS = Object.freeze([
     },
   },
   {
-    key: 'star3', stars: 3, name: '네오', title: '영리한', motif: 'owl', color: '#7c93ff', deep: '#1e2a66',
+    key: 'star3', stars: 3, name: '네오', title: '영리한', portrait: 'owl', color: '#7c93ff', deep: '#1e2a66',
     blurb: '좋은 수를 계산하는 부엉이',
-    faces: { think: 'monocle', happy: 'sunglasses', shock: 'astonished', sad: 'crying', smug: 'smirking', party: 'partying', angry: 'grimacing' },
     lines: {
       intro: ['좋은 승부를 기대할게', '확률은 내 편이야'],
       think: ['계산 중…', '이 수가 좋겠군'],
@@ -53,9 +50,8 @@ export const RIVALS = Object.freeze([
     },
   },
   {
-    key: 'star4', stars: 4, name: '아스트라', title: '냉철한', motif: 'wolf', color: '#6fd6e8', deep: '#0f4752',
+    key: 'star4', stars: 4, name: '아스트라', title: '냉철한', portrait: 'wolf', color: '#6fd6e8', deep: '#0f4752',
     blurb: '최선과 차선의 흐름을 읽는 늑대',
-    faces: { think: 'monocle', happy: 'sunglasses', shock: 'astonished', sad: 'grimacing', smug: 'smirking', party: 'sunglasses', angry: 'steam' },
     lines: {
       intro: ['봐주지 않아', '흐름은 내가 읽는다'],
       think: ['…', '최선은 이거'],
@@ -70,9 +66,8 @@ export const RIVALS = Object.freeze([
     },
   },
   {
-    key: 'star5', stars: 5, name: '오르비스', title: '무결한', motif: 'dragon-face', color: '#e35a6a', deep: '#5a1520',
+    key: 'star5', stars: 5, name: '오르비스', title: '무결한', portrait: 'dragon', color: '#e35a6a', deep: '#5a1520',
     blurb: '공개된 정보로 다음 수를 읽는 용',
-    faces: { think: 'monocle', happy: 'smirking', shock: 'screaming', sad: 'grimacing', smug: 'smirking', party: 'sunglasses', angry: 'steam' },
     lines: {
       intro: ['도전자인가', '나를 이길 수 있을까'],
       think: ['모든 수가 보인다', '흥미롭군'],
@@ -84,6 +79,54 @@ export const RIVALS = Object.freeze([
       playerOnecard: ['멈춰라', '그럴 수는 없지'],
       win: ['무결한 승리', '아직 멀었다'],
       lose: ['내가… 졌다고?', '인정하지. 강하구나'],
+    },
+  },
+  {
+    key: 'star6', stars: 6, name: '세레나', title: '우아한', portrait: 'swan', color: '#dfe8f2', deep: '#2b3a52', elite: true,
+    blurb: '지나간 카드를 하나도 잊지 않는 백조',
+    lines: {
+      intro: ['우아하게 겨뤄 봐요', '오늘 나온 카드는 다 기억할게요'],
+      think: ['아까 그 카드가 나왔으니…', '남은 건 이것뿐이네요', '조용히, 정확하게'],
+      attack: ['실례할게요', '피할 카드가 없을 텐데요'],
+      hit: ['어머, 예상보다 많네요', '깃털이 조금 흐트러졌어요'],
+      playerAttack: ['좋은 타이밍이에요', '기억해 둘게요'],
+      joker: ['조커가 남아 있었군요', '이건 계산에 넣었어야 했는데'],
+      onecard: ['마지막 한 장이에요', '이제 물 위로 올라갈 때'],
+      playerOnecard: ['그 한 장, 무늬가 뭘까요', '서두르지 않을게요'],
+      win: ['우아한 마무리였어요', '다음에도 기억할게요'],
+      lose: ['훌륭해요, 정말로', '오늘은 제가 졌네요'],
+    },
+  },
+  {
+    key: 'star7', stars: 7, name: '녹턴', title: '그림자', portrait: 'black-panther', color: '#9a7cff', deep: '#1a1230', elite: true,
+    blurb: '나올 카드를 수백 번 그려 보고 고르는 흑표범',
+    lines: {
+      intro: ['…시작하지', '어둠 속에서 다 보여'],
+      think: ['수백 갈래 중에 하나', '…', '이 길이 가장 길어'],
+      attack: ['도망칠 곳은 없어', '조용히, 깊게'],
+      hit: ['…흠', '그림자가 길어졌군'],
+      playerAttack: ['날카롭군', '그 수는 봤어'],
+      joker: ['조커… 좋아', '빛이 번쩍이는군'],
+      onecard: ['마지막 걸음', '끝이 가까워'],
+      playerOnecard: ['막는다', '그 한 장을 읽는다'],
+      win: ['밤은 내 편이야', '다시 와, 어둠 속으로'],
+      lose: ['…강하군', '빛이 이겼어'],
+    },
+  },
+  {
+    key: 'star8', stars: 8, name: '로제아', title: '장미 정원의', portrait: 'peacock', color: '#ff6f8a', deep: '#3a0f1e', elite: true,
+    blurb: '장미 정원의 주인 — 가장 깊이 읽는 공작',
+    lines: {
+      intro: ['내 장미 정원에 온 걸 환영해요', '꽃이 지기 전에 끝내 볼까요'],
+      think: ['가시는 숨겨 두는 거예요', '어느 꽃을 피울까', '한 수 더 깊이'],
+      attack: ['가시에 찔렸네요', '장미에는 가시가 있죠'],
+      hit: ['꽃잎이 떨어졌어요', '괜찮아요, 다시 피면 돼요'],
+      playerAttack: ['대담하네요', '정원사가 놀라겠어요'],
+      joker: ['조커라니, 장미보다 화려하네요', '눈부신 한 수예요'],
+      onecard: ['마지막 꽃봉오리', '이제 활짝 필 차례'],
+      playerOnecard: ['그 꽃은 피우게 둘 수 없어요', '정원 문을 닫을게요'],
+      win: ['내 정원은 오늘도 만개', '백만 송이 중 한 송이를 드릴게요'],
+      lose: ['당신이 정원의 새 주인이에요', '이렇게 아름다운 패배는 처음이에요'],
     },
   },
 ]);
@@ -98,10 +141,10 @@ export function pickLine(rival, situation, random = Math.random) {
 }
 
 // 온라인 상대는 닉네임으로 캐릭터를 정한다(두 브라우저에서 같게 보이도록)
-const ONLINE_LOOKS = ['fox', 'penguin', 'panda', 'koala', 'tiger-face', 'frog', 'hamster', 'bear', 'dog-face', 'baby-chick'];
+const ONLINE_LOOKS = ['fox', 'penguin', 'panda', 'koala', 'tiger', 'frog', 'hamster', 'bear', 'dog', 'chick'];
 const ONLINE_COLORS = ['#f4a93b', '#7c93ff', '#9cc9a6', '#6fd6e8', '#e35a6a', '#ff8fab', '#c9a45c', '#b39bff'];
 export function onlineLook(nickname = '') {
   let hash = 0;
   for (const char of String(nickname)) hash = (hash * 31 + char.codePointAt(0)) >>> 0;
-  return { motif: ONLINE_LOOKS[hash % ONLINE_LOOKS.length], color: ONLINE_COLORS[(hash >> 4) % ONLINE_COLORS.length] };
+  return { portrait: ONLINE_LOOKS[hash % ONLINE_LOOKS.length], color: ONLINE_COLORS[(hash >> 4) % ONLINE_COLORS.length] };
 }

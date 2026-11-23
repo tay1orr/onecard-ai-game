@@ -45,7 +45,7 @@ export function formatNumber(value) {
 }
 
 export function stars(count) {
-  return '★'.repeat(Math.max(1, Math.min(5, Number(count) || 1)));
+  return '★'.repeat(Math.max(1, Math.min(8, Number(count) || 1)));
 }
 
 // 받침 있는 말 뒤 조사(이/가 · 은/는 · 을/를 · 와/과 · 으로/로)

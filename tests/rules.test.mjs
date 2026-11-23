@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { createDeck, OneCardGame } from '../src/core/game-engine.js';
 import { chooseAiMove, chooseSuit } from '../src/core/ai-player.js';
 import { fanLayout, sortHand } from '../src/core/hand-layout.js';
-import { THEMES } from '../src/data/themes.js';
 import { aiReactionDelay, chooseAiReaction } from '../src/core/ai-reactions.js';
 import {
   LEGACY_BACKUP_KEY,
@@ -177,8 +176,8 @@ const floorStorage = memoryStorage();
 const floorLoss = recordMatchResult({ won: false, opponentStars: 1, matchId: 'floor-loss' }, floorStorage);
 assert.equal(floorLoss.profile.points, 0, '점수는 0 아래로 내려가지 않아야 함');
 assert.equal(floorLoss.delta, 0, '0점에서 패배하면 실제 점수 변화도 0으로 표시해야 함');
-assert.deepEqual(matchmakingWeights(0), [55, 35, 10, 0, 0], '초기 점수대 매칭 확률을 적용해야 함');
-assert.deepEqual(matchmakingWeights(20000), [0, 0, 0, 30, 70], '2만점 이상은 4·5성만 매칭해야 함');
+assert.deepEqual(matchmakingWeights(0), [55, 35, 10, 0, 0, 0, 0, 0], '초기 점수대 매칭 확률을 적용해야 함');
+assert.deepEqual(matchmakingWeights(20000), [0, 0, 0, 30, 70, 0, 0, 0], '2만~5만점은 4·5성만 매칭해야 함');
 assert.equal(selectAiOpponent(0, () => 0, [1, 1]).stars, 2, '같은 AI가 세 번 연속 걸리려 하면 다른 가능한 등급으로 바꿔야 함');
 
 const cosmeticStorage = memoryStorage({
@@ -213,7 +212,6 @@ assert.equal(newlyUnlockedCosmetics(19999, 20000).length, 6, '2만점 달성 시
 assert.equal(nextCosmeticUnlock(20699).threshold, 20700, '20,700점부터 신규 이미지 테이블 보상이 시작되어야 함');
 assert.equal(newlyUnlockedCosmetics(20699, 21200).map((item) => item.id).join(','), 'table-pink-cloud-pop,back-pink-cloud-pop', '핑크 구름 팝은 테이블과 카드 뒷면 순서로 해금되어야 함');
 assert.deepEqual(newlyUnlockedCosmetics(21200, 22400).map((item) => item.id), ['effect-pink-cloud-carnival', 'victory-pink-cloud-pop'], '핑크 구름 팝은 이펙트와 승리 연출까지 이어서 해금되어야 함');
-assert.equal(COSMETICS.every((item) => THEMES[item.theme] || item.slot === 'charm'), true, '모든 꾸미기는 그릴 테마를 가리켜야 함');
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-neon-arcade'), true, '네온 아케이드 카드 앞면을 제공해야 함');
 assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-dessert-cafe'), true, '디저트 카페 카드 앞면을 제공해야 함');
 assert.equal(cosmeticsForSlot('pile').length, 0, '더미 꾸밈 아이템은 모두 제거되어야 함');

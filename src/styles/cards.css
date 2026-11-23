@@ -1,4 +1,5 @@
-/* 카드 — 크기는 --cw 하나로 정하고, 모든 글자 · 무늬가 그 비율을 따른다 */
+/* 카드 — 크기는 --cw 하나로 정하고, 모든 글자 · 무늬가 그 비율을 따른다.
+   앞면 종이 · 그림카드 · 뒷면 그림은 꾸미기 변수(look-apply.js)로 바뀐다 */
 .card {
   --ch: calc(var(--cw) * 1.4);
   position: relative; display: block; width: var(--cw); height: var(--ch);
@@ -6,97 +7,118 @@
   user-select: none; -webkit-user-select: none; touch-action: none;
 }
 
-/* 앞면 */
+/* 앞면 — 실제 종이 결(사진) 위에 인쇄한 것처럼 */
 .card.face {
-  background: var(--paper); color: var(--ink);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 5px 12px rgba(0, 0, 0, 0.28);
+  background: var(--paper-img, none) center / 260%, var(--paper, #fbf8f1);
+  background-blend-mode: multiply, normal;
+  color: var(--ink, #1b1d24);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 5px 12px rgba(0, 0, 0, 0.3);
 }
-.card.face.is-red { color: var(--red); }
+.card.face.is-red { color: var(--red, #b8232f); }
 .card .suit { display: block; fill: currentColor; }
+.card .face-frame { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
 .card .idx {
-  position: absolute; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  position: absolute; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 1px;
   font-family: var(--font-display); font-weight: 800; font-size: calc(var(--cw) * 0.235); line-height: 0.86; letter-spacing: -0.02em;
 }
 .card .idx.tl { left: 7%; top: 5%; }
 .card .idx.br { right: 7%; bottom: 5%; transform: rotate(180deg); }
 .card .idx .suit { width: calc(var(--cw) * 0.15); height: calc(var(--cw) * 0.15); }
-.card .center { position: absolute; inset: 15% 19% 15%; }
+.card .center { position: absolute; inset: 15% 19% 15%; z-index: 1; }
 .card .pip { position: absolute; width: calc(var(--cw) * 0.19); height: calc(var(--cw) * 0.19); transform: translate(-50%, -50%); }
 .card .pip.flip { transform: translate(-50%, -50%) rotate(180deg); }
 .card .pip .suit { width: 100%; height: 100%; }
 
-.card.s-hearts { --ace-default: var(--ace-hearts); }
-.card.s-diamonds { --ace-default: var(--ace-diamonds); }
-.card.s-spades { --ace-default: var(--ace-spades); }
-.card.s-clubs { --ace-default: var(--ace-clubs); }
-.card .ace-art { position: absolute; inset: 4% -6% 10%; background: var(--ace-art, var(--ace-default)) center / contain no-repeat; }
-.card .ace-suit { display: var(--ace-small, none); position: absolute; left: 50%; bottom: -2%; width: 26%; transform: translateX(-50%); }
+/* 금박 · 은박 무늬 — 실제 금박 사진을 무늬 모양으로 오려 찍는다 */
+.pips-foil .card.face .pip .suit { visibility: hidden; }
+.pips-foil .card.face .pip { background: var(--pip-foil) center / 520%; -webkit-mask: var(--suit-mask) center / contain no-repeat; mask: var(--suit-mask) center / contain no-repeat; filter: drop-shadow(0 0.5px 0 rgba(0, 0, 0, 0.35)); }
+.card.s-hearts { --suit-mask: var(--mask-hearts); --court-img-K: var(--court-KH); --court-img-Q: var(--court-QH); --court-img-J: var(--court-JH); --ace-img: var(--ace-H); }
+.card.s-diamonds { --suit-mask: var(--mask-diamonds); --court-img-K: var(--court-KD); --court-img-Q: var(--court-QD); --court-img-J: var(--court-JD); --ace-img: var(--ace-D); }
+.card.s-spades { --suit-mask: var(--mask-spades); --court-img-K: var(--court-KS); --court-img-Q: var(--court-QS); --court-img-J: var(--court-JS); --ace-img: var(--ace-S); }
+.card.s-clubs { --suit-mask: var(--mask-clubs); --court-img-K: var(--court-KC); --court-img-Q: var(--court-QC); --court-img-J: var(--court-JC); --ace-img: var(--ace-C); }
 
+/* 에이스 — 그림이 있으면 그림 + 작은 무늬, 없으면 큰 무늬 하나 */
+.card .ace-art { position: absolute; inset: 0 -8% 16%; background: var(--ace-img, none) center / contain no-repeat; mix-blend-mode: var(--court-blend, multiply); }
+.card .ace-suit { left: 50%; top: 50%; width: 64%; height: auto; aspect-ratio: 1; }
+.card.s-spades { --ace-on: var(--ace-on-S, 0); }
+.card.s-hearts { --ace-on: var(--ace-on-H, 0); }
+.card.s-diamonds { --ace-on: var(--ace-on-D, 0); }
+.card.s-clubs { --ace-on: var(--ace-on-C, 0); }
+.card.r-A .ace-art { opacity: var(--ace-on, 0); }
+.card.r-A .ace-suit { width: calc(64% - var(--ace-on, 0) * 42%); top: calc(50% + var(--ace-on, 0) * 40%); }
+
+/* 그림카드 — 실제 옛 카드 · 명화 · 사진 한 장을 판에 넣는다 */
 .card .court {
-  position: absolute; inset: -2% -6%; border-radius: calc(var(--cw) * 0.05);
-  background: color-mix(in srgb, currentColor 8%, transparent);
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 34%, transparent);
+  position: absolute; inset: -4% -9% -4%; border-radius: calc(var(--cw) * 0.04); overflow: hidden;
+  box-shadow: inset 0 0 0 1.2px color-mix(in srgb, currentColor 38%, transparent);
 }
-.card .court-letter {
-  position: absolute; left: 6%; top: -4%; font: 900 calc(var(--cw) * 0.62) / 1 var(--font-display);
-  color: currentColor; opacity: 0.13; letter-spacing: -0.04em;
-}
-.card .court-art { position: absolute; inset: 14% 8% 16%; background-position: center; background-size: contain; background-repeat: no-repeat; }
-.card.r-J .court-art { background-image: var(--court-J); }
-.card.r-Q .court-art { background-image: var(--court-Q); }
-.card.r-K .court-art { background-image: var(--court-K); }
-.card .court-suit { position: absolute; right: 7%; bottom: 6%; width: 22%; height: auto; aspect-ratio: 1; }
+.card .court-art { position: absolute; inset: 0; background-position: center; background-size: var(--court-fit, cover); background-repeat: no-repeat; mix-blend-mode: var(--court-blend, multiply); filter: var(--court-fx, none); }
+.card.r-K .court-art { background-image: var(--court-img-K); }
+.card.r-Q .court-art { background-image: var(--court-img-Q); }
+.card.r-J .court-art { background-image: var(--court-img-J); }
 
-/* 조커 — 상아 바탕 위 보라 띠, 광대 그림을 크게 당겨 보인다 */
-.card.is-joker { color: #5b2bb5; background: var(--paper); }
-.card.is-joker::before { content: ''; position: absolute; inset: 4%; border-radius: calc(var(--cw) * 0.05); box-shadow: inset 0 0 0 2px #f2b544, inset 0 0 0 4px var(--paper), inset 0 0 0 5px #5b2bb5; }
-.card .joker-band { position: absolute; left: 8%; top: 8%; writing-mode: vertical-rl; }
-.card .joker-band b { font: 900 calc(var(--cw) * 0.17) / 1 var(--font-display); letter-spacing: 0.04em; }
+/* 조커 — 옛 카드의 조커 그림 */
+.card.is-joker { color: #5b2bb5; }
+.card.is-joker::before { content: ''; position: absolute; inset: 4%; z-index: 1; border-radius: calc(var(--cw) * 0.05); box-shadow: inset 0 0 0 1.5px var(--face-accent, #c9a25a); pointer-events: none; }
+.card .joker-band { position: absolute; z-index: 2; left: 8%; top: 8%; writing-mode: vertical-rl; }
+.card .joker-band b { font: 900 calc(var(--cw) * 0.16) / 1 var(--font-display); letter-spacing: 0.04em; }
 .card .joker-band.bottom { left: auto; top: auto; right: 8%; bottom: 8%; transform: rotate(180deg); }
-.card .joker-art { position: absolute; inset: 18% 18% 22%; background: var(--joker-art) center 46% / 200% no-repeat; }
+.card .joker-art { position: absolute; inset: 9% 16% 14%; background: var(--joker-art) center / contain no-repeat; mix-blend-mode: multiply; }
 .card .joker-power {
-  position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%) rotate(-4deg);
+  position: absolute; z-index: 2; left: 50%; bottom: 6%; transform: translateX(-50%) rotate(-4deg);
   padding: 2px 8px; border-radius: 6px; background: var(--strike); color: #fff;
-  font: 900 calc(var(--cw) * 0.16) / 1.1 var(--font-display);
+  font: 900 calc(var(--cw) * 0.15) / 1.1 var(--font-display);
 }
 
-/* 뒷면 — 흰 테두리 안에 테마 무늬 · 틀 · 문장 */
-.card.back { background: #f6f2e8; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 5px 12px rgba(0, 0, 0, 0.3); }
-.card.back::before {
-  content: ''; position: absolute; inset: 5.5%; border-radius: calc(var(--cw) * 0.05);
-  background: var(--back-texture, none) center / 220%, linear-gradient(155deg, var(--back-base), var(--back-base2));
+/* 앞면 테 */
+.ff-thin .card.face .face-frame { box-shadow: inset 0 0 0 calc(var(--cw) * 0.045) transparent, inset 0 0 0 calc(var(--cw) * 0.052) color-mix(in srgb, var(--face-accent) 70%, transparent); }
+.ff-gold .card.face .face-frame { box-shadow: inset 0 0 0 calc(var(--cw) * 0.035) transparent, inset 0 0 0 calc(var(--cw) * 0.048) var(--face-accent), inset 0 0 0 calc(var(--cw) * 0.062) transparent, inset 0 0 0 calc(var(--cw) * 0.07) color-mix(in srgb, var(--face-accent) 60%, transparent); }
+.ff-deco .card.face .face-frame { box-shadow: inset 0 0 0 calc(var(--cw) * 0.03) transparent, inset 0 0 0 calc(var(--cw) * 0.042) var(--face-accent), inset 0 0 0 calc(var(--cw) * 0.07) transparent, inset 0 0 0 calc(var(--cw) * 0.078) var(--face-accent); }
+.ff-glass .card.face { box-shadow: inset 0 0 0 1.5px rgba(127, 195, 232, 0.75), inset 0 calc(var(--cw) * 0.16) calc(var(--cw) * 0.18) calc(var(--cw) * -0.14) #fff, 0 6px 14px rgba(0, 0, 0, 0.3); }
+.ff-grid .card.face .face-frame { background: linear-gradient(rgba(255, 255, 255, 0.13) 1px, transparent 1px) 0 0 / calc(var(--cw) * 0.09) calc(var(--cw) * 0.09), linear-gradient(90deg, rgba(255, 255, 255, 0.13) 1px, transparent 1px) 0 0 / calc(var(--cw) * 0.09) calc(var(--cw) * 0.09); box-shadow: inset 0 0 0 1.5px rgba(238, 245, 255, 0.6); }
+.ff-neon .card.face .face-frame { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--face-accent) 80%, transparent); }
+.ff-neon .card.face .idx { color: var(--face-accent); }
+.ff-neon .card.face.is-red .idx { color: var(--red); }
+.ff-paint .card.face .face-frame { background: var(--face-frame) center / 100% 100% no-repeat; }
+.ff-paint .card.face .center { inset: 21% 25% 21%; }
+.ff-paint .card.face .idx.tl { left: 13%; top: 9%; }
+.ff-paint .card.face .idx.br { right: 13%; bottom: 9%; }
+
+/* 뒷면 — 종이 테(실제 종이 결) 안에 그림 · 안쪽 선 · 금박 결 · 작은 이름 */
+.card.back {
+  background: var(--back-paper, none) center / 240%, var(--back-border, #f6f1e6);
   background-blend-mode: multiply, normal;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14), 0 5px 12px rgba(0, 0, 0, 0.32);
 }
-.card .back-photo { position: absolute; inset: 5.5%; border-radius: calc(var(--cw) * 0.05); background: var(--back-photo, none) center / cover no-repeat; }
-.card .back-pattern { position: absolute; inset: 5.5%; border-radius: calc(var(--cw) * 0.05); background: var(--back-pattern, none); }
-.card .back-frame { position: absolute; inset: 11%; border-radius: calc(var(--cw) * 0.035); box-shadow: inset 0 0 0 1.5px var(--back-frame), inset 0 0 0 4px rgba(0, 0, 0, 0.18); }
-.card .back-emblem {
-  position: absolute; left: 50%; top: 50%; width: 50%; aspect-ratio: 1; transform: translate(-50%, -50%) rotate(-6deg);
-  background: var(--back-emblem, none) center / contain no-repeat;
+.card .back-art {
+  position: absolute; inset: var(--back-inset, 5.5%); border-radius: calc(var(--cw) * 0.05); overflow: hidden;
+  background: var(--back-art, none) var(--back-pos, center) / var(--back-fit, cover) no-repeat, var(--back-texture, none) center / 260%, var(--back-base, #15223a);
+  background-blend-mode: normal, multiply, normal;
+  filter: var(--back-filter, none);
 }
+.card .back-art::after { content: ''; position: absolute; inset: 6%; border-radius: calc(var(--cw) * 0.03); box-shadow: inset 0 0 0 1.2px var(--back-frame, transparent); }
+.card .back-foil { position: absolute; inset: var(--back-inset, 5.5%); border-radius: calc(var(--cw) * 0.05); overflow: hidden; opacity: var(--back-foil, 0); pointer-events: none; }
+.card .back-foil::before {
+  content: ''; position: absolute; inset: -10% -70%;
+  background: linear-gradient(112deg, transparent 38%, rgba(255, 246, 214, 0.42) 47%, rgba(255, 255, 255, 0.18) 51%, transparent 60%);
+  transform: translateX(-48%);
+}
+[data-back-foil="1"] .card .back-foil::before { animation: back-foil 6.5s ease-in-out infinite; }
+@keyframes back-foil { 0%, 55% { transform: translateX(-48%); } 85%, 100% { transform: translateX(48%); } }
+.card .back-emblem { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-6deg); }
 .card .back-emblem::after {
-  content: var(--back-emblem-text, ""); position: absolute; inset: -20% -40%; display: grid; place-items: center;
-  font: 900 calc(var(--cw) * 0.24) / 1 var(--font-display); color: var(--back-frame); letter-spacing: 0.01em;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  content: var(--back-emblem-text, ""); display: block; white-space: nowrap;
+  font: 900 calc(var(--cw) * 0.26) / 1 var(--font-display); letter-spacing: 0.01em;
+  background: url('/assets/s2/t/gold-foil.webp') center / 300%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 1.5px 0 rgba(0, 0, 0, 0.45));
 }
-
-/* 앞면 꾸밈 결 */
-.fs-parchment .card.face { background: var(--face-texture, none) center / 260%, var(--paper); background-blend-mode: multiply; }
-.fs-scanline .card.face { background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 3px), var(--paper); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--face-accent) 70%, transparent), 0 5px 12px rgba(0, 0, 0, 0.4); }
-.fs-scanline .card.face .idx { color: var(--face-accent); }
-.fs-scanline .card.face.is-red .idx { color: var(--red); }
-.fs-deco .card.face { box-shadow: inset 0 0 0 2px var(--face-accent), inset 0 0 0 5px var(--paper), inset 0 0 0 6px color-mix(in srgb, var(--face-accent) 55%, transparent), 0 5px 12px rgba(0, 0, 0, 0.4); }
-.fs-stone .card.face { background: radial-gradient(circle at 20% 30%, rgba(0, 0, 0, 0.06) 0 2px, transparent 3px) 0 0 / 9px 9px, radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.25) 0 1px, transparent 2px) 0 0 / 7px 7px, var(--paper); }
-.fs-glass .card.face { background: linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(220, 236, 250, 0.88)); box-shadow: inset 0 0 0 1.5px rgba(127, 211, 255, 0.7), inset 0 18px 22px -18px #fff, 0 6px 14px rgba(0, 0, 0, 0.3); }
-.fs-blueprint .card.face { background: linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px) 0 0 / 10px 10px, linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px) 0 0 / 10px 10px, var(--paper); box-shadow: inset 0 0 0 1.5px rgba(238, 245, 255, 0.6), 0 5px 12px rgba(0, 0, 0, 0.35); }
-.fs-blueprint .card .court-art, .fs-ink .card .court-art { filter: saturate(0.4); }
-.fs-ink .card.face { box-shadow: inset 0 0 0 3px rgba(26, 26, 26, 0.85), inset 0 0 0 5px var(--paper), 0 5px 12px rgba(0, 0, 0, 0.3); }
-.fs-tarot .card.face { box-shadow: inset 0 0 0 2px var(--face-accent), inset 0 0 0 4px var(--paper), inset 0 0 0 5px var(--face-accent), 0 5px 12px rgba(0, 0, 0, 0.3); }
-.fs-tarot .card .idx { font-weight: 700; }
-.fs-league .card.face { box-shadow: inset 0 calc(var(--cw) * -0.05) 0 var(--face-accent), inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 5px 12px rgba(0, 0, 0, 0.3); }
-.fs-holo .card.face { background: conic-gradient(from 200deg at 30% 30%, rgba(255, 179, 230, 0.35), rgba(169, 184, 255, 0.35), rgba(170, 255, 220, 0.3), rgba(255, 240, 170, 0.3), rgba(255, 179, 230, 0.35)), var(--paper); box-shadow: inset 0 0 0 1.5px rgba(169, 184, 255, 0.8), 0 5px 12px rgba(0, 0, 0, 0.3); }
-.fs-photo .card .court-art { inset: 8%; border-radius: calc(var(--cw) * 0.04); background-size: cover; box-shadow: inset 0 0 0 2px rgba(200, 161, 90, 0.9); }
-.fs-photo .card .ace-art { inset: 0 -4% 8%; border-radius: calc(var(--cw) * 0.05); background-size: cover; box-shadow: inset 0 0 0 2px rgba(200, 161, 90, 0.9); }
+.card .back-caption { position: absolute; left: 0; right: 0; bottom: calc(var(--back-inset, 5.5%) * 0.18); display: none; text-align: center; }
+.card .back-caption::after { content: var(--back-caption, ""); font: italic 600 calc(var(--cw) * 0.068) / 1 Georgia, 'Times New Roman', serif; color: rgba(70, 48, 26, 0.78); letter-spacing: 0.02em; }
+.show-caption .card .back-caption { display: block; }
 
 /* 작은 카드(기록 · 미리보기) */
 .card.mini { --cw: 42px; flex: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-back-foil="1"] .card .back-foil::before { animation: none; }
+}

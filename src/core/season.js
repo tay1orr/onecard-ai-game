@@ -39,7 +39,7 @@ export function openingEventDaysLeft(now = new Date()) {
 }
 
 export function xpForMatch({ won, stars = 1, bonus = false, mode = 'ai', now = new Date() } = {}) {
-  const safeStars = Math.min(5, Math.max(1, Number(stars) || 1));
+  const safeStars = Math.min(8, Math.max(1, Number(stars) || 1));
   let xp = won ? 100 + safeStars * 20 : 45;
   if (mode === 'multi') xp += 20;
   if (bonus && won) xp = Math.round(xp * 1.5);

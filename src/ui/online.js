@@ -8,12 +8,11 @@ import { loadPlayerProfile, playerStarsForPoints, recordMatchResult } from '../c
 import { applyMissionEvents, missionEventsForCard } from '../core/missions.js';
 import { cosmeticById } from '../core/cosmetics.js';
 import { onlineLook } from '../data/characters.js';
-import { img } from '../data/assets.js';
+import { cut } from '../data/assets.js';
 import { createTable } from './table.js';
 import { createFx } from './fx.js';
 import { createDirector } from './director.js';
-import { applyEquipped, backVars, themeFor } from './theme-apply.js';
-import { renderDecor } from './decor.js';
+import { applyEquipped, backVars, lookFor } from './look-apply.js';
 import { mountToys } from './toys.js';
 import { pickSuit, playHint, blockedReason } from './play-ui.js';
 import { showResult } from './result.js';
@@ -85,7 +84,7 @@ export function startOnline({ host, onExit, openRules }) {
       h('h1.page-title', {}, '친구와 대전'), pill),
     h('div.entry-body', {},
       h('div.entry-card', {},
-        h('img.entry-art', { src: img(avatar.motif), alt: '' }),
+        h('img.entry-art', { src: cut(avatar.portrait), alt: '' }),
         h('label.field', {}, h('span', {}, '닉네임'), nickname),
         h('div.entry-split', {},
           h('section.entry-col', {}, h('b', {}, '방을 만들어요'), h('small', {}, '코드를 친구에게 알려 주세요'), createButton),
@@ -139,7 +138,7 @@ export function startOnline({ host, onExit, openRules }) {
   function renderRoom(view) {
     const { mine, opponent } = getSeatView(view);
     const seat = (player, label, me) => h(`div.seat${player?.ready ? '.is-ready' : ''}${me ? '.is-me' : ''}`, {},
-      h('img', { src: img(me ? avatar.motif : onlineLook(player?.nickname || '').motif), alt: '' }),
+      h('img', { src: cut(me ? avatar.portrait : onlineLook(player?.nickname || '').portrait), alt: '' }),
       h('b', {}, player?.nickname || '친구를 기다리는 중'),
       h('small', {}, player ? `${stars(playerStarsForPoints(player.rating || 0))} ${formatNumber(player.rating || 0)}점, ${player.ready ? '준비 완료' : '준비 전'}` : '방 코드를 알려 주세요'),
       h('span.seat-label', {}, label));
@@ -180,24 +179,23 @@ export function startOnline({ host, onExit, openRules }) {
       onRules: () => openRules?.(),
       onEmoteToggle: () => toggleStickers(),
     });
-    const themes = applyEquipped(table.root, profile.equipped);
+    const looks = applyEquipped(table.root, profile.equipped, { propsEl: table.sceneProps });
     fx = createFx({ layer: table.fxLayer, root: table.root, director });
     host.replaceChildren(table.root);
-    renderDecor(table.decor, themes.table);
     toys = mountToys({ layer: table.toysLayer, equipped: profile.equipped, fx });
-    table.themes = themes;
+    table.looks = looks;
     table.root.addEventListener('pointerdown', (event) => { if (event.target.closest('.fx-layer') && director.busy()) director.skip(); });
     const { opponent } = getSeatView(view);
     const look = onlineLook(opponent?.nickname || '');
-    table.setRival({ name: opponent?.nickname || '상대', starsCount: playerStarsForPoints(opponent?.rating || 0), color: look.color, motif: look.motif, status: '' });
-    table.setMe({ name: getSeatView(view).mine?.nickname || '나', motif: avatar.motif, points: profile.points, starsCount: playerStarsForPoints(profile.points), color: '#f2b544' });
+    table.setRival({ name: opponent?.nickname || '상대', starsCount: playerStarsForPoints(opponent?.rating || 0), color: look.color, portrait: look.portrait, status: '' });
+    table.setMe({ name: getSeatView(view).mine?.nickname || '나', portrait: avatar.portrait, points: profile.points, starsCount: playerStarsForPoints(profile.points), color: '#f2b544' });
   }
 
   function syncTable(view) {
     const { mine, opponent } = getSeatView(view);
     const myTurn = isMyTurn(view);
     table.setMatch({ title: `${mine?.nickname || '나'} 대 ${opponent?.nickname || '상대'}`, sub: `이 방 ${view.host?.wins ?? 0} : ${view.guest?.wins ?? 0}`, bonus: (view.bonusMultiplier || 1) > 1 });
-    Object.entries(backVars(themeFor(opponent?.cardBack || 'back-classic'))).forEach(([key, value]) => table.rivalZone.style.setProperty(key, value));
+    Object.entries(backVars(lookFor(opponent?.cardBack || 'back-classic'))).forEach(([key, value]) => table.rivalZone.style.setProperty(key, value));
     table.setTurn(view.status === 'playing' ? (myTurn ? 'me' : 'rival') : '');
     table.setDeckCount(view.drawCount);
     table.setAttack(view.attackCount, view.topCard?.rank === 'JOKER' && view.attackCount > 0);
@@ -307,7 +305,7 @@ export function startOnline({ host, onExit, openRules }) {
         if (event.payload.remaining === 1) events.push({ id: `online:${event.id}:onecard`, type: 'one-card', mode: 'multi' });
         applyMissionEvents(events);
       }
-      fx.burst(mine ? table.themes.effect : themeFor('effect-classic'), at, { count: mine ? 5 : 3, sizeScale: mine ? 1 : 0.7 });
+      fx.burst(mine ? table.looks.effect : lookFor('effect-classic'), at, mine ? {} : { count: 2, sizeScale: 0.7 });
       if (card.rank === 'JOKER') await fx.jokerTime({ at, owner: mine ? 'me' : 'rival', card });
       else if (card.rank === '2' || card.rank === 'A') await fx.attack({ at, added: card.rank === '2' ? 2 : 3, total: event.payload.attackCount || view.attackCount, owner: mine ? 'me' : 'rival' });
       else if (card.rank === '7') { table.setActiveSuit(event.payload.chosenSuit); await fx.suitChange({ at, suit: event.payload.chosenSuit, medallion: table.root.querySelector('.suit-medallion') }); }
@@ -344,8 +342,8 @@ export function startOnline({ host, onExit, openRules }) {
     if (!rating.duplicate) client.setRating(after.points).catch(() => {});
     const look = onlineLook(opponent?.nickname || '');
     const scene = won
-      ? fx.victory({ theme: table.themes.victory, avatarEl: table.meImg, title: '승리', sub: `${opponent?.nickname || '상대'}를 이겼어요` })
-      : fx.defeat({ rival: { name: opponent?.nickname || '상대', motif: look.motif, faces: { smug: 'smirking' } }, portrait: table.rivalPortrait });
+      ? fx.victory({ look: table.looks.victory, avatarEl: table.meImg, title: '승리', sub: `${opponent?.nickname || '상대'}를 이겼어요` })
+      : fx.defeat({ rival: { name: opponent?.nickname || '상대', portrait: look.portrait }, portrait: table.rivalPortrait });
     await scene.timeline;
     resultPanel = showResult({
       host: table.root, won, delta: rating.delta || 0, bonus: (view.bonusMultiplier || 1) > 1, profile: after,

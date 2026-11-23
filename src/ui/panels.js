@@ -72,16 +72,31 @@ export function openMissions() {
   return openModal({ title: '미션', body: h('div.missions', {}, block('오늘', dashboard.daily), block('이번 주', dashboard.weekly), h('p.modal-note', {}, '미션을 하나 마칠 때마다 시즌 패스 경험치 40도 받아요.')), className: 'is-missions' });
 }
 
-export function openCredits() {
+export async function openCredits() {
   const rows = [
-    ['캐릭터 · 소품 그림', 'Microsoft Fluent Emoji 3D (MIT)'],
-    ['움직이는 그림', 'Microsoft Fluent Emoji Animated (MIT)'],
     ['카드 · 칩 · 주사위 · 단추 소리, 잔음악', 'Kenney (CC0)'],
-    ['탁자 · 테두리 질감', 'ambientCG, OpenGameArt (CC0)'],
+    ['반응 스티커', 'Microsoft Fluent Emoji 3D (MIT)'],
     ['리얼 로즈 사진', '선생님이 찍은 사진'],
     ['글꼴', 'Pretendard, Big Shoulders Display (OFL)'],
   ];
-  return openModal({ title: '그림 · 소리 출처', body: h('ul.credits', {}, ...rows.map(([what, who]) => h('li', {}, h('b', {}, what), h('small', {}, who)))), className: 'is-credits' });
+  const list = h('div.credits-groups', {}, h('p.modal-text', {}, '출처 목록을 불러오고 있어요'));
+  const modal = openModal({
+    title: '그림 · 소리 출처',
+    body: h('div.credits-body', {},
+      h('ul.credits', {}, ...rows.map(([what, who]) => h('li', {}, h('b', {}, what), h('small', {}, who)))),
+      list),
+    className: 'is-credits',
+  });
+  // 실사 에셋 출처는 길어서 창을 열 때 받는다
+  try {
+    const { CREDIT_GROUPS } = await import('../data/credits.js');
+    list.replaceChildren(...CREDIT_GROUPS.filter((group) => group.items.length).map((group) => h('details.credit-group', {},
+      h('summary', {}, `${group.name} ${group.items.length}`),
+      h('ul.credit-items', {}, ...group.items.map((item) => h('li', {}, h('b', {}, item.title), h('small', {}, [item.creator, item.license].filter(Boolean).join(', '))))))));
+  } catch {
+    list.replaceChildren(h('p.modal-text', {}, '출처 목록을 불러오지 못했어요. docs/ASSET-CREDITS.md 에도 같은 목록이 있어요'));
+  }
+  return modal;
 }
 
 // 기록 보호(이메일) — 기록 동기화 모듈은 이 창을 열 때 받는다
