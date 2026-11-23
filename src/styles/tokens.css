@@ -1,0 +1,41 @@
+/* ONE! 시즌 2 — 색 · 글꼴 · 크기
+   바탕은 밤의 잉크 남색, 탁자는 초록 펠트, 카드는 상아색 종이. 강조는 금색(보상 · 결정)과 공격 빨강 둘만. */
+:root {
+  color-scheme: dark;
+  --ink: #121a2b;
+  --ink-2: #18223a;
+  --ink-3: #22304c;
+  --ink-4: #2e3d5d;
+  --line: rgba(233, 238, 246, 0.12);
+  --line-strong: rgba(233, 238, 246, 0.24);
+  --chalk: #eef2f8;
+  --mute: #9aa6bd;
+  --gold: #f2b544;
+  --gold-deep: #b9801c;
+  --strike: #e8483b;
+  --mint: #4fd1a1;
+
+  --font-ui: 'Pretendard Variable', Pretendard, -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Big Shoulders Display', 'Pretendard Variable', Pretendard, sans-serif;
+
+  --r-s: 8px;
+  --r-m: 14px;
+  --r-l: 22px;
+  --hard: 0 3px 0 rgba(0, 0, 0, 0.38);
+  --hard-l: 0 6px 0 rgba(0, 0, 0, 0.32);
+  --drop: 0 10px 22px rgba(4, 7, 15, 0.38);
+
+  /* 카드 폭 — 실습실 1920 에서 118px, 휴대폰에서 64px 안팎 */
+  --cw-base: clamp(62px, 6.1vw, 118px);
+
+  /* 기본 테마(아이템을 장착하면 바뀐다) */
+  --felt: #1d6b52;
+  --felt-deep: #0b3528;
+  --paper: #fbf7ee;
+  --red: #c62f3b;
+  --face-accent: #f2b544;
+}
+
+@media (max-width: 760px) {
+  :root { --cw-base: clamp(58px, 17vw, 72px); }
+}

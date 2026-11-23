@@ -1,0 +1,102 @@
+/* 카드 — 크기는 --cw 하나로 정하고, 모든 글자 · 무늬가 그 비율을 따른다 */
+.card {
+  --ch: calc(var(--cw) * 1.4);
+  position: relative; display: block; width: var(--cw); height: var(--ch);
+  border-radius: calc(var(--cw) * 0.085); padding: 0; border: 0; overflow: hidden;
+  user-select: none; -webkit-user-select: none; touch-action: none;
+}
+
+/* 앞면 */
+.card.face {
+  background: var(--paper); color: var(--ink);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 5px 12px rgba(0, 0, 0, 0.28);
+}
+.card.face.is-red { color: var(--red); }
+.card .suit { display: block; fill: currentColor; }
+.card .idx {
+  position: absolute; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  font-family: var(--font-display); font-weight: 800; font-size: calc(var(--cw) * 0.235); line-height: 0.86; letter-spacing: -0.02em;
+}
+.card .idx.tl { left: 7%; top: 5%; }
+.card .idx.br { right: 7%; bottom: 5%; transform: rotate(180deg); }
+.card .idx .suit { width: calc(var(--cw) * 0.15); height: calc(var(--cw) * 0.15); }
+.card .center { position: absolute; inset: 15% 19% 15%; }
+.card .pip { position: absolute; width: calc(var(--cw) * 0.19); height: calc(var(--cw) * 0.19); transform: translate(-50%, -50%); }
+.card .pip.flip { transform: translate(-50%, -50%) rotate(180deg); }
+.card .pip .suit { width: 100%; height: 100%; }
+
+.card.s-hearts { --ace-default: var(--ace-hearts); }
+.card.s-diamonds { --ace-default: var(--ace-diamonds); }
+.card.s-spades { --ace-default: var(--ace-spades); }
+.card.s-clubs { --ace-default: var(--ace-clubs); }
+.card .ace-art { position: absolute; inset: 4% -6% 10%; background: var(--ace-art, var(--ace-default)) center / contain no-repeat; }
+.card .ace-suit { display: var(--ace-small, none); position: absolute; left: 50%; bottom: -2%; width: 26%; transform: translateX(-50%); }
+
+.card .court {
+  position: absolute; inset: -2% -6%; border-radius: calc(var(--cw) * 0.05);
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 34%, transparent);
+}
+.card .court-letter {
+  position: absolute; left: 6%; top: -4%; font: 900 calc(var(--cw) * 0.62) / 1 var(--font-display);
+  color: currentColor; opacity: 0.13; letter-spacing: -0.04em;
+}
+.card .court-art { position: absolute; inset: 14% 8% 16%; background-position: center; background-size: contain; background-repeat: no-repeat; }
+.card.r-J .court-art { background-image: var(--court-J); }
+.card.r-Q .court-art { background-image: var(--court-Q); }
+.card.r-K .court-art { background-image: var(--court-K); }
+.card .court-suit { position: absolute; right: 7%; bottom: 6%; width: 22%; height: auto; aspect-ratio: 1; }
+
+/* 조커 — 상아 바탕 위 보라 띠, 광대 그림을 크게 당겨 보인다 */
+.card.is-joker { color: #5b2bb5; background: var(--paper); }
+.card.is-joker::before { content: ''; position: absolute; inset: 4%; border-radius: calc(var(--cw) * 0.05); box-shadow: inset 0 0 0 2px #f2b544, inset 0 0 0 4px var(--paper), inset 0 0 0 5px #5b2bb5; }
+.card .joker-band { position: absolute; left: 8%; top: 8%; writing-mode: vertical-rl; }
+.card .joker-band b { font: 900 calc(var(--cw) * 0.17) / 1 var(--font-display); letter-spacing: 0.04em; }
+.card .joker-band.bottom { left: auto; top: auto; right: 8%; bottom: 8%; transform: rotate(180deg); }
+.card .joker-art { position: absolute; inset: 18% 18% 22%; background: var(--joker-art) center 46% / 200% no-repeat; }
+.card .joker-power {
+  position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%) rotate(-4deg);
+  padding: 2px 8px; border-radius: 6px; background: var(--strike); color: #fff;
+  font: 900 calc(var(--cw) * 0.16) / 1.1 var(--font-display);
+}
+
+/* 뒷면 — 흰 테두리 안에 테마 무늬 · 틀 · 문장 */
+.card.back { background: #f6f2e8; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 5px 12px rgba(0, 0, 0, 0.3); }
+.card.back::before {
+  content: ''; position: absolute; inset: 5.5%; border-radius: calc(var(--cw) * 0.05);
+  background: var(--back-texture, none) center / 220%, linear-gradient(155deg, var(--back-base), var(--back-base2));
+  background-blend-mode: multiply, normal;
+}
+.card .back-photo { position: absolute; inset: 5.5%; border-radius: calc(var(--cw) * 0.05); background: var(--back-photo, none) center / cover no-repeat; }
+.card .back-pattern { position: absolute; inset: 5.5%; border-radius: calc(var(--cw) * 0.05); background: var(--back-pattern, none); }
+.card .back-frame { position: absolute; inset: 11%; border-radius: calc(var(--cw) * 0.035); box-shadow: inset 0 0 0 1.5px var(--back-frame), inset 0 0 0 4px rgba(0, 0, 0, 0.18); }
+.card .back-emblem {
+  position: absolute; left: 50%; top: 50%; width: 50%; aspect-ratio: 1; transform: translate(-50%, -50%) rotate(-6deg);
+  background: var(--back-emblem, none) center / contain no-repeat;
+}
+.card .back-emblem::after {
+  content: var(--back-emblem-text, ""); position: absolute; inset: -20% -40%; display: grid; place-items: center;
+  font: 900 calc(var(--cw) * 0.24) / 1 var(--font-display); color: var(--back-frame); letter-spacing: 0.01em;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* 앞면 꾸밈 결 */
+.fs-parchment .card.face { background: var(--face-texture, none) center / 260%, var(--paper); background-blend-mode: multiply; }
+.fs-scanline .card.face { background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 3px), var(--paper); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--face-accent) 70%, transparent), 0 5px 12px rgba(0, 0, 0, 0.4); }
+.fs-scanline .card.face .idx { color: var(--face-accent); }
+.fs-scanline .card.face.is-red .idx { color: var(--red); }
+.fs-deco .card.face { box-shadow: inset 0 0 0 2px var(--face-accent), inset 0 0 0 5px var(--paper), inset 0 0 0 6px color-mix(in srgb, var(--face-accent) 55%, transparent), 0 5px 12px rgba(0, 0, 0, 0.4); }
+.fs-stone .card.face { background: radial-gradient(circle at 20% 30%, rgba(0, 0, 0, 0.06) 0 2px, transparent 3px) 0 0 / 9px 9px, radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.25) 0 1px, transparent 2px) 0 0 / 7px 7px, var(--paper); }
+.fs-glass .card.face { background: linear-gradient(140deg, rgba(255, 255, 255, 0.95), rgba(220, 236, 250, 0.88)); box-shadow: inset 0 0 0 1.5px rgba(127, 211, 255, 0.7), inset 0 18px 22px -18px #fff, 0 6px 14px rgba(0, 0, 0, 0.3); }
+.fs-blueprint .card.face { background: linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px) 0 0 / 10px 10px, linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px) 0 0 / 10px 10px, var(--paper); box-shadow: inset 0 0 0 1.5px rgba(238, 245, 255, 0.6), 0 5px 12px rgba(0, 0, 0, 0.35); }
+.fs-blueprint .card .court-art, .fs-ink .card .court-art { filter: saturate(0.4); }
+.fs-ink .card.face { box-shadow: inset 0 0 0 3px rgba(26, 26, 26, 0.85), inset 0 0 0 5px var(--paper), 0 5px 12px rgba(0, 0, 0, 0.3); }
+.fs-tarot .card.face { box-shadow: inset 0 0 0 2px var(--face-accent), inset 0 0 0 4px var(--paper), inset 0 0 0 5px var(--face-accent), 0 5px 12px rgba(0, 0, 0, 0.3); }
+.fs-tarot .card .idx { font-weight: 700; }
+.fs-league .card.face { box-shadow: inset 0 calc(var(--cw) * -0.05) 0 var(--face-accent), inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 5px 12px rgba(0, 0, 0, 0.3); }
+.fs-holo .card.face { background: conic-gradient(from 200deg at 30% 30%, rgba(255, 179, 230, 0.35), rgba(169, 184, 255, 0.35), rgba(170, 255, 220, 0.3), rgba(255, 240, 170, 0.3), rgba(255, 179, 230, 0.35)), var(--paper); box-shadow: inset 0 0 0 1.5px rgba(169, 184, 255, 0.8), 0 5px 12px rgba(0, 0, 0, 0.3); }
+.fs-photo .card .court-art { inset: 8%; border-radius: calc(var(--cw) * 0.04); background-size: cover; box-shadow: inset 0 0 0 2px rgba(200, 161, 90, 0.9); }
+.fs-photo .card .ace-art { inset: 0 -4% 8%; border-radius: calc(var(--cw) * 0.05); background-size: cover; box-shadow: inset 0 0 0 2px rgba(200, 161, 90, 0.9); }
+
+/* 작은 카드(기록 · 미리보기) */
+.card.mini { --cw: 42px; flex: none; }

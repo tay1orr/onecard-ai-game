@@ -1,0 +1,367 @@
+import assert from 'node:assert/strict';
+import { createDeck, OneCardGame } from '../src/core/game-engine.js';
+import { chooseAiMove, chooseSuit } from '../src/core/ai-player.js';
+import { fanLayout, sortHand } from '../src/core/hand-layout.js';
+import { THEMES } from '../src/data/themes.js';
+import { aiReactionDelay, chooseAiReaction } from '../src/core/ai-reactions.js';
+import {
+  LEGACY_BACKUP_KEY,
+  LEGACY_RECORD_KEY,
+  PROFILE_KEY,
+  bonusMatchChance,
+  loadPlayerProfile,
+  matchmakingWeights,
+  recordMatchResult,
+  rewardForStars,
+  rollBonusMatch,
+  savePlayerProfile,
+  selectAiOpponent,
+} from '../src/core/rating.js';
+import {
+  CHARM_SLOT_COUNT,
+  COSMETICS,
+  COSMETIC_SETS,
+  DEFAULT_EQUIPPED,
+  charmToyConfig,
+  cosmeticSetForItem,
+  cosmeticSetProgress,
+  cosmeticsForSlot,
+  equippedCharmIds,
+  equippedSetBonuses,
+  newlyUnlockedCosmetics,
+  nextCosmeticUnlock,
+  normalizeEquipped,
+} from '../src/core/cosmetics.js';
+import {
+  DAILY_MISSION_COUNT,
+  WEEKLY_MISSION_COUNT,
+  applyMissionEvents,
+  loadMissionDashboard,
+} from '../src/core/missions.js';
+import {
+  friendlyAccountSyncError,
+  mergeAccountBundles,
+  mergeMissionStates,
+  mergeProfiles,
+  normalizeEmailInput,
+} from '../src/net/account.js';
+
+function card(suit, rank) { return { id: `${suit}-${rank}`, suit, rank }; }
+
+function memoryStorage(initial = {}) {
+  const values = new Map(Object.entries(initial));
+  return {
+    getItem(key) { return values.has(key) ? values.get(key) : null; },
+    setItem(key, value) { values.set(key, String(value)); },
+  };
+}
+
+function setState(game, { player = 0, top = card('hearts', '5'), hands, attack = 0, requestedSuit = null, freePlay = false }) {
+  game.currentPlayer = player;
+  game.discardPile = [top];
+  game.hands = hands;
+  game.drawPile = [card('clubs', '3'), card('spades', '4'), card('diamonds', '5'), card('clubs', '6')];
+  game.attackCount = attack;
+  game.freePlay = freePlay;
+  game.requestedSuit = requestedSuit;
+  game.winner = null;
+  game.history = [{ player: null, card: { ...top }, turn: 0, requestedSuit: null }];
+}
+
+const game = new OneCardGame({ random: () => 0.42 });
+
+assert.equal(createDeck().length, 54, '표준 카드 52장과 조커 2장을 생성해야 함');
+assert.equal(createDeck().filter((item) => item.rank === 'JOKER').length, 2, '조커는 정확히 2장이어야 함');
+assert.deepEqual(game.hands.map((hand) => hand.length), [5, 5], '양쪽 플레이어는 5장으로 시작해야 함');
+assert.equal(game.drawPile.length, 43, '5장씩 배분하고 시작 카드를 뺀 43장이 덱에 남아야 함');
+
+setState(game, { hands: [[card('hearts', '9'), card('clubs', '5'), card('spades', '7')], [card('clubs', '3')]] });
+assert.equal(game.playableCards(0).length, 2, '7도 같은 무늬가 아니면 낼 수 없어야 함');
+
+setState(game, { hands: [[card('hearts', '7'), card('spades', '7')], [card('clubs', '3')]] });
+assert.deepEqual(game.playableCards(0).map((item) => item.id), ['hearts-7'], '7은 현재 무늬와 맞을 때만 낼 수 있어야 함');
+
+setState(game, { top: card('spades', '7'), requestedSuit: 'hearts', hands: [[card('spades', '7'), card('hearts', '3')], [card('clubs', '3')]] });
+assert.deepEqual(game.playableCards(0).map((item) => item.id), ['spades-7', 'hearts-3'], '7 이후에는 선택된 무늬 또는 다른 7을 낼 수 있어야 함');
+
+setState(game, { hands: [[card('hearts', '9')], [card('clubs', '3')]] });
+assert.equal(game.setStartingPlayer(1), 1, '주사위 결과에 따라 AI를 선공으로 지정할 수 있어야 함');
+assert.equal(game.currentPlayer, 1, '선공 지정이 현재 플레이어에 반영되어야 함');
+
+setState(game, { attack: 5, hands: [[card('hearts', '2'), card('clubs', 'A'), card('joker', 'JOKER'), card('hearts', '9')], [card('clubs', '3')]] });
+assert.deepEqual(game.playableCards(0).map((item) => item.rank).sort(), ['2', 'A', 'JOKER'], '공격 중에는 2, A, 조커만 허용');
+game.playCard(0, 'hearts-2');
+assert.equal(game.attackCount, 7, '공격이 누적되어야 함');
+
+setState(game, { top: card('joker', 'JOKER'), attack: 5, hands: [[card('hearts', '2'), card('clubs', 'A'), card('joker', 'JOKER')], [card('clubs', '3')]] });
+assert.deepEqual(game.playableCards(0).map((item) => item.rank), ['JOKER'], '조커 공격은 조커로만 방어할 수 있어야 함');
+
+setState(game, { top: card('diamonds', '6'), hands: [[card('joker', 'JOKER'), card('clubs', '3')], [card('clubs', '4')]] });
+game.playCard(0, 'joker-JOKER');
+assert.equal(game.attackCount, 5, '조커 공격은 5장이 누적되어야 함');
+assert.equal(game.activeSuit, 'diamonds', '조커 이후에는 직전 유효 무늬를 유지해야 함');
+
+setState(game, { top: card('diamonds', '6'), hands: [[card('joker', 'JOKER'), card('clubs', '3')], [card('spades', '4')]] });
+game.playCard(0, 'joker-JOKER');
+const jokerPenalty = game.drawCards(1);
+assert.equal(jokerPenalty.grantsFreePlay, true, '조커 공격을 받으면 다음 플레이어에게 자유 플레이를 부여해야 함');
+assert.equal(game.isPlayable(card('clubs', '3')), true, '조커 공격 다음 턴에는 무늬와 관계없이 낼 수 있어야 함');
+game.playCard(0, 'clubs-3');
+assert.equal(game.freePlay, false, '자유 플레이는 한 번 행동하면 종료되어야 함');
+
+setState(game, { hands: [[card('hearts', 'K'), card('clubs', '3')], [card('clubs', '4')]] });
+const kingPlay = game.playCard(0, 'hearts-K');
+assert.equal(kingPlay.extraTurn, false, '2인 게임에서 K는 추가 효과가 없어야 함');
+assert.equal(game.currentPlayer, 1, 'K를 내면 일반 카드처럼 상대 차례가 되어야 함');
+
+setState(game, { hands: [[card('hearts', 'Q'), card('clubs', '3')], [card('clubs', '4')]] });
+const queenPlay = game.playCard(0, 'hearts-Q');
+assert.equal(queenPlay.extraTurn, false, '2인 게임에서 Q는 추가 효과가 없어야 함');
+assert.equal(game.currentPlayer, 1, 'Q를 내면 일반 카드처럼 상대 차례가 되어야 함');
+
+setState(game, { top: card('spades', '5'), hands: [[card('spades', '7'), card('clubs', '3')], [card('clubs', '4')]] });
+game.playCard(0, 'spades-7', 'clubs');
+assert.equal(game.activeSuit, 'clubs', '7이 선택한 무늬를 적용해야 함');
+assert.equal(game.history.at(-1).requestedSuit, 'clubs', '카드 기록에 선택한 무늬가 남아야 함');
+
+setState(game, { hands: [[card('hearts', '9')], [card('clubs', '4')]] });
+const win = game.playCard(0, 'hearts-9');
+assert.equal(win.type, 'win');
+assert.equal(game.winner, 0, '마지막 카드를 내면 승리해야 함');
+
+setState(game, { player: 1, hands: [[card('clubs', '4')], [card('hearts', '2'), card('hearts', '8')]] });
+assert.equal(chooseAiMove(game, 'normal', () => 0).type, 'play', 'AI가 낼 수 있는 카드를 선택해야 함');
+assert.equal(chooseSuit([card('clubs', '3'), card('clubs', '9'), card('spades', '4')]), 'clubs', 'AI가 가장 많은 무늬를 선택해야 함');
+
+const desktop16 = fanLayout(16, 1100, 118);
+assert.ok(Math.abs(desktop16[0].x) + 59 <= 550 && desktop16[15].x + 59 <= 550, '데스크톱 16장 양끝이 손패 폭 안에 들어와야 함');
+assert.equal(desktop16[0].x, -desktop16[15].x, '부채꼴은 가운데를 기준으로 좌우가 같아야 함');
+const mobile5 = fanLayout(5, 366, 66, { compact: true });
+assert.ok(mobile5[0].r < 0 && mobile5[4].r > 0 && mobile5[2].r === 0, '모바일 5장은 왼쪽 · 가운데 · 오른쪽으로 펼쳐져야 함');
+assert.ok(mobile5[2].y <= mobile5[0].y, '가운데 카드가 가장 높아야 함');
+assert.deepEqual(sortHand([card('hearts', 'K'), card('spades', '2'), { id: 'joker-1', suit: 'joker', rank: 'JOKER' }, card('hearts', 'A')]).map((item) => item.id), ['spades-2', 'hearts-A', 'hearts-K', 'joker-1'], '손패는 무늬 · 숫자 차례로 정렬하고 조커는 끝에 둬야 함');
+
+assert.equal(chooseAiReaction('player-win', 'hard', () => 0.99), 'gg', '게임 종료에는 AI가 반드시 GG로 반응해야 함');
+assert.equal(chooseAiReaction({ type: 'player-emote', emote: 'lol' }, 'normal', () => 0), 'lol', '플레이어 스티커에 어울리는 답장을 선택해야 함');
+assert.equal(chooseAiReaction('player-attack', 'hard', () => 0.99), null, '냉철한 AI는 모든 행동에 과하게 반응하지 않아야 함');
+assert.ok(aiReactionDelay('easy', () => 0.5) < aiReactionDelay('hard', () => 0.5), '쉬운 AI가 어려운 AI보다 빠르게 반응해야 함');
+
+const legacyRaw = JSON.stringify({ wins: 12, games: 20, nickname: '기존 플레이어' });
+const legacyStorage = memoryStorage({ [LEGACY_RECORD_KEY]: legacyRaw });
+const migrated = loadPlayerProfile(legacyStorage);
+assert.deepEqual([migrated.wins, migrated.games, migrated.losses, migrated.points], [12, 20, 8, 0], '기존 승수와 판수를 그대로 이전해야 함');
+assert.equal(legacyStorage.getItem(LEGACY_BACKUP_KEY), legacyRaw, '이전 전 원본 기록을 정확히 백업해야 함');
+assert.deepEqual(JSON.parse(legacyStorage.getItem(LEGACY_RECORD_KEY)), { wins: 12, games: 20, nickname: '기존 플레이어' }, '기존 기록의 추가 필드까지 보존해야 함');
+assert.ok(legacyStorage.getItem(PROFILE_KEY), '새 프로필을 별도 키로 저장해야 함');
+
+assert.deepEqual([1, 2, 3, 4, 5].map(rewardForStars), [125, 180, 250, 340, 500], '상대 등급별 상향된 승리 보상을 적용해야 함');
+const firstWin = recordMatchResult({ won: true, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-1' }, legacyStorage);
+assert.deepEqual([firstWin.delta, firstWin.profile.points, firstWin.profile.wins, firstWin.profile.games], [500, 500, 13, 21], '5성 승리는 기존 기록 위에 상향된 점수와 승리를 더해야 함');
+const duplicateWin = recordMatchResult({ won: true, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-1' }, legacyStorage);
+assert.deepEqual([duplicateWin.duplicate, duplicateWin.profile.wins, duplicateWin.profile.games], [true, 13, 21], '같은 경기 결과는 중복 반영하지 않아야 함');
+const fixedLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-2' }, legacyStorage);
+assert.deepEqual([fixedLoss.delta, fixedLoss.profile.points, fixedLoss.profile.games], [-50, 450, 22], '상대 등급과 무관하게 패배는 50점만 차감해야 함');
+assert.deepEqual(JSON.parse(legacyStorage.getItem(LEGACY_RECORD_KEY)), { wins: 13, games: 22, nickname: '기존 플레이어' }, '새 결과 반영 뒤에도 기존 키의 승수·판수와 추가 필드를 보존해야 함');
+
+const bonusStorage = memoryStorage();
+const bonusWin = recordMatchResult({ won: true, opponentStars: 3, mode: 'ai', matchId: 'bonus-win', bonusMultiplier: 2 }, bonusStorage);
+assert.deepEqual([bonusWin.baseDelta, bonusWin.delta, bonusWin.bonusMultiplier, bonusWin.profile.points], [250, 500, 2, 500], '보너스판 승리는 기본 승리 보상을 2배로 지급해야 함');
+const bonusLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'bonus-loss', bonusMultiplier: 2 }, bonusStorage);
+assert.deepEqual([bonusLoss.delta, bonusLoss.bonusMultiplier, bonusLoss.profile.points], [-50, 2, 450], '보너스판에서 져도 패배 차감은 2배가 아니어야 함');
+assert.equal(bonusMatchChance(0), 0.2, '초기 보너스판 확률은 20%여야 함');
+assert.equal(bonusMatchChance(40000), 0.15, '고점 보너스판 확률은 15%까지 완만히 줄어야 함');
+assert.equal(rollBonusMatch(0, () => 0.19), true, '확률 안쪽이면 보너스판이 등장해야 함');
+assert.equal(rollBonusMatch(40000, () => 0.16), false, '고점 확률 밖이면 일반판이어야 함');
+
+const floorStorage = memoryStorage();
+const floorLoss = recordMatchResult({ won: false, opponentStars: 1, matchId: 'floor-loss' }, floorStorage);
+assert.equal(floorLoss.profile.points, 0, '점수는 0 아래로 내려가지 않아야 함');
+assert.equal(floorLoss.delta, 0, '0점에서 패배하면 실제 점수 변화도 0으로 표시해야 함');
+assert.deepEqual(matchmakingWeights(0), [55, 35, 10, 0, 0], '초기 점수대 매칭 확률을 적용해야 함');
+assert.deepEqual(matchmakingWeights(20000), [0, 0, 0, 30, 70], '2만점 이상은 4·5성만 매칭해야 함');
+assert.equal(selectAiOpponent(0, () => 0, [1, 1]).stars, 2, '같은 AI가 세 번 연속 걸리려 하면 다른 가능한 등급으로 바꿔야 함');
+
+const cosmeticStorage = memoryStorage({
+  [PROFILE_KEY]: JSON.stringify({ points: 1800, wins: 2, games: 3 }),
+  [LEGACY_RECORD_KEY]: JSON.stringify({ wins: 12, games: 20 }),
+});
+const cosmeticProfile = loadPlayerProfile(cosmeticStorage);
+assert.equal(cosmeticProfile.peakPoints, 1800, '기존 점수를 역대 최고 점수로 안전하게 이전해야 함');
+assert.deepEqual([cosmeticProfile.wins, cosmeticProfile.games], [12, 20], '꾸미기 프로필 이전 중 기존 승수·판수가 유지되어야 함');
+assert.deepEqual(cosmeticProfile.equipped, DEFAULT_EQUIPPED, '처음에는 슬롯마다 기본 꾸미기를 장착해야 함');
+assert.equal(CHARM_SLOT_COUNT, 3, '장난감은 동시에 3개까지 장착할 수 있어야 함');
+assert.deepEqual(equippedCharmIds(cosmeticProfile.equipped), ['charm-classic', 'charm-classic', 'charm-classic'], '처음 세 장난감 자리는 기본 친구들로 채워져야 함');
+const migratedCharmLoadout = normalizeEquipped({ charm: 'charm-star-cat' }, 20000);
+assert.deepEqual(migratedCharmLoadout.charms, ['charm-star-cat', 'charm-classic', 'charm-classic'], '기존 단일 장난감은 1번 자리에 안전하게 이전되어야 함');
+assert.equal(migratedCharmLoadout.charm, 'charm-star-cat', '이전 버전 호환용 단일 장난감 값은 1번 자리와 같아야 함');
+const normalizedCharmLoadout = normalizeEquipped({ charms: ['charm-rose-musicbox', 'charm-rose-teacup', 'charm-rose-musicbox'] }, 130000);
+assert.deepEqual(normalizedCharmLoadout.charms, ['charm-rose-musicbox', 'charm-rose-teacup', 'charm-classic'], '같은 보상 장난감은 중복 장착되지 않아야 함');
+assert.deepEqual([0, 1, 2].map((slot) => charmToyConfig('charm-classic', slot).key), ['custard', 'star', 'rose'], '기본 장난감은 자리마다 푸딩 · 별 · 장미를 써야 함');
+assert.equal(charmToyConfig('charm-royal-flower-fountain', 0).key, 'royal-flower-fountain', '왕실 꽃정원 분수는 전용 소리와 파티클 키를 유지해야 함');
+assert.equal(cosmeticsForSlot('cardBack').some((item) => item.threshold === 300), true, '300점부터 첫 카드 스킨을 해금해야 함');
+assert.equal(nextCosmeticUnlock(700).threshold, 1200, '현재 최고 점수 다음 보상까지 정확히 안내해야 함');
+assert.deepEqual(newlyUnlockedCosmetics(250, 750).map((item) => item.threshold), [300, 700], '한 번에 여러 기준을 넘으면 모든 보상을 해금해야 함');
+assert.equal(normalizeEquipped({ cardBack: 'back-space-whale' }, 1000).cardBack, 'back-classic', '점수가 부족한 아이템은 장착할 수 없어야 함');
+assert.equal(normalizeEquipped({ cardBack: 'back-strawberry-milk' }, 1000).cardBack, 'back-strawberry-milk', '해금한 아이템은 장착 상태를 유지해야 함');
+cosmeticProfile.equipped.cardBack = 'back-strawberry-milk';
+savePlayerProfile(cosmeticProfile, cosmeticStorage);
+const cosmeticLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'cosmetic-loss' }, cosmeticStorage);
+assert.deepEqual([cosmeticLoss.profile.points, cosmeticLoss.profile.peakPoints], [1750, 1800], '패배해 현재 점수가 내려가도 역대 최고 점수는 유지해야 함');
+assert.equal(cosmeticLoss.profile.equipped.cardBack, 'back-strawberry-milk', '점수가 내려가도 이미 해금하고 장착한 스킨은 유지해야 함');
+assert.equal(nextCosmeticUnlock(20000).threshold, 20700, '2만점 이후에는 마스터 꾸미기 라인이 이어져야 함');
+assert.equal(newlyUnlockedCosmetics(19999, 20000).length, 6, '2만점 달성 시 꿈빛 왕국 풀 세트 6종을 함께 해금해야 함');
+assert.equal(nextCosmeticUnlock(20699).threshold, 20700, '20,700점부터 신규 이미지 테이블 보상이 시작되어야 함');
+assert.equal(newlyUnlockedCosmetics(20699, 21200).map((item) => item.id).join(','), 'table-pink-cloud-pop,back-pink-cloud-pop', '핑크 구름 팝은 테이블과 카드 뒷면 순서로 해금되어야 함');
+assert.deepEqual(newlyUnlockedCosmetics(21200, 22400).map((item) => item.id), ['effect-pink-cloud-carnival', 'victory-pink-cloud-pop'], '핑크 구름 팝은 이펙트와 승리 연출까지 이어서 해금되어야 함');
+assert.equal(COSMETICS.every((item) => THEMES[item.theme] || item.slot === 'charm'), true, '모든 꾸미기는 그릴 테마를 가리켜야 함');
+assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-neon-arcade'), true, '네온 아케이드 카드 앞면을 제공해야 함');
+assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-dessert-cafe'), true, '디저트 카페 카드 앞면을 제공해야 함');
+assert.equal(cosmeticsForSlot('pile').length, 0, '더미 꾸밈 아이템은 모두 제거되어야 함');
+assert.equal(Object.hasOwn(DEFAULT_EQUIPPED, 'pile'), false, '장착 정보에 더미 슬롯을 새로 저장하지 않아야 함');
+assert.deepEqual(
+  ['charm-rose-musicbox', 'charm-rose-teacup', 'charm-crimson-rose-clockwork'].map((id) => COSMETICS.find((item) => item.id === id)?.threshold),
+  [24900, 29200, 40000],
+  '리얼 장미 장난감 3종은 2~3만점대 2개와 4만점 1개로 배치되어야 함',
+);
+assert.equal(['charm-rose-musicbox', 'charm-rose-teacup', 'charm-crimson-rose-clockwork'].every((id) => cosmeticsForSlot('charm').some((item) => item.id === id)), true, '리얼 장미 장난감 3종은 장난감 칸에 있어야 함');
+assert.equal(COSMETICS.some((item) => item.id === 'charm-rose-teacup' && item.name.includes('티컵')), false, '새 장미 장난감은 컵이 아닌 꽃 단독 콘셉트여야 함');
+const fountain = COSMETICS.find((item) => item.id === 'charm-royal-flower-fountain');
+assert.deepEqual([fountain.slot, fountain.threshold, fountain.name, fountain.legendary], ['charm', 130000, '왕실 꽃정원 분수', true], '왕실 꽃정원 분수는 13만점 장난감 그대로여야 함');
+assert.equal(cosmeticsForSlot('cardFace').some((item) => item.id === 'face-royal-tarot'), true, '카드 전체를 바꾸는 왕실 타로 앞면을 제공해야 함');
+assert.equal(cosmeticsForSlot('cardBack').some((item) => item.id === 'back-antique-library'), true, '카드 전체를 바꾸는 고서관 뒷면을 제공해야 함');
+assert.equal(cosmeticsForSlot('victory').some((item) => item.id === 'victory-dual-fireworks'), true, '양쪽 폭죽 승리 연출을 제공해야 함');
+const roseSet = COSMETIC_SETS.find((set) => set.id === 'rose-conservatory');
+assert.equal(roseSet.itemIds.length, 5, '장미 온실은 배경·앞면·뒷면·효과·승리 연출 5종 세트여야 함');
+assert.deepEqual(cosmeticSetProgress(roseSet, 10000), { unlocked: 2, total: 5 }, '1만점에서는 장미 온실 배경과 앞면까지 해금되어야 함');
+assert.deepEqual(cosmeticSetProgress(roseSet, 10900), { unlocked: 5, total: 5 }, '10,900점에서는 장미 온실 5종이 모두 해금되어야 함');
+assert.equal(['table-rose-conservatory', 'back-rose-arbor', 'effect-rose-petal-storm', 'victory-rose-grand-bloom'].every((id) => COSMETICS.some((item) => item.id === id)), true, '장미 온실의 네 가지 신규 아이템이 모두 있어야 함');
+assert.equal(cosmeticSetForItem('face-rose-tea')?.id, 'rose-conservatory', '장미 티파티 앞면은 장미 온실 세트로 표시되어야 함');
+assert.equal(normalizeEquipped({ cardBack: 'back-rose-arbor' }, 14000).cardBack, 'back-rose-arbor', '해금한 장미 뒷면은 정상 장착되어야 함');
+const roseBallroomSet = COSMETIC_SETS.find((set) => set.id === 'rose-ballroom');
+assert.deepEqual(cosmeticSetProgress(roseBallroomSet, 31600), { unlocked: 4, total: 4 }, '장미 무도회 이미지 세트는 효과와 승리 연출까지 4종으로 완성되어야 함');
+const realRoseSet = COSMETIC_SETS.find((set) => set.id === 'real-rose-garden');
+assert.deepEqual(cosmeticSetProgress(realRoseSet, 33400), { unlocked: 3, total: 5 }, '리얼 로즈가든은 앞면까지 단계적으로 해금되어야 함');
+assert.deepEqual(cosmeticSetProgress(realRoseSet, 34800), { unlocked: 5, total: 5 }, '리얼 로즈가든은 테이블·뒷면·앞면·효과·승리 연출 5종 풀세트여야 함');
+assert.equal(cosmeticSetForItem('face-real-rose-garden')?.id, 'real-rose-garden', '리얼 로즈가든 앞면은 리얼 로즈가든 세트로 표시되어야 함');
+assert.equal(normalizeEquipped({ cardFace: 'face-real-rose-garden', cardBack: 'back-real-rose-garden' }, 34800).cardFace, 'face-real-rose-garden', '해금한 리얼 로즈가든 앞면은 정상 장착되어야 함');
+assert.equal(normalizeEquipped({ cardBack: 'back-ancient-sun-temple' }, 40400).cardBack, 'back-ancient-sun-temple', '고대 태양 신전 뒷면은 최고 구간에서 장착되어야 함');
+
+const realRoseEquipped = {
+  ...DEFAULT_EQUIPPED,
+  table: 'table-real-rose-garden',
+  cardBack: 'back-real-rose-garden',
+  cardFace: 'face-real-rose-garden',
+  effect: 'effect-real-rose-garden',
+  victory: 'victory-real-rose-garden',
+};
+assert.equal(equippedSetBonuses(realRoseEquipped).some((set) => set.id === 'real-rose-garden'), true, '리얼 로즈가든 풀 장착 시 세트 보너스를 감지해야 함');
+const neonCharmSet = {
+  ...DEFAULT_EQUIPPED,
+  cardFace: 'face-neon-arcade',
+  effect: 'effect-pixel-combo',
+  victory: 'victory-high-score',
+  charms: ['charm-classic', 'charm-ufo-pet', 'charm-classic'],
+};
+assert.equal(equippedSetBonuses(neonCharmSet).some((set) => set.id === 'neon-arcade'), true, '세트 장난감은 2·3번 자리에 있어도 세트 보너스로 인정되어야 함');
+
+const missionNow = new Date('2026-07-07T12:00:00+09:00');
+const missionStorage = memoryStorage({
+  [PROFILE_KEY]: JSON.stringify({ points: 100, peakPoints: 100, wins: 9, games: 12 }),
+  [LEGACY_RECORD_KEY]: JSON.stringify({ wins: 9, games: 12 }),
+});
+const missionDashboard = loadMissionDashboard(missionStorage, missionNow);
+assert.equal(missionDashboard.daily.total, DAILY_MISSION_COUNT, '일일 미션은 3개 조합되어야 함');
+assert.equal(missionDashboard.weekly.total, WEEKLY_MISSION_COUNT, '주간 미션은 5개 조합되어야 함');
+assert.equal(missionDashboard.weekly.missions.reduce((sum, mission) => sum + mission.target, 0) >= 18, true, '주간 미션은 일일보다 높은 목표량으로 구성되어야 함');
+const missionEvents = [
+  { id: 'mission-game', type: 'game', mode: 'ai', amount: 99, bonus: true },
+  { id: 'mission-win', type: 'win', mode: 'ai', amount: 99, opponentStars: 5, bonus: true },
+  { id: 'mission-card', type: 'card-play', amount: 99 },
+  { id: 'mission-draw', type: 'draw-card', amount: 99 },
+  { id: 'mission-attack', type: 'attack-card', amount: 99 },
+  { id: 'mission-seven', type: 'seven-card', amount: 99 },
+  { id: 'mission-joker', type: 'joker-card', amount: 99 },
+  { id: 'mission-emote', type: 'emote', amount: 99 },
+  { id: 'mission-onecard', type: 'one-card', amount: 99 },
+  { id: 'mission-bonus', type: 'bonus-match', amount: 99 },
+  { id: 'mission-bonus-win', type: 'bonus-win', amount: 99 },
+];
+const missionReward = applyMissionEvents(missionEvents, { storage: missionStorage, now: missionNow });
+assert.equal(missionReward.rewardDelta > 0, true, '완료된 미션은 점수 보상을 지급해야 함');
+assert.deepEqual([missionReward.profile.wins, missionReward.profile.games], [9, 12], '미션 보상은 기존 승수와 판수를 바꾸지 않아야 함');
+assert.equal(missionReward.profile.points, 100 + missionReward.rewardDelta, '미션 보상은 현재 점수에만 더해져야 함');
+const duplicatedMissionReward = applyMissionEvents(missionEvents, { storage: missionStorage, now: missionNow });
+assert.equal(duplicatedMissionReward.rewardDelta, 0, '같은 미션 이벤트 ID는 중복 보상되지 않아야 함');
+
+const preservedCosmeticStorage = memoryStorage({
+  [PROFILE_KEY]: JSON.stringify({
+    points: 12345,
+    peakPoints: 14000,
+    wins: 44,
+    games: 70,
+    equipped: { ...DEFAULT_EQUIPPED, pile: 'pile-moon-jelly', cardBack: 'back-antique-atlas' },
+  }),
+  [LEGACY_RECORD_KEY]: JSON.stringify({ wins: 44, games: 70 }),
+});
+const preservedCosmeticProfile = loadPlayerProfile(preservedCosmeticStorage);
+assert.deepEqual(
+  [preservedCosmeticProfile.points, preservedCosmeticProfile.peakPoints, preservedCosmeticProfile.wins, preservedCosmeticProfile.games],
+  [12345, 14000, 44, 70],
+  '꾸밈 목록 변경 후에도 기존 점수·최고점수·승수·판수를 보존해야 함',
+);
+assert.equal(preservedCosmeticProfile.equipped.cardBack, 'back-antique-atlas', '해금한 새 카드 뒷면 장착 상태를 보존해야 함');
+assert.equal(Object.hasOwn(preservedCosmeticProfile.equipped, 'pile'), false, '예전 더미 장착값은 기록을 건드리지 않고 정규화 과정에서만 제외해야 함');
+
+const mergedProfile = mergeProfiles(
+  { points: 1200, peakPoints: 2000, wins: 12, games: 20, losses: 8, aiWins: 8, aiGames: 12, multiWins: 4, multiGames: 8, equipped: { ...DEFAULT_EQUIPPED, cardBack: 'back-strawberry-milk' }, awardedMatchIds: ['local-a'] },
+  { points: 900, peakPoints: 1500, wins: 10, games: 18, losses: 8, aiWins: 7, aiGames: 11, multiWins: 3, multiGames: 7, equipped: { ...DEFAULT_EQUIPPED, cardBack: 'back-classic' }, awardedMatchIds: ['remote-a', 'local-a'] },
+);
+assert.deepEqual(
+  [mergedProfile.points, mergedProfile.peakPoints, mergedProfile.wins, mergedProfile.games, mergedProfile.aiWins, mergedProfile.multiWins],
+  [1200, 2000, 12, 20, 8, 4],
+  'Supabase 병합은 낮은 서버 값으로 기존 점수/승수/판수를 줄이면 안 됩니다.',
+);
+assert.equal(mergedProfile.equipped.cardBack, 'back-strawberry-milk', '현재 브라우저에 장착한 꾸밈은 동기화 후에도 유지되어야 합니다.');
+assert.deepEqual(mergedProfile.awardedMatchIds, ['remote-a', 'local-a'], '중복 지급 방지 ID는 서버와 로컬 값을 합쳐야 합니다.');
+
+const remoteEquippedProfile = mergeProfiles(
+  { points: 0, peakPoints: 0, wins: 0, games: 0, equipped: DEFAULT_EQUIPPED },
+  { points: 20000, peakPoints: 20000, wins: 9, games: 15, equipped: { ...DEFAULT_EQUIPPED, cardBack: 'back-space-whale' } },
+  { preferLocalEquipped: false },
+);
+assert.equal(remoteEquippedProfile.equipped.cardBack, 'back-space-whale', '새 브라우저에서 불러올 때는 서버 장착 꾸밈을 복원해야 합니다.');
+const remoteLegacyCharmProfile = mergeProfiles(
+  { points: 0, peakPoints: 0, wins: 0, games: 0, equipped: DEFAULT_EQUIPPED },
+  { points: 20000, peakPoints: 20000, wins: 14, games: 23, equipped: { charm: 'charm-star-cat' } },
+  { preferLocalEquipped: false },
+);
+assert.deepEqual(remoteLegacyCharmProfile.equipped.charms, ['charm-star-cat', 'charm-classic', 'charm-classic'], '서버의 예전 단일 장난감 기록도 새 브라우저에서 1번 자리로 이전되어야 합니다.');
+assert.deepEqual([remoteLegacyCharmProfile.wins, remoteLegacyCharmProfile.games], [14, 23], '장난감 3칸 이전 중 서버 승수와 판수는 그대로 보존되어야 합니다.');
+
+const mergedMissionState = mergeMissionStates(
+  { daily: { key: '2026-07-07', missionIds: ['a'], progress: { a: 1 }, claimed: {} }, weekly: { key: '2026-07-06', missionIds: ['w'], progress: { w: 2 }, claimed: { w: false } }, seenEventIds: ['local-event'] },
+  { daily: { key: '2026-07-07', missionIds: ['a'], progress: { a: 3 }, claimed: { a: true } }, weekly: { key: '2026-07-06', missionIds: ['w'], progress: { w: 1 }, claimed: { w: true } }, seenEventIds: ['remote-event', 'local-event'] },
+);
+assert.deepEqual(mergedMissionState.daily.progress, { a: 3 }, '미션 진행도는 더 큰 값을 유지해야 합니다.');
+assert.equal(mergedMissionState.daily.claimed.a, true, '완료된 미션 보상 상태는 유지되어야 합니다.');
+assert.deepEqual(mergedMissionState.seenEventIds, ['remote-event', 'local-event'], '미션 이벤트 중복 방지 목록은 합쳐져야 합니다.');
+
+const mergedBundle = mergeAccountBundles(
+  { profile: { points: 500, peakPoints: 900, wins: 5, games: 8, equipped: { ...DEFAULT_EQUIPPED, cardBack: 'back-classic' } }, missionState: null, hasProfile: false, hasMissionState: false },
+  { profile: { points: 700, peakPoints: 1200, wins: 6, games: 10, equipped: { ...DEFAULT_EQUIPPED, cardBack: 'back-strawberry-milk' } }, missionState: { daily: { key: 'remote', missionIds: ['r'], progress: { r: 1 }, claimed: {} } } },
+);
+assert.equal(mergedBundle.profile.points, 700, '계정 불러오기 병합은 더 높은 서버 점수를 보존해야 합니다.');
+assert.equal(mergedBundle.profile.equipped.cardBack, 'back-strawberry-milk', '로컬 프로필이 없으면 서버 장착 꾸밈을 우선해야 합니다.');
+assert.equal(mergedBundle.missionState.daily.key, 'remote', '로컬 미션 상태가 없으면 서버 미션 상태를 가져와야 합니다.');
+
+assert.equal(normalizeEmailInput('  USER@GMAIL.COM  '), 'user@gmail.com', '이메일은 앞뒤 공백 제거와 소문자 정규화를 거쳐야 합니다.');
+assert.throws(() => normalizeEmailInput('not-an-email'), /INVALID_EMAIL/, '이메일 형식이 아니면 메일 발송 전에 막아야 합니다.');
+let typoMessage = '';
+try {
+  normalizeEmailInput('player@gmial.com');
+} catch (error) {
+  typoMessage = friendlyAccountSyncError(error);
+}
+assert.match(typoMessage, /player@gmail\.com/, '흔한 이메일 도메인 오타는 추천 주소를 안내해야 합니다.');
+
+console.log('규칙 · 부채꼴 · AI 반응 · 기록 · 꾸미기 테스트 통과');

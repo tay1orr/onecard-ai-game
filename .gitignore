@@ -6,3 +6,6 @@ node_modules/
 *.log
 .env
 .env.local
+dist/
+.asset-cache/
+tests/e2e/_shots/
