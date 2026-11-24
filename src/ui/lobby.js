@@ -50,7 +50,7 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
   const eventOn = isOpeningEventActive();
 
   // 캐릭터와 난이도는 따로 무작위 — 이 점수에서 만나는 난이도 확률은 따로 한 줄로(30만 점대면 ★5~★8)
-  // 무대 자리는 넓으면 다섯 · 좁으면 넷이고, 상대 열다섯이 몇 초마다 한 자리씩 번갈아 앉는다(11-25 「넷만 나오는 게 아깝다」)
+  // 무대 자리는 넓으면 다섯 · 좁으면 넷이고, 상대 열다섯이 몇 초마다 한 자리씩 번갈아 앉는다(11-24 「넷만 나오는 게 아깝다」)
   const odds = weights.map((chance, index) => ({ stars: index + 1, chance })).filter((level) => level.chance > 0);
   const order = shufflePersonas(CHARACTERS.length);
   const lineupEl = h('div.stage-lineup');

@@ -264,8 +264,8 @@ check(normalizeEquipped({ charms: [teddy.id] }, 330000, 0, [teddy.id]).charms[0]
 const mergedBox = mergeProfiles3({ boxItems: ['charm-box-hedgehog'], claimedBoxIds: ['box:a'] }, { boxItems: ['charm-box-duckling'], claimedBoxIds: ['box:b'] }, base);
 check(mergedBox.boxItems.length === 2 && mergedBox.claimedBoxIds.length === 2, '두 기기의 상자 아이템 · 받은 상자를 모두 남겨야 함');
 
-// 운영에 올릴 때 넣는 SQL · 휴면 막기(11-25)
-const launchSql = fs.readFileSync(path.join(root, 'supabase/2026-11-25-season2-launch.sql'), 'utf8');
+// 운영에 올릴 때 넣는 SQL · 휴면 막기(11-24)
+const launchSql = fs.readFileSync(path.join(root, 'supabase/2026-11-24-season2-launch.sql'), 'utf8');
 const sqlBacks = new Set([...launchSql.matchAll(/'(back-[a-z0-9-]+)'/g)].map((match) => match[1]));
 const missingBacks = COSMETICS.filter((entry) => entry.slot === 'cardBack' && !sqlBacks.has(entry.id)).map((entry) => entry.id);
 check(missingBacks.length === 0, `운영 SQL 의 카드 뒷면 허용 목록에 빠진 뒷면(온라인 상대에게 클래식으로 보임): ${missingBacks.join(', ')}`);

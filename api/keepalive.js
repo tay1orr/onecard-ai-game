@@ -1,6 +1,6 @@
-// Supabase 휴면 막기(11-25) — Vercel 예약 실행(vercel.json 의 crons)이 하루 한 번 부른다
+// Supabase 휴면 막기(11-24) — Vercel 예약 실행(vercel.json 의 crons)이 하루 한 번 부른다
 // Supabase 무료 프로젝트는 일주일 동안 데이터베이스 활동이 적으면 멈춘다(휴면). 아무도 며칠 안 들어와도 멈추지 않게
-// DB 함수 onecard_keepalive 를 불러 한 줄을 고쳐 쓴다(supabase/2026-11-25-season2-launch.sql 의 1)
+// DB 함수 onecard_keepalive 를 불러 한 줄을 고쳐 쓴다(supabase/2026-11-24-season2-launch.sql 의 1)
 // 공개 키(publishable)만 쓴다 — 게임 화면이 쓰는 그 키라 비밀 키 · 환경 변수가 필요 없다
 import { SUPABASE_CONFIG } from '../src/net/config.js';
 

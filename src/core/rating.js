@@ -4,7 +4,7 @@ import { tierForXp, xpForMatch } from './season.js';
 export const LEGACY_RECORD_KEY = 'onecard-record';
 export const LEGACY_BACKUP_KEY = 'onecard-record-backup-v1';
 export const PROFILE_KEY = 'onecard-player-profile-v2';
-// 운영에 올릴 때 기록을 지키는 열쇠 둘(11-25)
+// 운영에 올릴 때 기록을 지키는 열쇠 둘(11-24)
 // · S1_PROFILE_BACKUP_KEY 시즌 1 프로필 원본을 처음 한 번 그대로 떠 둔다(무엇이 잘못돼도 되살릴 수 있게)
 // · S2_PROGRESS_KEY 시즌 2 에만 있는 값(패스 경험치 · 상자 아이템 · 장착)을 따로도 적는다
 //   배포 전부터 열려 있던 시즌 1 탭은 프로필을 옛 모양으로 덮어쓰며 이 값들을 버리는데, 그래도 여기서 되살아난다

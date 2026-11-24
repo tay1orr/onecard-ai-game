@@ -1,5 +1,5 @@
 {
- "_note": "운영(main 0670f83)의 시즌 1 코드로 만든 33만 점대 기록 — 실제 저장 모양 그대로(11-25)",
+ "_note": "운영(main 0670f83)의 시즌 1 코드로 만든 33만 점대 기록 — 실제 저장 모양 그대로(11-24)",
  "storage": {
   "onecard-account-last-sync-v1": "2026-11-24T11:02:00.000Z",
   "onecard-missions-v1": "{\"version\":1,\"daily\":{\"key\":\"2026-11-25\",\"missionIds\":[\"daily-win-any-1\",\"daily-card-play-10\",\"daily-bonus-see-1\"],\"progress\":{\"daily-win-any-1\":1,\"daily-card-play-10\":7},\"claimed\":{\"daily-win-any-1\":true}},\"weekly\":{\"key\":\"2026-11-23\",\"missionIds\":[\"weekly-ai-games-6\",\"weekly-wins-4\",\"weekly-cards-75\",\"weekly-sevens-7\",\"weekly-onecard-5\"],\"progress\":{\"weekly-ai-games-6\":1,\"weekly-wins-4\":1,\"weekly-cards-75\":7},\"claimed\":{}},\"seenEventIds\":[\"fx-game-1\",\"fx-win-1\",\"fx-card-1\",\"fx-joker-1\"]}",

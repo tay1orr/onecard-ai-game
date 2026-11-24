@@ -1,4 +1,4 @@
-// 로비 무대 찍기(빌드 뒤) — 상대 열다섯이 한 자리씩 번갈아 앉는지 · 겹치지 않는지 · 누르면 인사 말풍선이 뜨는지(11-25)
+// 로비 무대 찍기(빌드 뒤) — 상대 열다섯이 한 자리씩 번갈아 앉는지 · 겹치지 않는지 · 누르면 인사 말풍선이 뜨는지(11-24)
 // node tests/e2e/lobby-shot.mjs [--mobile] [--seconds=50]
 import { spawn } from 'node:child_process';
 import path from 'node:path';

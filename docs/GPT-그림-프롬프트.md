@@ -180,8 +180,8 @@ Use the attached picture only as a style reference (painting style, lighting and
 
 Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a tiny sitting teddy bear with a red bow, (2) a red satin bow, (3) a small red heart, (4) a little pink heart balloon, (5) a tiny golden star, (6) a small curl of red ribbon. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
 
-## 아이템 보충(11-25 — 적은 칸부터)
-- 칸마다 아이템 수(11-25): 내 캐릭터 7 · 카드 앞면 26 · 카드 효과 27 · 승리 연출 31 · 맵 39 · 카드 뒷면 55 · 장난감 67.
+## 아이템 보충(11-24 — 적은 칸부터)
+- 칸마다 아이템 수(11-24): 내 캐릭터 7 · 카드 앞면 26 · 카드 효과 27 · 승리 연출 31 · 맵 39 · 카드 뒷면 55 · 장난감 67.
 - 시즌 2 세트 가운데 승리 연출이 없는 곳: 왕실 겨울 정원 · 밀푀유 파티스리 · 두바이 쫀득쿠키 · 자수정 · 루비 왕관.
 - 카드 효과가 없는 곳: 왕실 겨울 정원 · 밀푀유 파티스리 · 베르사유 · 백만 송이 장미 · 패스 세트 셋(달빛 티아라 · 진주 조개 · 흑임자 몽블랑).
 - 아래를 모두 만드실 필요는 없습니다. 만드신 것만 그림을 보고 넣습니다. 앞 순위부터 권합니다.
