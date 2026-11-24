@@ -3,9 +3,11 @@
 .game .fx-layer:has(.fx-dim, .fx-victory) { pointer-events: auto; }
 .fx-sprite { position: absolute; object-fit: contain; pointer-events: none; will-change: transform; filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.35)); }
 .fx-sprite[style*="mix-blend-mode"] { filter: none; }
-/* 사진 띠(오로라 · 무대 조명 · 불꽃) — 가장자리를 부드럽게 지우고 밝게 섞는다 */
-.fx-band { position: absolute; left: -6%; right: -6%; background-size: 170% auto; background-repeat: no-repeat; mix-blend-mode: screen; pointer-events: none;
-  -webkit-mask: radial-gradient(ellipse 50% 50% at 50% 50%, #000 35%, transparent 100%); mask: radial-gradient(ellipse 50% 50% at 50% 50%, #000 35%, transparent 100%); }
+/* 카드 효과(fx.js burst) — 놓은 카드 둘레 빛 테 · 카드 윗변 위로 흐르는 빛 리본 · 맨 위 카드 구석에 내려앉아 남는 장식 */
+.fx-land { position: absolute; border: 2px solid; pointer-events: none; }
+.fx-ribbon { position: absolute; background-size: 240% auto; background-repeat: no-repeat; mix-blend-mode: screen; pointer-events: none; border-radius: 50%;
+  -webkit-mask: radial-gradient(ellipse 50% 50% at 50% 50%, #000 30%, transparent 72%); mask: radial-gradient(ellipse 50% 50% at 50% 50%, #000 30%, transparent 72%); }
+.card .fx-token { position: absolute; z-index: 3; right: 4%; top: 3%; width: 42%; height: 42%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.35)); }
 .fx-ring { position: absolute; border-radius: 50%; border-style: solid; pointer-events: none; }
 .fx-flash { position: absolute; inset: 0; pointer-events: none; }
 .fx-dim { position: absolute; inset: 0; background: #05070d; opacity: 0; }

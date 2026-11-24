@@ -15,7 +15,7 @@ import { normalizeNickname } from '../net/multiplayer-helpers.js';
 import { h, wait, formatNumber, josa } from './dom.js';
 import { openRewardBoxes } from './reward-boxes.js';
 import { createTable } from './table.js';
-import { createFx } from './fx.js';
+import { createFx, preloadEffect } from './fx.js';
 import { preloadVictory } from './victory.js';
 import { createDirector } from './director.js';
 import { createRivalController } from './rival.js';
@@ -48,6 +48,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
   let ended = false;
   let stickerPanel = null;
   let finale = null; // 승리 · 패배 장면 — 나갈 때 계속 도는 움직임까지 걷는다
+  let streak = 0; // 뽑지 않고 이어서 낸 횟수 — 카드 효과 세기에 쓴다
   const missionUnlocks = [];
   const missionDone = [];
   let missionPoints = 0;
@@ -68,6 +69,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
   const looks = applyEquipped(table.root, profile.equipped, { propsEl: table.sceneProps });
   const fx = createFx({ layer: table.fxLayer, root: table.root, director });
   preloadVictory(looks.victory, { rival: rival.portrait, me: avatar.portrait });
+  preloadEffect(looks.effect);
   const rivalCtl = createRivalController(table, rival);
   host.replaceChildren(table.root);
   const toys = mountToys({ layer: table.toysLayer, equipped: profile.equipped, fx });
@@ -163,6 +165,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     busy = true;
     sync();
     const result = game.drawCards(0);
+    streak = 0;
     missions([{ id: `${matchId}:draw:${Date.now()}`, type: 'draw-card', amount: result.cards.length || 1 }]);
     await director.run(() => table.drawMine(result.cards, game.hands[0]));
     if (result.wasPenalty) {
@@ -203,8 +206,13 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     const card = result.card;
     sync();
     const at = table.rect.pile();
-    if (mine) fx.burst(looks.effect, at, { count: SPECIAL.has(card.rank) ? null : Math.max(1, Math.ceil(looks.effect.count / 2)) });
-    else fx.burst(lookFor('effect-classic'), at, { count: 2, sizeScale: 0.7 });
+    // 카드 효과 — 보통 카드는 작게, 특수 카드 · 한 장 남음 · 연속 넷째부터는 조금 크게, 조커 · 큰 공격(+5 이상)은 크게. 상대가 낸 카드는 빛 테만
+    const topCard = table.pile.lastElementChild;
+    if (mine) {
+      streak += 1;
+      const tier = card.rank === 'JOKER' || game.attackCount >= 5 ? 'big' : SPECIAL.has(card.rank) || game.hands[0].length === 1 || streak >= 4 ? 'accent' : 'soft';
+      fx.burst(looks.effect, at, { tier, onto: topCard });
+    } else fx.burst(lookFor('effect-classic'), at, { tier: 'rival', onto: topCard });
     if (card.rank === 'JOKER') {
       await director.run(() => fx.jokerTime({ at, owner: mine ? 'me' : 'rival', card }));
       if (mine) rivalCtl.react('shock', 'joker'); else rivalCtl.react('smug', 'attack');

@@ -76,7 +76,7 @@ Object.entries(FACES).forEach(([key, face]) => {
   if (face.frame?.startsWith?.('paint:')) need(`r/paint/${face.frame.slice(6)}.webp`, `앞면 ${key} 테`);
 });
 Object.entries(EFFECTS).forEach(([key, effect]) => {
-  effect.sprites.forEach((cut) => needCut(cut, `효과 ${key}`));
+  [...effect.sprites, ...(effect.petals || [])].forEach((cut) => needCut(cut, `효과 ${key}`));
   if (effect.band) need(`r/scene/${effect.band}.webp`, `효과 ${key} 사진 띠`);
 });
 Object.entries(VICTORIES).forEach(([key, victory]) => {
@@ -199,6 +199,10 @@ check(gptBox.length === 2, `GPT 그림 아이템 가운데 상자 전용은 둘�
 check(!['effect-golden-rose', 'victory-golden-rose', 'charm-golden-rose'].some((id) => cosmeticById(id)) && cosmeticById('table-golden-rose'), '황금 장미 효과 · 피날레 · 장난감은 빼고 맵은 남김(11-24)');
 check(Object.values(VICTORIES).every((look) => ['head', 'feet', 'beside', 'behind', 'sky', 'frame'].includes(look.anchor) && ['pan', 'petals', 'flash', 'confetti'].includes(look.transition)), '승리 연출은 모두 붙는 자리 · 넘어가는 방식이 정해져 있어야 함');
 check(new Set(Object.values(VICTORIES).map((look) => look.transition)).size === 4 && new Set(Object.values(VICTORIES).map((look) => look.anchor)).size === 6, '넘어가는 방식 넷 · 붙는 자리 여섯이 모두 쓰여야 함(단조롭지 않게)');
+// 카드 효과(11-24) — 동작은 정해진 여섯 가운데서, 내려앉는 효과는 실물이 있어야 하고, 빛 리본은 사진이 있어야 함
+const MOVES = ['fan', 'ring', 'rise', 'breeze', 'settle', 'sweep'];
+check(Object.values(EFFECTS).every((effect) => effect.moves.length && effect.moves.every((move) => MOVES.includes(move)) && (!effect.moves.includes('settle') || effect.sprites.length) && (!effect.moves.includes('sweep') || effect.band) && effect.tone), '카드 효과는 정해진 동작 · 실물 · 빛 색을 가져야 함');
+check(new Set(Object.values(EFFECTS).flatMap((effect) => effect.moves)).size === MOVES.length && Object.values(EFFECTS).filter((effect) => effect.moves.length > 1).length >= 18, '동작 여섯이 모두 쓰이고, 대부분의 효과는 동작을 둘 이상 돌려 씀(단조롭지 않게)');
 check(CHARACTERS.every((persona) => persona.stars === undefined && persona.key === undefined && persona.name && persona.portrait && persona.lines?.win?.length), '캐릭터에는 별 · 난이도가 붙어 있지 않아야 함(따로 뽑음)');
 const seededPick = (seed) => () => { seed = (seed * 48271) % 2147483647; return (seed - 1) / 2147483646; };
 const ranked = makeRival(AI_OPPONENTS[6], CHARACTERS[0]);

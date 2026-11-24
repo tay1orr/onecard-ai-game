@@ -15,6 +15,15 @@ gsap.registerPlugin(Physics2DPlugin);
 const rand = (min, max) => min + Math.random() * (max - min);
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
+// 판이 시작될 때 카드 효과 실물을 미리 받아 둔다 — 첫 카드에서 그림이 늦게 그려지지 않게
+export function preloadEffect(effect) {
+  [...(effect?.sprites || []), ...(effect?.petals || [])].map((key) => cut(key)).concat(effect?.band ? [scene(effect.band)] : []).forEach((url) => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+  });
+}
+
 export function createFx({ layer, root, director }) {
   const reduced = () => settings.reduced();
 
@@ -91,71 +100,174 @@ export function createFx({ layer, root, director }) {
     return timeline;
   }
 
-  // ── 카드 효과(꾸미기) — 실물 몇 개를 크게. 작은 조각이 떼로 퍼지지 않게 개수는 적게
-  function burst(effect, at, { count = null, sizeScale = 1 } = {}) {
-    if (!effect) return null;
-    const point = local(at);
-    const motion = effect.motion;
+  // ── 카드 효과(꾸미기) — 한 판에 수십 번 나오므로 작고 짧게, 낸 카드는 가리지 않게(11-24 선생님 「단조롭지 않고도 너무 신경 쓰이지 않게」)
+  // tier 세기: soft 보통 카드(작게 · 0.6초) · accent 공격 · 건너뛰기 · 무늬 바꾸기 · 한 장 남음 · 연속(조금 크게) · big 조커 · 큰 공격(두 동작을 겹쳐) · rival 상대가 낸 카드(빛 테만)
+  // 동작(effect.moves)은 효과마다 몇 가지를 돌려 쓰고, 실물은 카드 가장자리 · 둘레 · 위아래로만 지나간다(카드 숫자를 덮지 않음).
+  // settle 은 맨 위 카드 구석에 작게 내려앉아 다음 카드가 덮을 때까지 남는다. 새 효과가 시작되면 앞 효과는 빨리 감아 걷는다
+  const TIERS = {
+    soft: { count: 2, size: 0.46, reach: 0.65, time: 0.6 },
+    accent: { count: 4, size: 0.6, reach: 1, time: 0.82 },
+    big: { count: 6, size: 0.74, reach: 1.35, time: 1 },
+  };
+  const turns = new WeakMap();
+  let running = [];
+
+  function effectSprite(effect, key, size, at) {
+    const el = sprite(key, size, at);
+    if (effect.petalTint && key.startsWith('rose-petal')) el.style.filter = effect.petalTint;
+    return el;
+  }
+
+  // 카드를 놓은 자리에 아이템 색 빛 테가 한 번 번진다 — 모든 세기 공통의 「착」
+  function landing(point, cw, ch, onto, color, strength = 0.9) {
+    const el = h('i.fx-land');
+    Object.assign(el.style, { left: `${point.x - cw / 2}px`, top: `${point.y - ch / 2}px`, width: `${cw}px`, height: `${ch}px`, borderRadius: `${cw * 0.09}px`, borderColor: color, boxShadow: `0 0 14px ${color}, inset 0 0 10px ${color}` });
+    layer.append(el);
+    const rotation = onto ? Number(gsap.getProperty(onto, 'rotation')) || 0 : 0;
+    return gsap.timeline({ onComplete: () => el.remove() })
+      .fromTo(el, { rotation, scale: 1, opacity: strength }, { scale: 1.14, opacity: 0, duration: 0.42, ease: 'power2.out' });
+  }
+
+  // 부채꼴 — 카드 위쪽 가장자리에서 바깥으로 퍼졌다가 사라진다
+  function fan(effect, keys, point, cw, ch, level, count) {
     const timeline = gsap.timeline();
-    if (effect.band) timeline.add(band(effect.band, at), 0);
-    const total = reduced() ? Math.min(1, effect.count) : Math.max(0, count ?? effect.count);
-    const [min, max] = effect.size || [70, 110];
-    for (let index = 0; index < total; index += 1) {
-      const key = effect.sprites[index % effect.sprites.length];
-      if (!key) continue;
-      const size = rand(min, max) * sizeScale;
-      const delay = index * rand(0.04, 0.08);
-      if (motion === 'drop') {
-        const el = sprite(key, size, point, { blend: effect.blend });
-        timeline.fromTo(el, { y: -Math.max(260, point.y + size), rotation: rand(-30, 30), scale: 1.25, opacity: 0 }, { y: 0, rotation: rand(-12, 12), scale: 1, opacity: 1, duration: 0.5, ease: 'bounce.out' }, delay);
-        timeline.to(el, { scale: 0.6, opacity: 0, y: 12, duration: 0.35, ease: 'power2.in', onComplete: () => el.remove() }, delay + 1.05);
-      } else if (motion === 'float') {
-        const el = sprite(key, size, point, { blend: effect.blend });
-        timeline.fromTo(el, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.25, ease: 'back.out(1.8)' }, delay);
-        timeline.to(el, { y: -rand(170, 260), x: rand(-150, 150), rotation: rand(-18, 18), duration: rand(1.3, 1.6), ease: 'sine.out' }, delay);
-        timeline.to(el, { opacity: 0, duration: 0.45, onComplete: () => el.remove() }, delay + 1.05);
-      } else if (motion === 'swirl' || motion === 'orbit') {
-        const el = sprite(key, size, point, { blend: effect.blend });
-        const startAngle = (index / Math.max(1, total)) * 360 + rand(-20, 20);
-        const holder = { angle: startAngle, radius: 24 };
-        const reach = motion === 'orbit' ? rand(120, 150) : rand(130, 190);
-        const update = () => {
-          const rad = (holder.angle * Math.PI) / 180;
-          gsap.set(el, { x: Math.cos(rad) * holder.radius, y: Math.sin(rad) * holder.radius * 0.6, rotation: holder.angle * 0.5 });
-        };
-        timeline.fromTo(el, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.22 }, delay);
-        timeline.to(holder, { angle: startAngle + (motion === 'orbit' ? 360 : 250), radius: reach, duration: motion === 'orbit' ? 1.4 : 1.15, ease: 'power1.inOut', onUpdate: update }, delay);
-        if (motion === 'swirl') timeline.to(el, { y: '+=90', duration: 0.6, ease: 'power1.in' }, delay + 1.05);
-        timeline.to(el, { opacity: 0, duration: 0.35, onComplete: () => el.remove() }, delay + (motion === 'orbit' ? 1.3 : 1.25));
-      } else if (motion === 'sweep-petals') {
-        const box = layer.getBoundingClientRect();
-        const el = sprite(key, size, { x: -60, y: point.y + rand(-140, 80) }, { blend: effect.blend });
-        timeline.fromTo(el, { x: 0, rotation: rand(-90, 90), opacity: 0 }, { x: box.width + 120, opacity: 1, rotation: `+=${rand(240, 420)}`, duration: rand(1.4, 1.9), ease: 'sine.inOut' }, delay * 1.6);
-        timeline.to(el, { y: `+=${rand(-70, 70)}`, duration: 0.45, yoyo: true, repeat: 3, ease: 'sine.inOut' }, delay * 1.6);
-        timeline.call(() => el.remove(), null, delay * 1.6 + 1.95);
-      } else {
-        const el = sprite(key, size, point, { blend: effect.blend });
-        timeline.to(el, { physics2D: { velocity: rand(480, 700), angle: rand(-150, -30), gravity: 1500 }, rotation: rand(-200, 200), duration: rand(0.95, 1.2), ease: 'none' }, delay);
-        timeline.fromTo(el, { scale: 0.4 }, { scale: 1, duration: 0.2, ease: 'back.out(2)' }, delay);
-        timeline.to(el, { opacity: 0, duration: 0.25, onComplete: () => el.remove() }, delay + 0.85);
-      }
+    const tilt = rand(-14, 14);
+    for (let index = 0; index < count; index += 1) {
+      const angle = ((-158 + (136 * (index + 0.5)) / count + tilt + rand(-7, 7)) * Math.PI) / 180;
+      const start = { x: point.x + Math.cos(angle) * cw * 0.52, y: point.y + Math.sin(angle) * ch * 0.5 };
+      const reach = cw * level.reach * rand(0.85, 1.15);
+      const el = effectSprite(effect, keys[index % keys.length], cw * level.size * rand(0.85, 1.12), start);
+      const delay = index * 0.035;
+      timeline.fromTo(el, { scale: 0.25, opacity: 0, rotation: rand(-30, 30) }, { scale: 1, opacity: 1, duration: level.time * 0.28, ease: 'back.out(2)' }, delay);
+      timeline.to(el, { x: Math.cos(angle) * reach, y: Math.sin(angle) * reach, rotation: `+=${rand(-50, 50)}`, duration: level.time, ease: 'power3.out' }, delay);
+      timeline.to(el, { opacity: 0, scale: 0.7, duration: level.time * 0.35, ease: 'power1.in', onComplete: () => el.remove() }, delay + level.time * 0.65);
     }
     return timeline;
   }
 
-  // 사진 한 줄기(오로라 · 무대 조명 · 불꽃)가 탁자를 가로질러 흐른다 — 사진을 밝게 섞어서
-  function band(key, at, { height = 300, duration = 1.2 } = {}) {
-    if (reduced()) return gsap.timeline();
-    const point = local(at);
-    const el = h('div.fx-band');
-    el.style.backgroundImage = `url("${scene(key)}")`;
-    el.style.top = `${point.y - height / 2}px`;
-    el.style.height = `${height}px`;
+  // 둘레 — 카드 바깥 타원을 따라 한 바퀴 가까이 돈다
+  function ring(effect, keys, point, cw, ch, level, count) {
+    const timeline = gsap.timeline();
+    const rx = cw * 0.98;
+    const ry = ch * 0.7;
+    const direction = Math.random() < 0.5 ? 1 : -1;
+    const startAngle = rand(0, 360);
+    for (let index = 0; index < count; index += 1) {
+      const el = effectSprite(effect, keys[index % keys.length], cw * level.size * 0.95, point);
+      const holder = { angle: startAngle + (index * 360) / count };
+      const update = () => {
+        const rad = (holder.angle * Math.PI) / 180;
+        gsap.set(el, { x: Math.cos(rad) * rx, y: Math.sin(rad) * ry, rotation: holder.angle * 0.35 });
+      };
+      update();
+      const travel = level.time * 1.25;
+      timeline.fromTo(el, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.16 }, index * 0.04);
+      timeline.to(holder, { angle: holder.angle + direction * 240, duration: travel, ease: 'power1.inOut', onUpdate: update }, index * 0.04);
+      timeline.to(el, { opacity: 0, duration: 0.2, onComplete: () => el.remove() }, index * 0.04 + travel - 0.2);
+    }
+    return timeline;
+  }
+
+  // 떠오름 — 카드 윗변에서 살랑이며 위로
+  function rise(effect, keys, point, cw, ch, level, count) {
+    const timeline = gsap.timeline();
+    for (let index = 0; index < count; index += 1) {
+      const start = { x: point.x + cw * ((index + 0.5) / count - 0.5) * 1.1 + rand(-8, 8), y: point.y - ch * 0.5 };
+      const el = effectSprite(effect, keys[index % keys.length], cw * level.size * rand(0.85, 1.1), start);
+      const delay = index * 0.06;
+      const travel = level.time * 1.3;
+      timeline.fromTo(el, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: 'back.out(1.8)' }, delay);
+      timeline.to(el, { y: -(cw * level.reach * 1.15 + rand(0, 24)), x: rand(-0.28, 0.28) * cw, rotation: rand(-16, 16), duration: travel, ease: 'sine.out' }, delay);
+      timeline.to(el, { opacity: 0, duration: travel * 0.35, onComplete: () => el.remove() }, delay + travel * 0.65);
+    }
+    return timeline;
+  }
+
+  // 바람 — 한쪽에서 카드 위아래 길로 스쳐 지나간다(카드 위로는 안 지나감)
+  function breeze(effect, keys, point, cw, ch, level, count) {
+    const timeline = gsap.timeline();
+    const from = Math.random() < 0.5 ? -1 : 1;
+    for (let index = 0; index < count; index += 1) {
+      const lane = (index % 2 ? -1 : 1) * ch * rand(0.58, 0.8);
+      const start = { x: point.x + from * cw * 2.3, y: point.y + lane };
+      const el = effectSprite(effect, keys[index % keys.length], cw * level.size * rand(0.6, 0.85), start);
+      const delay = index * 0.05;
+      const travel = level.time * 1.2;
+      timeline.set(el, { opacity: 0.95, rotation: rand(-90, 90) }, delay);
+      timeline.to(el, { keyframes: { x: [0, -from * cw * 2.3, -from * cw * 4.6], y: [0, rand(-14, 14), rand(-24, 24)], ease: 'none' }, rotation: `+=${rand(180, 320) * -from}`, duration: travel, ease: 'sine.inOut' }, delay);
+      timeline.to(el, { opacity: 0, duration: 0.18, onComplete: () => el.remove() }, delay + travel - 0.18);
+    }
+    return timeline;
+  }
+
+  // 내려앉음 — 맨 위 카드 오른쪽 위 구석에 작게 내려앉아, 다음 카드가 덮을 때까지 남는다(카드 숫자는 왼쪽 위 · 오른쪽 아래라 가리지 않음)
+  function settle(effect, onto, cw) {
+    onto.querySelector('.fx-token')?.remove();
+    const token = h('img.fx-token', { src: cut(effect.sprites[0]), alt: '', draggable: 'false' });
+    onto.append(token);
+    return gsap.timeline().fromTo(token, { y: -cw * 0.7, scale: 1.6, opacity: 0, rotation: rand(-36, 36) }, { y: 0, scale: 1, opacity: 1, rotation: rand(-12, 12), duration: 0.36, ease: 'back.out(2.2)' });
+  }
+
+  // 빛 리본 — 사진 한 줄기가 카드 윗변 위로 짧게 흐른다(탁자 전체를 덮지 않음)
+  function sweep(effect, point, cw, ch, level) {
+    const el = h('div.fx-ribbon');
+    el.style.backgroundImage = `url("${scene(effect.band)}")`;
+    const width = cw * (2.6 + level.reach * 1.6);
+    const height = ch * 0.48;
+    Object.assign(el.style, { width: `${width}px`, height: `${height}px`, left: `${point.x - width / 2}px`, top: `${point.y - ch * 0.5 - height * 0.85}px` });
     layer.append(el);
+    const travel = level.time * 1.35;
     return gsap.timeline({ onComplete: () => el.remove() })
-      .fromTo(el, { opacity: 0, scaleY: 0.5 }, { opacity: 1, scaleY: 1, duration: 0.3, ease: 'power2.out' }, 0)
-      .fromTo(el, { backgroundPosition: '0% 50%' }, { backgroundPosition: '100% 50%', duration, ease: 'sine.inOut' }, 0)
-      .to(el, { opacity: 0, duration: 0.4 }, duration - 0.25);
+      .fromTo(el, { opacity: 0, scaleX: 0.55 }, { opacity: 0.85, scaleX: 1, duration: travel * 0.3, ease: 'power2.out' }, 0)
+      .fromTo(el, { backgroundPosition: '0% 50%' }, { backgroundPosition: '100% 50%', duration: travel, ease: 'sine.inOut' }, 0)
+      .to(el, { opacity: 0, duration: travel * 0.35 }, travel * 0.65);
+  }
+
+  function runMove(move, effect, point, cw, ch, level, onto, count) {
+    const sprites = effect.sprites || [];
+    const petals = effect.petals || [];
+    if (move === 'settle') {
+      const timeline = gsap.timeline().add(settle(effect, onto, cw), 0);
+      // 조금 큰 세기면 꽃잎 · 실물 둘이 함께 부채꼴로
+      if (count > 2) timeline.add(fan(effect, petals.length ? petals : sprites, point, cw, ch, level, 2), 0.06);
+      return timeline;
+    }
+    if (move === 'sweep') return effect.band ? sweep(effect, point, cw, ch, level) : gsap.timeline();
+    if (move === 'breeze') return breeze(effect, petals.length ? [...petals, ...sprites] : sprites, point, cw, ch, level, count + 1);
+    const keys = [...sprites, ...petals];
+    if (!keys.length) return gsap.timeline();
+    if (move === 'ring') return ring(effect, keys, point, cw, ch, level, Math.max(1, Math.round(count / 2)));
+    if (move === 'rise') return rise(effect, keys, point, cw, ch, level, Math.max(2, count - 1));
+    return fan(effect, keys, point, cw, ch, level, count);
+  }
+
+  function burst(effect, at, { tier = 'accent', onto = null } = {}) {
+    if (!effect) return null;
+    // 앞 효과는 빨리 감아 걷는다 — 빠르게 낼 때 효과가 쌓이지 않게
+    running.forEach((timeline) => timeline.timeScale(6));
+    running = running.filter((timeline) => timeline.isActive());
+    const point = local(at);
+    const cw = onto?.offsetWidth || 110;
+    const ch = onto?.offsetHeight || cw * 1.4;
+    const timeline = gsap.timeline({ onComplete: () => { running = running.filter((item) => item !== timeline); } });
+    running.push(timeline);
+    timeline.add(landing(point, cw, ch, onto, tier === 'rival' ? 'rgba(236, 240, 248, 0.7)' : effect.tone || '#ffe6a8', tier === 'rival' ? 0.5 : 0.9), 0);
+    if (tier === 'rival') return timeline;
+    const level = TIERS[tier] || TIERS.accent;
+    const moves = (effect.moves || ['fan']).filter((move) => move !== 'settle' || onto);
+    if (!moves.length) return timeline;
+    // 동작은 차례로 돌려 쓴다(바로 앞과 같은 동작은 다시 안 나옴)
+    const turn = (turns.get(effect) ?? -1) + 1;
+    turns.set(effect, turn);
+    const move = moves[turn % moves.length];
+    if (reduced()) {
+      if (move === 'settle') timeline.add(settle(effect, onto, cw), 0);
+      return timeline;
+    }
+    timeline.add(runMove(move, effect, point, cw, ch, level, onto, level.count), 0.02);
+    // 크게(조커 · 큰 공격) — 다음 동작을 하나 더 겹친다
+    if (tier === 'big' && moves.length > 1) timeline.add(runMove(moves[(turn + 1) % moves.length], effect, point, cw, ch, level, onto, level.count), 0.14);
+    return timeline;
   }
 
   // 장난감을 누를 때 — 꽃잎 · 물보라 두세 개
@@ -348,5 +460,5 @@ export function createFx({ layer, root, director }) {
     return { timeline, scene: stage, finish: () => { stage.remove(); face.remove(); } };
   }
 
-  return { burst, band, toyBurst, attack, jokerTime, suitChange, skip, oneCard, penalty, bonusStart, victory, defeat, slab, shockwave, shake, flash, sprite, local };
+  return { burst, toyBurst, attack, jokerTime, suitChange, skip, oneCard, penalty, bonusStart, victory, defeat, slab, shockwave, shake, flash, sprite, local };
 }

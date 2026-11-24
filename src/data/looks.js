@@ -166,37 +166,41 @@ export const FACES = {
   dubai: gptFace('11', { tint: '#fbf1e0', ink: '#2e1f12', red: '#a8322a', accent: '#8a9a3a' }),
 };
 
-// ── 카드 효과: 낼 때 실물 몇 개(많이 흩뿌리지 않음 — 크게 몇 개만)
-// motion: pop(튀어 오름) · swirl(감돌다 흩어짐) · float(떠오름) · drop(위에서 떨어져 앉음) · sweep(빛 띠가 지나감) · strike(번개) · orbit(둘레를 돎)
-const E = (o) => ({ sprites: ['poker-chips'], motion: 'pop', count: 4, size: [70, 110], blend: 'normal', band: null, ...o });
+// ── 카드 효과(fx.js burst) — 한 판에 수십 번 나오므로 작고 짧게, 낸 카드는 가리지 않게(11-24 선생님 「단조롭지 않고도 너무 신경 쓰이지 않게」)
+// 세기는 게임이 정한다: 보통 카드는 작게 · 공격 · 건너뛰기 · 무늬 바꾸기 · 한 장 남음 · 연속으로 낼 때는 조금 크게 · 조커 · 큰 공격은 크게
+// moves 돌려 쓰는 동작(바로 앞과 같은 동작은 다시 안 나옴): fan 카드 가장자리에서 부채꼴로 · ring 카드 둘레를 돎 · rise 위로 떠오름
+//   · breeze 카드 위아래로 바람처럼 지나감 · settle 맨 위 카드 구석에 내려앉아 다음 카드가 덮을 때까지 남음 · sweep 빛 리본이 카드 위로 지나감
+// tone 카드를 놓을 때 둘레에 번지는 빛 색 · petals 함께 날리는 꽃잎(장미 꽃잎 사진) · petalTint 꽃잎을 그 꽃 색으로 · band 빛 리본 사진
+const E = (o) => ({ sprites: [], moves: ['fan'], tone: '#ffe6a8', petals: null, petalTint: null, band: null, ...o });
+const FX_PETALS = ['rose-petal-1', 'rose-petal-2'];
+const PINK_PETAL = 'saturate(0.38) brightness(1.7) hue-rotate(-10deg)';
 
 export const EFFECTS = {
-  classic: E({ sprites: ['poker-chips', 'gold-coins'], motion: 'pop', count: 3 }),
-  cloud: E({ sprites: ['soap-bubble', 'balloon-pink'], motion: 'float', count: 4, size: [60, 110] }),
-  aurora: E({ motion: 'sweep', band: 'aurora', sprites: [], count: 0 }),
-  'rose-conservatory': E({ sprites: ['rose-petal-1', 'rose-petal-2', 'rose-petal-3'], motion: 'swirl', count: 6, size: [46, 78] }),
-  arcade: E({ sprites: ['gamepad', 'joystick'], motion: 'pop', count: 3, size: [80, 120] }),
-  dream: E({ sprites: ['diamond', 'pearls', 'crown'], motion: 'pop', count: 3, size: [70, 110] }),
-  'pink-cloud': E({ sprites: ['balloon-pink', 'soap-bubble'], motion: 'float', count: 4, size: [70, 120] }),
-  'moon-rabbit': E({ sprites: ['moon', 'rabbit'], motion: 'orbit', count: 2, size: [80, 120] }),
-  'strawberry-parade': E({ sprites: ['strawberry', 'gift-box'], motion: 'pop', count: 4, size: [60, 100] }),
-  'rose-ballroom': E({ sprites: ['rose-red', 'rose-petal-1', 'rose-petal-2'], motion: 'swirl', count: 5, size: [56, 100] }),
-  'real-rose': E({ sprites: ['rose-bouquet'], motion: 'drop', count: 1, size: [150, 170] }),
-  'neon-deepsea': E({ sprites: ['jellyfish', 'soap-bubble'], motion: 'float', count: 3, size: [70, 130] }),
-  'sun-temple': E({ sprites: ['gold-coins', 'diamond'], motion: 'pop', count: 4, size: [60, 100] }),
+  classic: E({ sprites: ['poker-chips', 'gold-coins'], moves: ['fan', 'settle'], tone: '#ffd66b' }),
+  cloud: E({ sprites: ['soap-bubble', 'balloon-pink'], moves: ['rise', 'fan'], tone: '#ffc6e6' }),
+  aurora: E({ band: 'aurora', moves: ['sweep'], tone: '#9ef0c8' }),
+  'rose-conservatory': E({ sprites: ['rose-pink'], moves: ['breeze', 'ring', 'fan'], petals: FX_PETALS, tone: '#ff9db0' }),
+  arcade: E({ sprites: ['gamepad', 'joystick'], moves: ['fan', 'settle'], tone: '#5cf2ff' }),
+  dream: E({ sprites: ['crown', 'diamond', 'pearls'], moves: ['settle', 'fan', 'ring'], tone: '#d9c2ff' }),
+  'pink-cloud': E({ sprites: ['balloon-pink', 'soap-bubble'], moves: ['rise', 'fan'], tone: '#ff9ccc' }),
+  'moon-rabbit': E({ sprites: ['moon', 'rabbit'], moves: ['ring'], tone: '#cdd8ff' }),
+  'strawberry-parade': E({ sprites: ['strawberry', 'gift-box'], moves: ['fan', 'settle'], tone: '#ff8fa3' }),
+  'rose-ballroom': E({ sprites: ['rose-red'], moves: ['ring', 'breeze', 'settle'], petals: FX_PETALS, tone: '#f1cf8b' }),
+  'real-rose': E({ sprites: ['rose-bouquet'], moves: ['settle', 'breeze'], petals: FX_PETALS, tone: '#f4c2a8' }),
+  'neon-deepsea': E({ sprites: ['jellyfish', 'soap-bubble'], moves: ['rise', 'ring'], tone: '#76efff' }),
+  'sun-temple': E({ sprites: ['gold-coins', 'diamond'], moves: ['fan', 'settle'], tone: '#ffd46c' }),
   // 시즌 2
-  'single-rose': E({ sprites: ['rose-red'], motion: 'drop', count: 1, size: [130, 150] }),
-  'petal-wind': E({ sprites: ['rose-petal-1', 'rose-petal-2', 'rose-petal-3'], motion: 'sweep-petals', count: 7, size: [40, 70] }),
-  'white-rose': E({ sprites: ['rose-white', 'rose-petal-3'], motion: 'swirl', count: 4, size: [60, 100] }),
-  'black-rose': E({ sprites: ['rose-black', 'smoke'], motion: 'drop', count: 1, size: [130, 150] }),
-  fireworks: E({ motion: 'sweep', band: 'fireworks-2', sprites: [], count: 0 }),
-  'lily-drop': E({ sprites: ['lily'], motion: 'drop', count: 1, size: [130, 150] }),
-  'lotus-float': E({ sprites: ['lotus', 'water-lily'], motion: 'float', count: 3, size: [80, 120] }),
-  'cherry-breeze': E({ sprites: ['cherry-branch', 'rose-petal-3'], motion: 'swirl', count: 4, size: [70, 110] }),
-  'box-macarons': E({ sprites: ['macarons', 'macaron-tower'], motion: 'pop', count: 3, size: [80, 120] }),
-  'box-flowers': E({ sprites: ['carnation', 'pansy', 'camomile', 'poppy'], motion: 'float', count: 4, size: [70, 110] }),
-  'box-teddy': E({ sprites: ['teddy-red-bow'], motion: 'drop', count: 1, size: [130, 150] }),
-  'rose-heart': E({ sprites: ['bouquet-heart'], motion: 'drop', count: 1, size: [140, 165] }),
+  'single-rose': E({ sprites: ['rose-red'], moves: ['settle', 'fan'], petals: FX_PETALS, tone: '#ff5d73' }),
+  'petal-wind': E({ moves: ['breeze'], petals: ['rose-petal-1', 'rose-petal-2', 'rose-petal-3'], tone: '#ff7d8f' }),
+  'white-rose': E({ sprites: ['rose-white'], moves: ['ring', 'settle', 'breeze'], petals: FX_PETALS, petalTint: 'grayscale(1) brightness(3) sepia(0.12)', tone: '#f6f1e6' }),
+  'black-rose': E({ sprites: ['rose-black'], moves: ['settle', 'ring'], tone: '#b08aa0' }),
+  'lily-drop': E({ sprites: ['lily'], moves: ['settle', 'rise'], petals: FX_PETALS, petalTint: PINK_PETAL, tone: '#ffb3c7' }),
+  'lotus-float': E({ sprites: ['lotus', 'water-lily'], moves: ['rise', 'ring'], tone: '#ff9fd1' }),
+  'cherry-breeze': E({ sprites: ['cherry-branch'], moves: ['breeze', 'settle'], petals: FX_PETALS, petalTint: PINK_PETAL, tone: '#ffb7c8' }),
+  'box-macarons': E({ sprites: ['macarons', 'macaron-tower'], moves: ['fan', 'settle'], tone: '#ffb3c7' }),
+  'box-flowers': E({ sprites: ['carnation', 'pansy', 'camomile', 'poppy'], moves: ['fan', 'rise', 'settle'], tone: '#ffcf8a' }),
+  'box-teddy': E({ sprites: ['teddy-red-bow'], moves: ['settle'], tone: '#e8b48a' }),
+  'rose-heart': E({ sprites: ['bouquet-heart'], moves: ['settle', 'fan'], petals: FX_PETALS, tone: '#ff8fb1' }),
 };
 
 // ── 승리 연출(src/ui/victory.js): 탁자 → 우는 상대 → 뛰어오르는 내 캐릭터 → 장면. 아이템은 장면과 붙는 방식을 정한다(11-24 「오브젝트 하나 떨구고 배경 · 글씨만이 다가 아님」)
@@ -205,7 +209,6 @@ export const EFFECTS = {
 // ambient 분위기(petals 꽃잎이 날림 · cannons 색종이 대포 · fireworks 불꽃 · bubbles 비눗방울 · sparkles 반짝임) · petals 날리는 꽃잎
 // petalTint 장미 꽃잎 사진을 그 꽃 색으로 물들이는 필터 · sweep 꽃바람 전환에 쓰는 실물(없으면 꽃밭 꽃 + 꽃잎) · lift 뒤 소품을 머리보다 더 높이(크기 비율)
 const V = (o) => ({ backdrop: null, transition: null, hero: 'trophy', heroSize: 1, anchor: 'beside', sprites: [], ambient: null, petals: null, petalTint: null, sweep: null, lift: 0, accent: '#f2b544', ...o });
-const PINK_PETAL = 'saturate(0.38) brightness(1.7) hue-rotate(-10deg)';
 const ROSE_PETALS = ['rose-petal-1', 'rose-petal-2', 'rose-petal-3'];
 
 export const VICTORIES = {

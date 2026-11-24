@@ -160,6 +160,7 @@ export function openCollection({ host, onClose, onChanged }) {
   // 보여 주던 승리 연출 — 다른 아이템을 누르면 바로 걷는다(안 걷으면 앞 왕관 · 글자가 겹쳐 남았다, 11-24)
   let showing = null;
   function clearShowing() {
+    previewPile.querySelectorAll('.fx-token').forEach((el) => el.remove()); // 카드 효과가 미리 보기 카드 구석에 남긴 장식
     if (!showing) return;
     showing.timeline.kill();
     showing.finish();
@@ -177,7 +178,8 @@ export function openCollection({ host, onClose, onChanged }) {
   function replay() {
     if (!selected) return;
     const at = (() => { const rect = previewPile.getBoundingClientRect(); return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }; })();
-    if (selected.slot === 'effect') fx.burst(lookOf('effect', selected.look), at, { sizeScale: 0.8 });
+    // 미리 보기는 조금 큰 세기로 — 누를 때마다 다음 동작이 나온다
+    if (selected.slot === 'effect') fx.burst(lookOf('effect', selected.look), at, { tier: 'accent', onto: previewPile.lastElementChild });
     else if (selected.slot === 'victory') {
       clearShowing();
       const avatar = cosmeticById(previewEquipped().avatar) || cosmeticById(DEFAULT_EQUIPPED.avatar);

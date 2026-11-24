@@ -10,7 +10,7 @@ import { cosmeticById, DEFAULT_EQUIPPED } from '../core/cosmetics.js';
 import { onlineLook } from '../data/characters.js';
 import { cut } from '../data/assets.js';
 import { createTable } from './table.js';
-import { createFx } from './fx.js';
+import { createFx, preloadEffect } from './fx.js';
 import { createDirector } from './director.js';
 import { applyEquipped, backVars, lookFor } from './look-apply.js';
 import { mountToys } from './toys.js';
@@ -182,6 +182,7 @@ export function startOnline({ host, onExit, openRules }) {
     });
     const looks = applyEquipped(table.root, profile.equipped, { propsEl: table.sceneProps });
     fx = createFx({ layer: table.fxLayer, root: table.root, director });
+    preloadEffect(table.looks.effect);
     host.replaceChildren(table.root);
     toys = mountToys({ layer: table.toysLayer, equipped: profile.equipped, fx });
     table.looks = looks;
@@ -306,7 +307,9 @@ export function startOnline({ host, onExit, openRules }) {
         if (event.payload.remaining === 1) events.push({ id: `online:${event.id}:onecard`, type: 'one-card', mode: 'multi' });
         applyMissionEvents(events);
       }
-      fx.burst(mine ? table.looks.effect : lookFor('effect-classic'), at, mine ? {} : { count: 2, sizeScale: 0.7 });
+      // 카드 효과 — 보통 카드는 작게, 특수 카드 · 한 장 남음은 조금 크게, 조커는 크게. 상대가 낸 카드는 빛 테만
+      const tier = !mine ? 'rival' : card.rank === 'JOKER' ? 'big' : ['2', 'A', 'J', '7'].includes(card.rank) || event.payload.remaining === 1 ? 'accent' : 'soft';
+      fx.burst(mine ? table.looks.effect : lookFor('effect-classic'), at, { tier, onto: table.pile.lastElementChild });
       if (card.rank === 'JOKER') await fx.jokerTime({ at, owner: mine ? 'me' : 'rival', card });
       else if (card.rank === '2' || card.rank === 'A') await fx.attack({ at, added: card.rank === '2' ? 2 : 3, total: event.payload.attackCount || view.attackCount, owner: mine ? 'me' : 'rival' });
       else if (card.rank === '7') { table.setActiveSuit(event.payload.chosenSuit); await fx.suitChange({ at, suit: event.payload.chosenSuit, medallion: table.root.querySelector('.suit-medallion') }); }
