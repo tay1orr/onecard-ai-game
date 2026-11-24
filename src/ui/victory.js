@@ -53,7 +53,8 @@ export function playVictory(fx, { look, me = {}, rival = null, table = null, tit
   const wide = W >= 760;
   const quick = reduced();
   const accent = look.accent || '#f2b544';
-  const stage = h('div.fx-victory', { vars: { '--v-accent': accent, '--stage-w': `${Math.round(W)}px` } });
+  // 낮은 무대(휴대폰 보관함 미리 보기 등)는 제목을 높이에 맞춰 줄인다 — 큰 화면 크기 그대로면 캐릭터 얼굴을 덮었다(11-24)
+  const stage = h(`div.fx-victory${H < 420 ? '.is-low' : ''}`, { vars: { '--v-accent': accent, '--stage-w': `${Math.round(W)}px`, '--stage-h': `${Math.round(H)}px` } });
   layer.append(stage);
   const timeline = director.timeline();
   const loops = [];
@@ -434,7 +435,8 @@ export function playVictory(fx, { look, me = {}, rival = null, table = null, tit
     } else if (anchor === 'beside' && key) {
       // 옆 — 위에서 떨어져 쿵 앉는다(운 상대 반대쪽)
       const px = size * 0.46 * heroScale;
-      const x = c.x - side * size * (wide ? 0.52 : 0.38);
+      // 화면 안에 — 휴대폰에서는 큰 캐릭터 옆이라 소품이 가장자리 밖으로 잘렸다(11-24)
+      const x = Math.min(W - px * 0.52, Math.max(px * 0.52, c.x - side * size * (wide ? 0.52 : 0.38)));
       const el = prop(key, px, { x, y: c.feet - px * 0.47 }, 'is-front');
       gsap.set(el, { transformOrigin: '50% 100%' });
       const ground = h('i.v-shadow');

@@ -288,6 +288,15 @@
 .res-mission-names { color: #cfe9de; font-size: 13px; }
 .res-stats { color: var(--mute); font-size: 13px; }
 .res-actions { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
+/* 휴대폰 — 점수 글씨 · 새 아이템 칸을 줄여 다섯 칸이 한 줄에, 판이 한 화면에 들어오게(11-24) */
+@media (max-width: 760px) {
+  .result-panel { padding: 16px 14px 14px; gap: 8px; max-height: 86dvh; }
+  .res-points { font-size: 50px; }
+  .unlock-row { gap: 6px; }
+  .unlock-card { width: 62px; padding: 6px 3px; gap: 3px; }
+  .unlock-card .pv { zoom: 0.7; }
+  .unlock-card small { font-size: 10.5px; line-height: 1.2; }
+}
 .res-actions .btn { flex: 1; }
 
 @media (max-width: 760px) {

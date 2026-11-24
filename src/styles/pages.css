@@ -41,6 +41,8 @@
 .locker-left { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
 .locker-preview { --cw: clamp(54px, 4.6vw, 84px); position: relative; isolation: isolate; aspect-ratio: 16 / 10; border-radius: 26px; overflow: hidden; background: var(--scene-base, #0c1322); padding: 7% 9%; }
 .locker-preview .scene-prop { max-width: 14%; }
+/* 미리 보기 상자는 늘 가로 모양 — 휴대폰 세로 화면에서도 가로 판 그림을 쓴다(11-24 세로 그림이 가로 상자에 맞춰져 탁자 가운데만 크게 보였음) */
+.locker-preview .scene-photo { background-image: var(--scene-photo, none); }
 .locker-preview[data-map="painted"] .rim, .locker-preview[data-map="painted"] .felt { background: none; box-shadow: none; }
 .locker-preview[data-map="painted"] .felt-light { display: none; }
 .locker-preview[data-rim="none"] .rim { padding: 0; background: none; box-shadow: none; }
@@ -197,7 +199,7 @@
   .locker-body { display: block; flex: none; }
   .locker-right { margin-top: 8px; }
   .locker-left { position: sticky; top: 0; z-index: 4; gap: 8px; padding: 6px 0 10px; background: var(--ink); box-shadow: 0 12px 14px -12px rgba(0, 0, 0, 0.7); }
-  .locker-preview { aspect-ratio: auto; height: clamp(150px, 24vh, 240px); border-radius: 18px; padding: 4% 7%; }
+  .locker-preview { --cw: 44px; aspect-ratio: auto; height: clamp(150px, 24vh, 240px); border-radius: 18px; padding: 4% 7%; }
   .locker-sel { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 10px; padding: 10px 12px; border-radius: 14px; }
   .locker-sel .sel-head { grid-column: 1; min-width: 0; }
   .locker-sel .sel-name { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

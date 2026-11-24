@@ -196,7 +196,7 @@ const gptUsed = new Set([
   ...Object.values(VICTORIES).flatMap((look) => [look.hero, (look.backdrop?.paint || '').replace(/^gpt-/, ''), ...(look.sprites || []), ...(look.petals || []), ...(look.sweep || [])]),
 ]);
 const unusedGpt = GPT_ART.filter((key) => !gptUsed.has(key));
-check(GPT_ART.length === 189 && unusedGpt.length === 0, `선생님 GPT 그림(캐릭터 29 · 판 19 · 뒷면 14 · 앞면 13 · 승리 배경 6 · 효과 조각 108)은 모두 써야 함(지금 ${GPT_ART.length} · 안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
+check(GPT_ART.length === 215 && unusedGpt.length === 0, `선생님 GPT 그림(캐릭터 29 · 판 19 · 세로 판 26 · 뒷면 14 · 앞면 13 · 승리 배경 6 · 효과 조각 108)은 모두 써야 함(지금 ${GPT_ART.length} · 안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
 // 시즌 2 첫 판 선물 — 크리스마스 다섯 칸, 상자에서는 나오지 않음
 const { FIRST_GAME_GIFT } = await import('../src/core/cosmetics.js');
 check(FIRST_GAME_GIFT.length === 5 && new Set(FIRST_GAME_GIFT.map((item) => item.slot)).size === 5 && FIRST_GAME_GIFT.every((item) => !item.box && item.set === 'christmas'), '첫 판 선물은 크리스마스 세트 다섯 칸(맵 · 뒷면 · 앞면 · 효과 · 승리)');

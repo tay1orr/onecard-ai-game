@@ -1,10 +1,11 @@
 // 승리 연출 프레임 찍기 — 개발 서버에서 실제 게임판 · 연출 코드로 승리 장면을 만들고, GSAP 시간을 멈춰 정해진 시각마다 찍어 한 장에 모은다
-// node tests/e2e/victory-frames.mjs [--mobile] [--only=million-roses,classic] [--seed=3]
+// node tests/e2e/victory-frames.mjs [--mobile] [--only=million-roses,classic] [--seed=3] [--all] [--finals --full=5.3]
+// --all 승리 아이템 모두(맵은 그 세트 맵, 없으면 기본) · --finals 16장 묶음 없이 --full 시각 한 장씩만
 // 찍은 그림: tests/e2e/_shots/victory/<묶음>.png (프레임 16장 모음)
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
 
@@ -20,6 +21,8 @@ const outDir = path.join(root, 'tests/e2e/_shots/victory');
 const TIMES = [0.05, 0.25, 0.5, 0.85, 1.15, 1.45, 1.8, 2.1, 2.45, 2.75, 3.05, 3.35, 3.7, 4.1, 4.6, 5.3];
 // --full=1.2,3 — 그 시각은 원래 크기 그림도 따로 남긴다
 const full = (process.argv.find((arg) => arg.startsWith('--full=')) || '').slice(7).split(',').filter(Boolean).map(Number);
+const all = process.argv.includes('--all');
+const finals = process.argv.includes('--finals') && full.length > 0;
 
 // 묶음 — 맵 · 승리 아이템 · 내 캐릭터 · 상대
 const PRESETS = [
@@ -40,7 +43,20 @@ const PRESETS = [
   { name: 'amethyst', table: 'table-amethyst', victory: 'victory-amethyst', avatar: 'avatar-molang', rival: '쿠로미' },
   { name: 'dubai', table: 'table-dubai', victory: 'victory-dubai', avatar: 'avatar-korilakkuma', rival: '짱구' },
   { name: 'millefeuille', table: 'table-millefeuille', victory: 'victory-millefeuille', avatar: 'avatar-carebear', rival: '우사기' },
-].filter((preset) => !only.length || only.includes(preset.name));
+];
+if (all) {
+  // 승리 아이템 모두 — 캐릭터 · 상대는 돌려 가며, 맵은 그 세트의 맵(없으면 기본)
+  const { COSMETICS, COSMETIC_SETS, DEFAULT_EQUIPPED } = await import(pathToFileURL(path.join(root, 'src/core/cosmetics.js')).href);
+  const avatars = COSMETICS.filter((item) => item.slot === 'avatar').map((item) => item.id);
+  const rivals = ['치이카와', '하치와레', '짱구', '케로로', '쿠로미', '헬로키티', '코난', '하츄핑'];
+  PRESETS.length = 0;
+  COSMETICS.filter((item) => item.slot === 'victory').forEach((item, index) => {
+    const set = COSMETIC_SETS.find((entry) => entry.itemIds.includes(item.id));
+    const table = set?.itemIds.find((id) => id.startsWith('table-')) || DEFAULT_EQUIPPED.table;
+    PRESETS.push({ name: item.id.replace(/^victory-/, ''), table, victory: item.id, avatar: avatars[index % avatars.length], rival: rivals[index % rivals.length] });
+  });
+}
+for (let index = PRESETS.length - 1; index >= 0; index -= 1) if (only.length && !only.includes(PRESETS[index].name)) PRESETS.splice(index, 1);
 
 fs.mkdirSync(outDir, { recursive: true });
 const server = spawn(process.execPath, [path.join(root, 'node_modules/vite/bin/vite.js'), '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: root, stdio: 'ignore', windowsHide: true });
@@ -116,13 +132,14 @@ try {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }, { preset, seed });
     const frames = [];
-    for (const time of [...new Set([...TIMES, ...full])].sort((x, y) => x - y)) {
+    for (const time of (finals ? full : [...new Set([...TIMES, ...full])]).sort((x, y) => x - y)) {
       await page.evaluate((t) => { window.__gsap.globalTimeline.seek(window.__t0 + t); }, time);
       await sleep(140);
       const shot = await page.screenshot();
       if (TIMES.includes(time)) frames.push(shot);
       if (full.includes(time)) fs.writeFileSync(path.join(outDir, `${mobile ? 'm' : 'd'}-${preset.name}-t${time}.png`), shot);
     }
+    if (finals) { console.log(`찍음 ${preset.name} 마지막 장면`); continue; }
     const tileW = mobile ? 260 : 480;
     const tileH = mobile ? 563 : 270;
     const cols = mobile ? 8 : 4;

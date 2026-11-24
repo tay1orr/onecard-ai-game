@@ -180,6 +180,14 @@ Use the attached picture only as a style reference (painting style, lighting and
 
 Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a tiny sitting teddy bear with a red bow, (2) a red satin bow, (3) a small red heart, (4) a little pink heart balloon, (5) a tiny golden star, (6) a small curl of red ribbon. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
 
+## 세로 판(11-24 밤 — 26장 들어감)
+- 휴대폰 세로 화면용 판. 넣으면 휴대폰 세로 화면의 로비 무대 · 게임판이 이 그림을 쓴다(없으면 가로 판의 가운데를 자른 그림).
+- 파일 이름: GPT 판은 `세로판NN`(판NN 과 같은 번호), 시즌 1 그림 판은 `세로판-핑크구름` · `-달토끼` · `-딸기퍼레이드` · `-장미무도회` · `-리얼로즈` · `-네온심해` · `-태양신전`(첨부 그림은 `gpt그림\참고\세로판-참고-…`).
+- 결과는 gpt그림 폴더 바로 안에(참고 폴더 말고). 넣기: `node scripts/build-gpt.mjs` → `paint/tall-<판>.webp`.
+- 새 판을 만들면 세로 판도 함께 — 그림마다 같은 글, 첨부만 그 판으로:
+
+Use the attached picture as the reference for the place, the props, the painting style, the lighting and the colors. Repaint the same card-table scene for a smartphone screen held upright, portrait 2:3 (1024x1536). Look down at about 65 degrees onto the same ornate card table, but make the table a tall vertical oval that fills about 85% of the image width and about 72% of its height, centered slightly below the middle. The tabletop is completely empty and smooth, the same material and color as in the reference — nothing on it. Move the props and decorations of the place to the top edge behind the table and into the two bottom corners, a little smaller, so the whole tabletop stays calm and empty for cards. Same light and colors. No text, no people, no characters, no playing cards. Portrait 2:3.
+
 ## 아이템 보충(11-24 — 적은 칸부터 · 저녁에 30장 들어감)
 - 넣은 자리(11-24 저녁, 그림을 보고 정함):
   - 내 캐릭터 일곱(나9 곰돌이 푸 · 나13 벨 · 나14 앨리스는 GPT 가 그리지 않음): 몰랑이 20만 · 미피 26만 · 코리락쿠마 30만(33만 점대면 시즌 2 를 열자마자) · 리락쿠마 47만 · 러브어랏 베어 55만 5천 · 벨리곰 75만 5천 · 어린 왕자 94만.

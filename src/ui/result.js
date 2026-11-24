@@ -56,6 +56,7 @@ export function showResult({ host, won, delta = 0, bonus = false, profile, xpGai
     timeline.fromTo(card, { rotationY: 90, opacity: 0 }, { rotationY: 0, opacity: 1, duration: 0.4, ease: 'back.out(1.8)' }, 1.2 + index * 0.15);
     if (index === 0) timeline.call(() => play('unlock'), null, 1.2);
   });
-  setTimeout(() => panel.querySelector('.btn.primary')?.focus(), 400);
+  // preventScroll — 휴대폰에서 판이 길면 맨 아래 단추로 포커스가 가며 판이 스크롤되어 점수가 잘렸다(11-24)
+  setTimeout(() => panel.querySelector('.btn.primary')?.focus({ preventScroll: true }), 400);
   return { el: panel, close: () => panel.remove() };
 }
