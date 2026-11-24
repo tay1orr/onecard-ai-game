@@ -299,7 +299,7 @@ export function createFx({ layer, root, director }) {
     play('chips', { volume: 0.85 });
     play('chip', { delay: 0.08, volume: 0.6 });
     const timeline = director.timeline();
-    timeline.add(slab({ text: `+${added}`, sub: total > added ? `쌓인 공격 ${total}장` : '공격', color: '#e8483b', ink: '#fff', at, size: 'm', tilt: owner === 'me' ? -9 : 7, hold: 0.35, from: owner === 'me' ? 'left' : 'right' }), 0);
+    timeline.add(slab({ text: `+${added}`, sub: total > added ? `총 ${total}장` : '', color: '#e8483b', ink: '#fff', at, size: 'm', tilt: owner === 'me' ? -9 : 7, hold: 0.35, from: owner === 'me' ? 'left' : 'right' }), 0);
     if (total >= 5 && !reduced()) {
       const fire = sprite('fire', 150, local({ x: at.x, y: at.y - 10 }), { blend: 'screen' });
       timeline.fromTo(fire, { scaleY: 0.2, scaleX: 0.6, opacity: 1, transformOrigin: '50% 100%' }, { scaleY: 1.25, scaleX: 1, duration: 0.3, ease: 'back.out(2)' }, 0.05);
@@ -337,7 +337,7 @@ export function createFx({ layer, root, director }) {
     timeline.call(() => { shockwave({ x: box.left + center.x, y: box.top + center.y }, '#f2b544', { size: 420, rings: 3 }); shake(1.6); flash('#f2b544', 0.18); }, null, 0.62);
     timeline.fromTo(letters.children, { y: (index) => (index % 2 ? -160 : 160), opacity: 0, rotation: () => rand(-14, 14) },
       { y: 0, opacity: 1, rotation: () => rand(-5, 5), duration: 0.32, stagger: 0.05, ease: 'back.out(2.6)' }, 0.55);
-    timeline.add(slab({ text: '+5', sub: '조커로만 막을 수 있어요', color: '#e8483b', ink: '#fff', size: 'l', tilt: -8, hold: 0.55, at: { x: box.left + center.x, y: box.top + center.y + box.height * 0.33 } }), 0.82);
+    timeline.add(slab({ text: '+5', color: '#e8483b', ink: '#fff', size: 'l', tilt: -8, hold: 0.55, at: { x: box.left + center.x, y: box.top + center.y + box.height * 0.33 } }), 0.82);
     timeline.to(letters, { opacity: 0, scale: 1.15, duration: 0.25 }, 1.75);
     timeline.to(big, { left: start.x, top: start.y, scale: 1, rotationY: 0, rotation: 0, duration: 0.42, ease: 'power3.inOut' }, 1.75);
     timeline.to(dim, { opacity: 0, duration: 0.35 }, 1.85);
@@ -387,18 +387,18 @@ export function createFx({ layer, root, director }) {
       timeline.fromTo(portrait, { rotation: -6 }, { rotation: 0, duration: 0.5, ease: 'elastic.out(2, .3)' }, 0.1);
       timeline.to(portrait, { filter: 'none', duration: 0.3 }, 0.9);
     }
-    timeline.add(slab({ text: '건너뛰기', sub: owner === 'me' ? '한 번 더 내 차례' : '상대가 한 번 더', color: '#7c93ff', ink: '#fff', size: 'm', at: { x: rect.left + rect.width / 2, y: rect.top + rect.height * 0.62 }, tilt: 5, hold: 0.35 }), 0.05);
+    timeline.add(slab({ text: '건너뛰기', color: '#7c93ff', ink: '#fff', size: 'm', at: { x: rect.left + rect.width / 2, y: rect.top + rect.height * 0.62 }, tilt: 5, hold: 0.35 }), 0.05);
     return timeline;
   }
 
-  function oneCard({ zone, name, color = '#f2b544', mine = false, lastCard = null }) {
+  function oneCard({ zone, color = '#f2b544', mine = false, lastCard = null }) {
     play('onecard');
     const rect = zone.getBoundingClientRect();
     const timeline = director.timeline();
     flash(color, 0.14);
     shake(0.6);
     if (lastCard && !reduced()) timeline.fromTo(lastCard, { y: 0, rotation: 0 }, { y: -46, rotation: 360, duration: 0.6, ease: 'back.out(1.6)', yoyo: true, repeat: 1, repeatDelay: 0.2 }, 0);
-    timeline.add(slab({ text: '원카드!', sub: mine ? '마지막 한 장이에요' : `${name}의 마지막 한 장`, color, ink: '#121a2b', size: 'l', tilt: mine ? -8 : 8, hold: 0.7, at: { x: rect.left + rect.width / 2, y: rect.top + rect.height * (mine ? 0.15 : 0.85) }, from: mine ? 'left' : 'right' }), 0.05);
+    timeline.add(slab({ text: '원카드!', color, ink: '#121a2b', size: 'l', tilt: mine ? -8 : 8, hold: 0.7, at: { x: rect.left + rect.width / 2, y: rect.top + rect.height * (mine ? 0.15 : 0.85) }, from: mine ? 'left' : 'right' }), 0.05);
     return timeline;
   }
 
@@ -408,7 +408,7 @@ export function createFx({ layer, root, director }) {
     const at = { x: rect.left + rect.width / 2, y: rect.top + rect.height * 0.5 };
     shockwave(at, '#e8483b', { size: 160, rings: 1 });
     const timeline = director.timeline();
-    timeline.add(slab({ text: `+${count}장`, sub: mine ? '공격을 받았어요' : '상대가 공격을 받았어요', color: '#1b1d24', ink: '#fff', size: 'm', tilt: mine ? 6 : -6, hold: 0.45, at }), 0);
+    timeline.add(slab({ text: `+${count}장`, color: '#1b1d24', ink: '#fff', size: 'm', tilt: mine ? 6 : -6, hold: 0.45, at }), 0);
     if (!reduced()) {
       const puff = sprite('smoke', 160, local({ x: at.x, y: at.y }), { blend: 'screen' });
       timeline.fromTo(puff, { scale: 0.3, opacity: 0.85 }, { scale: 1.3, opacity: 0, y: -40, duration: 0.9, ease: 'power2.out', onComplete: () => puff.remove() }, 0.02);

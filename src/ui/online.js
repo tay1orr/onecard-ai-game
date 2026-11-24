@@ -206,7 +206,7 @@ export function startOnline({ host, onExit, openRules }) {
     table.syncHand(view.myHand || [], { animate: true });
     table.setMyCount((view.myHand || []).length);
     table.setTop(view.topCard);
-    table.setHint(view.topCard ? playHint({ attackCount: view.attackCount, topCard: view.topCard, freePlay: view.freePlay, activeSuit: view.activeSuit, requestedSuit: view.topCard.rank === '7' ? view.activeSuit : null, myTurn }) : '');
+    table.setHint(view.topCard ? playHint({ attackCount: view.attackCount, topCard: view.topCard, freePlay: view.freePlay, activeSuit: view.activeSuit, requestedSuit: view.topCard.rank === '7' ? view.activeSuit : null, myTurn, beginner: profile.games < 3 }) : '');
     table.setMeStatus(myTurn ? '내 차례' : '');
     table.setRivalStatus(view.status === 'playing' && !myTurn ? '고르는 중' : '');
     const playable = myTurn ? (view.myHand || []).filter((card) => isPlayableOnline(card, view)).map((card) => card.id) : [];
@@ -314,7 +314,7 @@ export function startOnline({ host, onExit, openRules }) {
       else if (card.rank === '2' || card.rank === 'A') await fx.attack({ at, added: card.rank === '2' ? 2 : 3, total: event.payload.attackCount || view.attackCount, owner: mine ? 'me' : 'rival' });
       else if (card.rank === '7') { table.setActiveSuit(event.payload.chosenSuit); await fx.suitChange({ at, suit: event.payload.chosenSuit, medallion: table.root.querySelector('.suit-medallion') }); }
       else if (card.rank === 'J') await fx.skip({ zone: mine ? table.rivalZone : table.meZone, portrait: mine ? table.rivalPortrait : null, owner: mine ? 'me' : 'rival' });
-      if (event.payload.remaining === 1) await fx.oneCard({ zone: mine ? table.meZone : table.rivalZone, mine, name: getSeatView(view).opponent?.nickname || '상대', color: '#f2b544' });
+      if (event.payload.remaining === 1) await fx.oneCard({ zone: mine ? table.meZone : table.rivalZone, mine, color: '#f2b544' });
     } else if (event.eventType === 'draw') {
       if (mine) {
         const drawn = view.drawnCards || [];

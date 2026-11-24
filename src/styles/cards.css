@@ -13,6 +13,9 @@
   background-blend-mode: multiply, normal;
   color: var(--ink, #1b1d24);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 5px 12px rgba(0, 0, 0, 0.3);
+  /* 그림 카드 · 에이스 그림은 종이와 곱하기로 섞인다 — 섞는 범위를 카드 안으로 늘 고정해 둔다(11-24 휴대폰에서 Q · J 그림이 깜빡임).
+     못 내는 카드의 흐림 필터 · 효과 조각이 붙었다 떨어질 때마다 섞는 범위가 바뀌어 다시 그려지며 휴대폰이 한두 장면을 놓쳤다. 보이는 모습은 같다 */
+  isolation: isolate;
 }
 .card.face.is-red { color: var(--red, #b8232f); }
 .card .suit { display: block; fill: currentColor; }

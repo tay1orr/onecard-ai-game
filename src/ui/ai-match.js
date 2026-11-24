@@ -108,7 +108,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     table.setActiveSuit(game.requestedSuit);
     table.setRivalCount(game.hands[1].length, { animate: false });
     table.setMyCount(game.hands[0].length);
-    table.setHint(playHint({ attackCount: game.attackCount, topCard: game.topCard, freePlay: game.freePlay, activeSuit: game.activeSuit, requestedSuit: game.requestedSuit, myTurn }));
+    table.setHint(playHint({ attackCount: game.attackCount, topCard: game.topCard, freePlay: game.freePlay, activeSuit: game.activeSuit, requestedSuit: game.requestedSuit, myTurn, beginner: profile.games < 3 }));
     table.setMeStatus(myTurn ? (game.attackCount ? '공격을 막거나 받아요' : '내 차례') : '');
     table.setPlayable(myTurn ? game.playableCards(0).map((card) => card.id) : [], myTurn && !busy);
     table.setDeckEnabled(myTurn && !busy);
@@ -231,7 +231,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
         await director.run(() => fx.oneCard({ zone: table.meZone, mine: true, color: '#f2b544', lastCard: last }));
         rivalCtl.react('shock', 'playerOnecard');
       } else {
-        await director.run(() => fx.oneCard({ zone: table.rivalZone, name: rival.name, color: rival.color }));
+        await director.run(() => fx.oneCard({ zone: table.rivalZone, color: rival.color }));
         rivalCtl.react('smug', 'onecard');
       }
     }
