@@ -1,0 +1,136 @@
+# GPT 그림 프롬프트 (원카드 시즌 2)
+
+실제 사진 · 명화를 이어 붙이면 오려 붙인 티가 나는 것만 모았습니다. 시즌 1 그림(장미 무도회 · 리얼 로즈가든)과 같은 화풍 · 구도로 맞췄습니다.
+
+## 어느 모델로 (2026-11-24 확인)
+- 그림 모델은 고를 필요가 없습니다. ChatGPT 에서 그림을 부탁하면 최신 그림 모델 **ChatGPT Images 2.6**(11-04 출시)이 저절로 그립니다.
+- **생각(추론) 모드를 켜고 그리시는 것을 권합니다.**
+  - 위쪽 모델 고르기에서 생각하는 모델(Thinking · 추론 단계 「중간」이나 「높음」)을 고르세요.
+  - 생각 모드에서는 그리기 전에 구도를 먼저 짭니다. 그래서 「가운데 탁자는 비우고 가장자리만 꾸미기」 같은 까다로운 요구를 더 잘 지킵니다.
+  - 생각 모드는 사용량을 더 쓰고 시간도 더 걸립니다. 상대 캐릭터처럼 단순한 그림은 보통 모드로도 됩니다.
+  - 가장 높은 단계(Extra High · Pro 전용)까지는 필요 없습니다.
+  - 단계 이름은 앱 판에 따라 조금 다를 수 있습니다.
+- **참고 그림을 함께 올리면 화풍이 가장 잘 맞습니다.** `gpt그림\참고\` 에 시즌 1 그림 다섯 장을 꺼내 두었습니다.
+  - 판을 만들 때는 `참고-장미무도회-판.png` 를 첨부합니다.
+  - 그리고 프롬프트 앞에 「첨부한 그림과 같은 화풍과 시점으로」 한 줄을 붙입니다.
+  - 뒷면 · 앞면 테도 같은 방법으로 참고 그림을 첨부합니다.
+- 판 여러 장은 한 대화창에서 이어서 만들면 화풍이 서로 비슷하게 유지됩니다.
+
+## 만드는 법
+1. 아래 프롬프트를 ChatGPT 에 그대로 붙여 넣습니다(영어 그대로가 화풍이 잘 맞습니다).
+2. 마음에 드는 그림을 받아 이 폴더에 넣습니다:
+   `C:\Users\user\Documents\인공지능 기초\2026-06-30-onecard-game\gpt그림\`
+3. 파일 이름은 **앞의 번호만 맞으면** 됩니다. 뒤는 아무렇게나 두셔도 됩니다(예: `판01.png`, `판01-분홍장미.png` 모두 됨). png · jpg · webp 모두 됩니다.
+4. 넣은 뒤 말씀해 주시면 제가 크기를 맞춰 게임에 넣습니다(`node scripts/build-gpt.mjs`). 상대 그림이 들어온 자리만 동물에서 캐릭터로 바뀝니다.
+
+크기:
+- 판: 가로 3:2 (1536×1024)
+- 카드 뒷면 · 앞면 테: 세로 2:3 (1024×1536)
+- 상대 캐릭터: 정사각형 (1024×1024)
+
+마음에 안 들면 같은 프롬프트로 다시 뽑으셔도 됩니다. 판은 「가운데 탁자 면이 비어 있는지」만 꼭 봐 주세요. 그 위에 카드가 올라갑니다.
+
+---
+
+## 1순위 — 상대 캐릭터 8 (정사각형, 배경 투명)
+
+배경 투명이 안 되면 「plain pure white background」 로 바꿔 주세요. 흰 배경은 제가 지웁니다.
+GPT 가 캐릭터를 거절하면, 공식 그림(배경이 단색인 것)을 받아 같은 이름으로 넣어 주셔도 됩니다.
+
+### 상대1 — 춘식이 (★1)
+Choonsik (춘식이), the chubby cream-colored cat from Kakao Friends, hugging a roasted sweet potato, sleepy relaxed half-closed eyes and a content smile. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 상대2 — 치이카와 (★2)
+Chiikawa, the small white bear-like creature from the manga "Chiikawa" by Nagano, holding one tiny playing card with both paws, nervous but determined, eyes a little teary. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 상대3 — 하치와레 (★3)
+Hachiware, the white cat with the blue-black split-color head from the manga "Chiikawa", cheerful and optimistic, raising one paw with a playing card, bright open smile. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 상대4 — 우사기 (★4)
+Usagi, the yellow rabbit from the manga "Chiikawa", wild excited expression with mouth wide open as if shouting "Ura!", ears straight up, holding a playing card high in one hand. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 상대5 — 짱구 (★5)
+Shinnosuke Nohara (Shin-chan) from "Crayon Shin-chan", classic 1990s anime look, red shirt and yellow shorts, mischievous grin, holding a fan of playing cards close to his face like he is hiding his hand. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 상대6 — 카드캡터 체리 (★6)
+Sakura Kinomoto from the 1998 anime "Cardcaptor Sakura", classic late-90s cel anime style, wearing her pink and white battle costume, holding a glowing magic card in front of her with a confident smile, a few sparkles. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 상대7 — 랏코 (★7)
+Rakko, the sea otter from the manga "Chiikawa", the top-ranked hunter, calm and cool confident expression, wearing his hunter cape, arms crossed, one playing card held between two fingers. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 상대8 — 세일러문 (★8)
+Sailor Moon (Usagi Tsukino) from the 1992 anime "Sailor Moon", classic early-90s cel animation style, her famous pose with one gloved hand forward, holding a single long-stemmed red rose, soft pink sparkles and a few rose petals. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+---
+
+## 1순위 — 판 10 (가로 3:2)
+
+판은 모두 같은 틀입니다. 가운데 타원 탁자 면은 **완전히 비어 있어야** 합니다(카드 · 물건 없음).
+
+### 판01 — 분홍 장미 아치 정원 (30만 점대 장미 정원)
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth deep emerald-green velvet with a very subtle damask pattern — nothing on it at all. The table edge is a slim polished brass rim with delicate leaf engravings. Surrounding the table and filling all four edges of the frame: a Parisian rose garden seen from above — arches and garlands of pink climbing roses, white wrought-iron trellises, scattered pink petals on pale gravel paths, small round topiaries. The center stays calm and uncluttered; all decoration is around the outside. Soft golden-hour sunlight from the upper left with a gentle bloom. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, deep saturated colors, no text, no people, no playing cards.
+
+### 판02 — 영국식 장미 정원
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth sage-green felt — nothing on it at all. The table edge is carved light oak wood. Surrounding the table and filling all four edges of the frame: an English cottage rose garden — lush apricot and peach garden roses, lavender borders, a mossy stone path, a white wooden bench, a vintage watering can. The center stays calm and uncluttered; all decoration is around the outside. Soft morning light with a light mist. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, deep saturated colors, no text, no people, no playing cards.
+
+### 판03 — 하얀 장미 테라스
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth dusty-blue velvet — nothing on it at all. The table edge is fine silver filigree. Surrounding the table and filling all four edges of the frame: a white marble terrace whose balustrades overflow with white and blush roses, a small stone fountain, strings of pearls draped over the railing, white petals on the marble floor. The center stays calm and uncluttered; all decoration is around the outside. Bright soft daylight, airy and elegant. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, no text, no people, no playing cards.
+
+### 판04 — 붉은 장미 터널
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth deep burgundy velvet with a very subtle damask pattern — nothing on it at all. The table edge is ornate gold filigree. Surrounding the table and filling all four edges of the frame: a tunnel of red climbing roses arching over and around the table, red petals drifting through the air, small brass lanterns hanging from the rose arches. The center stays calm and uncluttered; all decoration is around the outside. Warm sunset light. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, deep saturated colors, no text, no people, no playing cards.
+
+### 판05 — 호숫가 노란 장미
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth navy-blue velvet — nothing on it at all. The table edge is polished gold with tiny rose motifs. Surrounding the table and filling all four edges of the frame: yellow and cream roses along a lakeside promenade, calm blue water with reflections along the top edge, a white gazebo, a few swans in the distance. The center stays calm and uncluttered; all decoration is around the outside. Late afternoon golden glow. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, no text, no people, no playing cards.
+
+### 판06 — 분홍 장미 파빌리온
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth blush-pink satin — nothing on it at all. The table edge is polished rose-gold. Surrounding the table and filling all four edges of the frame: a romantic pink rose pavilion with lace curtains, cascading pink and white roses, small side tables with porcelain teacups, macarons and a tiered cake stand. The center stays calm and uncluttered; all decoration is around the outside. Dreamy soft light. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, no text, no people, no playing cards.
+
+### 판07 — 밤의 장미 정원
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth midnight-blue velvet — nothing on it at all. The table edge is ornate gold. Surrounding the table and filling all four edges of the frame: a rose garden at night — red and pink roses lit by glowing lanterns and string lights, candles in glass jars, a stone fountain reflecting the full moon along the top edge. The center stays calm and uncluttered; all decoration is around the outside. Moonlight mixed with warm lantern glow. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, no text, no people, no playing cards.
+
+### 판08 — 베르사유 거울의 방
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth deep crimson velvet with a subtle gold damask pattern — nothing on it at all. The table edge is a heavy gilded baroque rim. Surrounding the table and filling all four edges of the frame: the Hall of Mirrors of a baroque palace — gilded mirrors, sparkling crystal chandeliers, gold candelabras with lit candles, tall gold vases of red roses, a polished parquet floor. The center stays calm and uncluttered; all decoration is around the outside. Warm candlelight and chandelier sparkle. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, deep saturated colors, no text, no people, no playing cards.
+
+### 판09 — 황금 장미의 방
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth black velvet with a faint gold damask pattern — nothing on it at all. The table edge is ornate polished gold decorated with tiny golden roses. Surrounding the table and filling all four edges of the frame: a luxurious black-and-gold salon filled with metallic 24-karat gold roses (real polished metal with bright specular highlights, not yellow paint, not ochre), gold candelabras with lit candles, black marble pillars, gold-leaf petals scattered on a black marble floor. The center stays calm and uncluttered; all decoration is around the outside. Warm candlelight making the gold gleam against deep black. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, no text, no people, no playing cards.
+
+### 판10 — 백만 송이 장미 (50만 점 마지막 보상)
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth deep crimson velvet — nothing on it at all. The table edge is ornate gold. Surrounding the table and filling all four edges of the frame: the table floats in an endless sea of red roses that fills every edge and stretches to the horizon, red petals swirling in the air. The center stays calm and uncluttered; all decoration is around the outside. A glowing sunset sky along the top edge with warm rim light on the roses. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, deep saturated colors, no text, no people, no playing cards.
+
+---
+
+## 1순위 — 황금 장미 카드 2 (세로 2:3)
+
+### 뒷면01 — 황금 장미 카드 뒷면
+The back of a single luxury playing card, portrait 2:3, the design fills the whole image edge to edge with slightly rounded corners. Perfectly symmetrical ornamental design, mirrored left-right and top-bottom like a real luxury card back. In the center, a single metallic 24-karat gold rose inside an oval medallion; around it, intricate polished gold filigree with tiny gold roses and leaves on deep black velvet, and a fine double gold border around the edge. Real metallic gold with bright highlights, not ochre or mustard. Semi-realistic fantasy digital painting, intricate, rich detail, soft glow, no text, no letters, no numbers.
+
+### 앞면01 — 황금 장미 카드 앞면 테
+A decorative border frame for the FRONT of a playing card, portrait 2:3. The center area (about 80% of the width and 84% of the height) is plain, smooth, empty warm ivory paper — leave it completely blank: no symbols, no letters, no numbers, no pictures. Only a narrow border is decorated: thin polished gold filigree vines with tiny metallic gold roses and leaves, a small gold rose in each corner. Elegant and light, the border no wider than about 8% of the card width. Semi-realistic digital painting, fine detail, no text.
+
+---
+
+## 2순위 — 있으면 좋은 것 8
+
+### 판11 — 왕실 겨울 정원
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth pale ice-blue velvet — nothing on it at all. The table edge is polished silver. Surrounding the table and filling all four edges of the frame: a royal winter glasshouse with white roses and white camellias, frosted glass panes, soft snow visible outside, silver candelabras. The center stays calm and uncluttered; all decoration is around the outside. Cool soft daylight. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, no text, no people, no playing cards.
+
+### 판12 — 장미 온실 (시즌 1 「장미 온실」 맵을 새로)
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth soft sage-green velvet — nothing on it at all. The table edge is white-painted wrought iron with brass details. Surrounding the table and filling all four edges of the frame: a Victorian glass conservatory with potted pink and red roses, ferns and palms, a porcelain tea set on a side table, sunlight through the glass roof. The center stays calm and uncluttered; all decoration is around the outside. Bright warm sunlight. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, no text, no people, no playing cards.
+
+### 판13 — 꿈빛 왕국 (시즌 1 「꿈빛 왕국 테이블」을 새로)
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, smooth lilac velvet — nothing on it at all. The table edge is ornate gold. Surrounding the table and filling all four edges of the frame: a fairy-tale castle balcony at sunset with lilac and peach clouds, castle towers in the distance, a jeweled crown and pearl necklaces on cushions, wisteria hanging from above. The center stays calm and uncluttered; all decoration is around the outside. Dreamy dusk light. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, no text, no people, no playing cards.
+
+### 판14 — 블랙 오닉스
+A high-angle view looking down at about 65 degrees onto an ornate oval card table, landscape composition. The oval tabletop is centered and fills about 70% of the image width and 70% of its height. The tabletop is a completely empty, polished black onyx with faint silver veins — nothing on it at all. The table edge is brushed silver. Surrounding the table and filling all four edges of the frame: a penthouse lounge at night overlooking glittering city lights through tall windows, crystal glasses, a few loose diamonds on black velvet, chrome and glass details. The center stays calm and uncluttered; all decoration is around the outside. Cool moonlight with city glow. Semi-realistic digital painting, painterly realism like a premium mobile card game, rich detail, no text, no people, no playing cards.
+
+### 뒷면02 — 백만 송이 장미 카드 뒷면
+The back of a single luxury playing card, portrait 2:3, the design fills the whole image edge to edge with slightly rounded corners. Perfectly symmetrical ornamental design, mirrored left-right and top-bottom like a real luxury card back. In the center, a mandala made of many deep red roses inside a round medallion; around it, polished gold filigree and small red roses on deep crimson, with a fine double gold border around the edge. Semi-realistic fantasy digital painting, intricate, rich detail, soft glow, no text, no letters, no numbers.
+
+### 뒷면03 — 하얀 장미 카드 뒷면
+The back of a single luxury playing card, portrait 2:3, the design fills the whole image edge to edge with slightly rounded corners. Perfectly symmetrical ornamental design, mirrored left-right and top-bottom like a real luxury card back. In the center, a single white rose inside an oval medallion framed with pearls; around it, fine silver filigree with small white roses and pale green leaves on soft powder-blue, with a fine double silver border around the edge. Semi-realistic fantasy digital painting, intricate, rich detail, soft glow, no text, no letters, no numbers.
+
+### 뒷면04 — 분홍 장미 정원 카드 뒷면
+The back of a single luxury playing card, portrait 2:3, the design fills the whole image edge to edge with slightly rounded corners. Perfectly symmetrical ornamental design, mirrored left-right and top-bottom like a real luxury card back. In the center, a lush pink garden rose inside a round medallion; around it, rose-gold filigree with climbing pink roses and sage-green leaves on blush pink, with a fine double rose-gold border around the edge. Semi-realistic fantasy digital painting, intricate, rich detail, soft glow, no text, no letters, no numbers.
+
+### 앞면02 — 하얀 장미 · 진주 카드 앞면 테
+A decorative border frame for the FRONT of a playing card, portrait 2:3. The center area (about 80% of the width and 84% of the height) is plain, smooth, empty white paper — leave it completely blank: no symbols, no letters, no numbers, no pictures. Only a narrow border is decorated: delicate white roses, tiny pearls and thin silver vines, a small white rose in each corner. Elegant and light, the border no wider than about 8% of the card width. Semi-realistic digital painting, fine detail, no text.

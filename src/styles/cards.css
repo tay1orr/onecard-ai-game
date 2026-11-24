@@ -24,7 +24,9 @@
 .card .idx.tl { left: 7%; top: 5%; }
 .card .idx.br { right: 7%; bottom: 5%; transform: rotate(180deg); }
 .card .idx .suit { width: calc(var(--cw) * 0.15); height: calc(var(--cw) * 0.15); }
-.card .center { position: absolute; inset: 15% 19% 15%; z-index: 1; }
+/* z-index 를 주면 가운데 칸이 따로 층이 되어 그림카드 · 에이스 그림이 종이와 섞이지(multiply) 못하고 사각형으로 떴다(11-24).
+   테(face-frame)가 먼저 그려지므로 z-index 없이도 무늬가 테 위에 온다. */
+.card .center { position: absolute; inset: 15% 19% 15%; }
 .card .pip { position: absolute; width: calc(var(--cw) * 0.19); height: calc(var(--cw) * 0.19); transform: translate(-50%, -50%); }
 .card .pip.flip { transform: translate(-50%, -50%) rotate(180deg); }
 .card .pip .suit { width: 100%; height: 100%; }
@@ -71,9 +73,14 @@
 }
 
 /* 앞면 테 */
-.ff-thin .card.face .face-frame { box-shadow: inset 0 0 0 calc(var(--cw) * 0.045) transparent, inset 0 0 0 calc(var(--cw) * 0.052) color-mix(in srgb, var(--face-accent) 70%, transparent); }
-.ff-gold .card.face .face-frame { box-shadow: inset 0 0 0 calc(var(--cw) * 0.035) transparent, inset 0 0 0 calc(var(--cw) * 0.048) var(--face-accent), inset 0 0 0 calc(var(--cw) * 0.062) transparent, inset 0 0 0 calc(var(--cw) * 0.07) color-mix(in srgb, var(--face-accent) 60%, transparent); }
-.ff-deco .card.face .face-frame { box-shadow: inset 0 0 0 calc(var(--cw) * 0.03) transparent, inset 0 0 0 calc(var(--cw) * 0.042) var(--face-accent), inset 0 0 0 calc(var(--cw) * 0.07) transparent, inset 0 0 0 calc(var(--cw) * 0.078) var(--face-accent); }
+/* 테는 가장자리에서 조금 들어온 가는 선(금 · 데코는 두 줄). 예전에는 투명 그림자로 안쪽을 가리려 했으나
+   투명한 겹은 아래 겹을 못 가려 두꺼운 띠가 되었다(11-24). 숫자 자리는 테 안쪽으로 조금 옮긴다. */
+.ff-thin .card.face .face-frame, .ff-gold .card.face .face-frame, .ff-deco .card.face .face-frame { inset: 3.6%; border-radius: calc(var(--cw) * 0.055); }
+.ff-thin .card.face .face-frame { border: max(1px, calc(var(--cw) * 0.009)) solid color-mix(in srgb, var(--face-accent) 78%, transparent); }
+.ff-gold .card.face .face-frame { border: max(3px, calc(var(--cw) * 0.03)) double var(--face-accent); }
+.ff-deco .card.face .face-frame { border: max(3px, calc(var(--cw) * 0.036)) double var(--face-accent); }
+:is(.ff-thin, .ff-gold, .ff-deco) .card.face .idx.tl { left: 9.5%; top: 7%; }
+:is(.ff-thin, .ff-gold, .ff-deco) .card.face .idx.br { right: 9.5%; bottom: 7%; }
 .ff-glass .card.face { box-shadow: inset 0 0 0 1.5px rgba(127, 195, 232, 0.75), inset 0 calc(var(--cw) * 0.16) calc(var(--cw) * 0.18) calc(var(--cw) * -0.14) #fff, 0 6px 14px rgba(0, 0, 0, 0.3); }
 .ff-grid .card.face .face-frame { background: linear-gradient(rgba(255, 255, 255, 0.13) 1px, transparent 1px) 0 0 / calc(var(--cw) * 0.09) calc(var(--cw) * 0.09), linear-gradient(90deg, rgba(255, 255, 255, 0.13) 1px, transparent 1px) 0 0 / calc(var(--cw) * 0.09) calc(var(--cw) * 0.09); box-shadow: inset 0 0 0 1.5px rgba(238, 245, 255, 0.6); }
 .ff-neon .card.face .face-frame { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--face-accent) 80%, transparent); }

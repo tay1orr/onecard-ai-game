@@ -22,17 +22,18 @@
 .pv-map[data-map="painted"] .pv-scene { filter: none; }
 .pv-burst img, .pv-toy img, .pv-avatar img, .pv-trio img, .pv-victory img { object-fit: contain; filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.4)); }
 .pv-burst.has-band { border-radius: 12px; overflow: hidden; background: var(--pv-band) center / cover no-repeat; }
-.pv-burst img { position: absolute; width: 46%; }
+.pv-burst img { position: absolute; width: 46%; height: 46%; }
 .pv-burst .b0 { left: 4%; top: 30%; transform: rotate(-14deg); }
 .pv-burst .b1 { left: 30%; top: 2%; transform: rotate(8deg) scale(1.15); }
 .pv-burst .b2 { right: 2%; top: 34%; transform: rotate(18deg); }
-.pv-toy img, .pv-avatar img { width: 86%; height: 86%; }
+/* 그림은 칸 상자에 고정 — 높이 % 가 격자 줄 높이로 풀리면 길쭉한 그림(샴페인 잔)이 칸 밖으로 넘쳤다(11-24) */
+.pv-toy img, .pv-avatar img { position: absolute; inset: 7%; width: 86%; height: 86%; }
 .pv-trio { display: flex; gap: 0; }
 .pv-trio img { width: 36px; height: 36px; margin: 0 -6px; }
 .pv-trio img:nth-child(2) { transform: translateY(-8px); }
 .pv-victory { border-radius: 12px; overflow: hidden; }
 .pv-victory .pv-backdrop { position: absolute; inset: 0; background: var(--pv-backdrop, none) center / cover no-repeat, radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--v-accent) 40%, #10131c), #10131c 75%); filter: brightness(0.8); }
-.pv-victory img { position: relative; width: 74%; height: 74%; }
+.pv-victory img { position: absolute; inset: 13%; width: 74%; height: 74%; }
 .pv-avatar img { border-radius: 50%; background: radial-gradient(circle at 50% 40%, #2a3248, #121826); }
 
 /* 보관함 */

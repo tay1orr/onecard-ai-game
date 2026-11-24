@@ -1031,6 +1031,172 @@ export const CREDIT_GROUPS = [
   ]
  },
  {
+  "name": "사진 한 장 판(위에서 내려다본 꽃 · 테이블 사진, Pexels · Unsplash)",
+  "items": [
+   {
+    "key": "surf-tulips-white",
+    "title": "a bouquet of white tulips on a black background aEOi uLVtZg",
+    "creator": "Catia Climovich",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-bouquet-of-white-tulips-on-a-black-background-aEOi-uLVtZg"
+   },
+   {
+    "key": "surf-lavender",
+    "title": "purple lavender flower wvUs06Rtu5E",
+    "creator": "NordWood Themes",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/purple-lavender-flower-wvUs06Rtu5E"
+   },
+   {
+    "key": "surf-water-lily",
+    "title": "lily pads on dark pond water 5GYN8U7wFsg",
+    "creator": "Sujit Bangarshettar",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/lily-pads-on-dark-pond-water-5GYN8U7wFsg"
+   },
+   {
+    "key": "surf-sunflower",
+    "title": "1478159",
+    "creator": "mattycphoto",
+    "license": "Pexels License",
+    "source": "https://www.pexels.com/photo/1478159/"
+   },
+   {
+    "key": "surf-hydrangea",
+    "title": "8680406",
+    "creator": "Asya Vlasova",
+    "license": "Pexels License",
+    "source": "https://www.pexels.com/photo/8680406/"
+   },
+   {
+    "key": "surf-peony",
+    "title": "12123644",
+    "creator": "micheile",
+    "license": "Pexels License",
+    "source": "https://www.pexels.com/photo/12123644/"
+   },
+   {
+    "key": "surf-lilac",
+    "title": "purple flowers on brown wooden table v7vf5ofD5sY",
+    "creator": "Nina Pix",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/purple-flowers-on-brown-wooden-table-v7vf5ofD5sY"
+   },
+   {
+    "key": "surf-cherry",
+    "title": "7316810",
+    "creator": "amresarse",
+    "license": "Pexels License",
+    "source": "https://www.pexels.com/photo/7316810/"
+   },
+   {
+    "key": "surf-rose-white",
+    "title": "white roses on gray textile TaFTIAaSn1I",
+    "creator": "Christina Victoria Craft",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/white-roses-on-gray-textile-TaFTIAaSn1I"
+   },
+   {
+    "key": "surf-rose-apricot",
+    "title": "a bunch of flowers that are on a table YJhXk23Qr80",
+    "creator": "Annie Spratt",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-bunch-of-flowers-that-are-on-a-table-YJhXk23Qr80"
+   },
+   {
+    "key": "surf-rose-pink",
+    "title": "5874608",
+    "creator": "Gabby K",
+    "license": "Pexels License",
+    "source": "https://www.pexels.com/photo/5874608/"
+   },
+   {
+    "key": "surf-rose-red",
+    "title": "a bouquet of red roses on a black background 6l9m9pFoL8g",
+    "creator": "Anita Austvika",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-bouquet-of-red-roses-on-a-black-background-6l9m9pFoL8g"
+   },
+   {
+    "key": "surf-rose-night",
+    "title": "6708770",
+    "creator": "RDNE Stock project",
+    "license": "Pexels License",
+    "source": "https://www.pexels.com/photo/6708770/"
+   },
+   {
+    "key": "surf-rose-petals",
+    "title": "a bunch of red petals on a black surface tTU 3D40GUU",
+    "creator": "Jonny Gios",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-bunch-of-red-petals-on-a-black-surface-tTU-3D40GUU"
+   },
+   {
+    "key": "surf-white-blossom",
+    "title": "a bunch of flowers that are on a table 6RGDPuvdxQk",
+    "creator": "Anita Austvika",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-bunch-of-flowers-that-are-on-a-table-6RGDPuvdxQk"
+   },
+   {
+    "key": "surf-rose-border",
+    "title": "pink and red rose border with gray copy space romantic floral background",
+    "creator": "Karolina Grabowska",
+    "license": "Kaboompics License",
+    "source": "https://kaboompics.com/photo/6858/pink-and-red-rose-border-with-gray-copy-space-romantic-floral-background"
+   },
+   {
+    "key": "surf-rose-wreath",
+    "title": "red and blush roses framing an open gray center for valentine invitations",
+    "creator": "Karolina Grabowska",
+    "license": "Kaboompics License",
+    "source": "https://kaboompics.com/photo/9427/red-and-blush-roses-framing-an-open-gray-center-for-valentine-invitations"
+   },
+   {
+    "key": "surf-dark-bloom",
+    "title": "a bunch of leaves and flowers on a black surface c9PeR7WuY2c",
+    "creator": "Evie S.",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-bunch-of-leaves-and-flowers-on-a-black-surface-c9PeR7WuY2c"
+   },
+   {
+    "key": "surf-fairy-lights",
+    "title": "string lights on blue textile vsnikmK5eH0",
+    "creator": "Joanna Kosinska",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/string-lights-on-blue-textile-vsnikmK5eH0"
+   },
+   {
+    "key": "surf-macarons",
+    "title": "pile of french macaroons 2VyyvZns3qQ",
+    "creator": "Keila Hötzel",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/pile-of-french-macaroons-2VyyvZns3qQ"
+   },
+   {
+    "key": "surf-cafe-pink",
+    "title": "a pink table topped with a plate of food and a cup of coffee uAPHWdfpOho",
+    "creator": "Mockuuups",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/a-pink-table-topped-with-a-plate-of-food-and-a-cup-of-coffee-uAPHWdfpOho"
+   },
+   {
+    "key": "surf-peach",
+    "title": "white labeled bottle on white textile and citrus fruits xrZw86L1jnM",
+    "creator": "Nadya Spetnitskaya",
+    "license": "Unsplash License",
+    "source": "https://unsplash.com/photos/white-labeled-bottle-on-white-textile-and-citrus-fruits-xrZw86L1jnM"
+   },
+   {
+    "key": "surf-sea-shells",
+    "title": "4455019",
+    "creator": "",
+    "license": "Pexels License",
+    "source": "https://www.pexels.com/photo/4455019/"
+   }
+  ]
+ },
+ {
   "name": "장난감 · 소품 · 캐릭터 누끼 사진",
   "items": [
    {

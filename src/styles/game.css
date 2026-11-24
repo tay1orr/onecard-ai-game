@@ -297,7 +297,8 @@
   .rival-hand { grid-column: 1 / -1; grid-row: 2; justify-self: center; width: 92vw; height: calc(var(--cw) * 1.4 + 12px); }
   .portrait { width: 56px; }
   .who-status { display: none; }
-  .bubble { left: 70px; max-width: 200px; font-size: 14px; }
+  /* 휴대폰은 이름 · 별을 가리지 않게 얼굴 바로 아래로(상대 뒷면 몇 장만 잠깐 가림) */
+  .bubble { left: 10px; top: 66px; max-width: 200px; font-size: 14px; border-radius: 4px 14px 14px 14px; }
   .rim { border-radius: 36px; max-height: none; min-height: 200px; }
   .pile-area { gap: 26px; top: 47%; }
   .attack-meter { position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%) rotate(-4deg); min-width: 0; padding: 4px 10px; flex-direction: row; gap: 6px; }

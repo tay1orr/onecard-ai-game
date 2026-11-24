@@ -157,7 +157,17 @@ export function openCollection({ host, onClose, onChanged }) {
     markTiles();
   }
 
+  // 보여 주던 승리 연출 — 다른 아이템을 누르면 바로 걷는다(안 걷으면 앞 왕관 · 글자가 겹쳐 남았다, 11-24)
+  let showing = null;
+  function clearShowing() {
+    if (!showing) return;
+    showing.timeline.kill();
+    showing.finish();
+    showing = null;
+  }
+
   function select(item) {
+    clearShowing();
     selected = item;
     play('select');
     refreshSelection();
@@ -169,8 +179,10 @@ export function openCollection({ host, onClose, onChanged }) {
     const at = (() => { const rect = previewPile.getBoundingClientRect(); return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }; })();
     if (selected.slot === 'effect') fx.burst(lookOf('effect', selected.look), at, { sizeScale: 0.8 });
     else if (selected.slot === 'victory') {
+      clearShowing();
       const shown = fx.victory({ look: lookOf('victory', selected.look), avatarEl: previewAvatar, title: '승리', sub: selected.name });
-      shown.timeline.then(() => setTimeout(() => shown.finish(), 600));
+      showing = shown;
+      shown.timeline.then(() => setTimeout(() => { if (showing === shown) clearShowing(); }, 900));
     } else if (selected.slot === 'charm') {
       const toy = charmToyConfig(selected.id, charmSlot);
       const toyEl = previewToys.children[charmSlot]?.querySelector('img');
@@ -191,6 +203,7 @@ export function openCollection({ host, onClose, onChanged }) {
   }
 
   function close() {
+    clearShowing();
     director.reset();
     gsap.to(el, { opacity: 0, y: 20, duration: 0.2, onComplete: () => { el.remove(); onClose?.(); } });
   }

@@ -19,7 +19,8 @@ const problems = [];
 
 const PRESETS = [
   { name: 'rose-ballroom', points: 335000, gift: true, equipped: { table: 'table-rose-ballroom', cardBack: 'back-rose-ballroom', cardFace: 'face-real-rose-garden', effect: 'effect-rose-ballroom-waltz', victory: 'victory-rose-ballroom-gala', avatar: 'avatar-fox', charms: ['charm-rose-musicbox', 'charm-crimson-rose-clockwork', 'charm-royal-flower-fountain'] } },
-  { name: 'rose-garden', points: 335000, equipped: { table: 'table-rose-garden-1', cardBack: 'back-redoute-03', cardFace: 'face-redoute', effect: 'effect-single-rose', victory: 'victory-curtain-call', avatar: 'avatar-rabbit', charms: ['charm-rose-dome', 'charm-perfume', 'charm-rose-teacup-set'] } },
+  { name: 'rose-garden', points: 360000, equipped: { table: 'table-rose-garden-3', cardBack: 'back-redoute-03', cardFace: 'face-redoute', effect: 'effect-single-rose', victory: 'victory-curtain-call', avatar: 'avatar-rabbit', charms: ['charm-rose-dome', 'charm-perfume', 'charm-rose-teacup-set'] } },
+  { name: 'peony', points: 560000, equipped: { table: 'table-peony', cardBack: 'back-vangogh-almond', cardFace: 'face-rose-tea', effect: 'effect-petal-wind', victory: 'victory-lily', avatar: 'avatar-fox', charms: ['charm-lily', 'charm-pink-rose', 'charm-peony-vase'] } },
   { name: 'versailles', points: 1000000, equipped: { table: 'table-versailles', cardBack: 'back-rose-window', cardFace: 'face-golden-rose', effect: 'effect-golden-rose', victory: 'victory-versailles', avatar: 'avatar-white-horse', charms: ['charm-golden-rose', 'charm-candelabra', 'charm-champagne'] } },
   { name: 'student', points: 0, equipped: null },
   { name: 'dessert', points: 20000, equipped: { table: 'table-dessert-cafe', cardBack: 'back-strawberry-milk', cardFace: 'face-dessert-cafe', effect: 'effect-cloud-pop', victory: 'victory-confetti-cannons', avatar: 'avatar-hamster', charms: ['charm-cafe-bear', 'charm-classic', 'charm-classic'] } },

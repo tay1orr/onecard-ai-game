@@ -19,6 +19,8 @@ export const LIGHTS = {
   day: 'radial-gradient(ellipse 85% 80% at 50% 45%, transparent 55%, rgba(10,14,20,.32) 100%)',
   cool: 'linear-gradient(180deg, rgba(10,60,110,.22), rgba(2,12,30,.45))',
   dusk: 'linear-gradient(180deg, rgba(120,60,90,.18), rgba(20,8,24,.5)), radial-gradient(ellipse 80% 80% at 50% 50%, transparent 46%, rgba(8,4,12,.5) 100%)',
+  // 사진 한 장 판 — 가장자리만 살짝 어둡게(가운데 카드로 눈이 가게)
+  vignette: 'radial-gradient(ellipse 80% 74% at 50% 48%, transparent 50%, rgba(6,8,12,.34) 100%)',
 };
 
 // 재질 한 겹: [질감, 덧칠 색, 섞기, 무늬 크기(px)] → background · blend 짝
@@ -154,7 +156,7 @@ export function applyEquipped(el, equipped, { propsEl = null, small = false } = 
   const face = lookOf('cardFace', cosmeticById(equipped.cardFace)?.look);
   setVars(el, { ...mapVars(map, { small }), ...backVars(back), ...faceVars(face) });
   applyFaceStyle(el, face);
-  el.dataset.map = map.painted ? 'painted' : 'photo';
+  el.dataset.map = map.painted || map.surface ? 'painted' : 'photo';
   el.dataset.shape = map.shape;
   el.dataset.backFoil = back.foil ? '1' : '0';
   el.dataset.rim = !map.rim || map.rim === 'none' ? 'none' : 'on';

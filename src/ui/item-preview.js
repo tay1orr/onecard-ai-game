@@ -31,7 +31,7 @@ export function itemPreview(item) {
   if (!item) return h('div.pv');
   if (item.slot === 'table') {
     const map = lookOf('table', item.look);
-    const el = h('div.pv.pv-map', { dataset: { map: map.painted ? 'painted' : 'photo', rim: !map.rim || map.rim === 'none' ? 'none' : 'on', shape: map.shape } },
+    const el = h('div.pv.pv-map', { dataset: { map: map.painted || map.surface ? 'painted' : 'photo', rim: !map.rim || map.rim === 'none' ? 'none' : 'on', shape: map.shape } },
       h('i.pv-scene'), h('i.pv-rim', {}, h('i.pv-top')));
     setVars(el, mapVars(map, { small: true }));
     return el;

@@ -41,12 +41,22 @@
 .v-firework { position: absolute; z-index: 2; object-fit: cover; mix-blend-mode: screen; pointer-events: none;
   -webkit-mask: radial-gradient(ellipse 50% 50% at 50% 50%, #000 40%, transparent 100%); mask: radial-gradient(ellipse 50% 50% at 50% 50%, #000 40%, transparent 100%); }
 .d-portrait { border-radius: 50%; }
+/* 피날레 — 빛이 먼저 모이고(v-glow · v-rays) 그 속에서 실물이 또렷해진다. 바닥 그림자(v-shadow) · 실물 모양 반짝임(v-shine) */
+.v-glow { position: absolute; z-index: 2; border-radius: 50%; pointer-events: none; mix-blend-mode: screen;
+  background: radial-gradient(circle, color-mix(in srgb, var(--v-accent) 55%, #fff) 0%, color-mix(in srgb, var(--v-accent) 38%, transparent) 30%, color-mix(in srgb, var(--v-accent) 12%, transparent) 52%, transparent 70%); }
+.v-rays { position: absolute; z-index: 1; border-radius: 50%; pointer-events: none; mix-blend-mode: screen; opacity: 0;
+  background: repeating-conic-gradient(from 4deg, color-mix(in srgb, var(--v-accent) 30%, transparent) 0deg 5deg, transparent 5deg 22deg);
+  -webkit-mask: radial-gradient(circle, #000 12%, transparent 66%); mask: radial-gradient(circle, #000 12%, transparent 66%); }
+.v-shadow { position: absolute; z-index: 2; border-radius: 50%; pointer-events: none; background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.25) 45%, transparent 72%); filter: blur(3px); }
 .v-hero { z-index: 3; }
-.v-sweep { position: absolute; z-index: 4; width: 90px; height: 420px; transform: rotate(18deg); background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent); opacity: 0; }
-.v-word { position: absolute; z-index: 5; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
-.v-word b { font: 900 clamp(64px, 9vw, 150px)/0.9 var(--font-ui); letter-spacing: -0.05em; color: #fff; text-shadow: 7px 7px 0 rgba(0, 0, 0, 0.42); }
-.v-word small { margin-top: 10px; font-size: clamp(15px, 1.6vw, 22px); font-weight: 800; color: #e9eef6; }
-.v-word.is-defeat b { font-size: clamp(48px, 6vw, 96px); color: #d7deeb; }
+.v-shine { position: absolute; z-index: 4; pointer-events: none; mix-blend-mode: screen; opacity: 0;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.8) 50%, transparent 62%) 130% 0 / 260% 100% no-repeat;
+  -webkit-mask: var(--hero-mask) center / contain no-repeat; mask: var(--hero-mask) center / contain no-repeat; }
+.v-word { position: absolute; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; white-space: nowrap; }
+.v-word b { font: 800 clamp(46px, 5.4vw, 92px)/1 var(--font-ui); letter-spacing: 0.08em; color: #fff; text-shadow: 0 4px 26px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4); }
+.v-rule { display: block; width: clamp(120px, 16vw, 260px); height: 2px; background: linear-gradient(90deg, transparent, var(--v-accent), transparent); transform-origin: center; }
+.v-word small { font-size: clamp(14px, 1.4vw, 20px); font-weight: 700; letter-spacing: 0.04em; color: #eef1f6; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); }
+.v-word.is-defeat b { font-size: clamp(44px, 5vw, 84px); color: #d7deeb; }
 
 /* 보상 상자 — 진짜 선물 상자 사진 셋, 고르면 흔들리다 열린다 */
 .reward-boxes { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px; text-align: center; }
@@ -63,11 +73,22 @@
 .rb-peek { position: absolute; left: 50%; top: 42%; transform: translateX(-50%); opacity: 0; padding: 6px 12px; border-radius: 10px; background: rgba(12, 14, 22, 0.9); color: #fff; font-weight: 800; font-size: 14px; white-space: nowrap; border: 1.5px solid var(--rb, #aab4c4); }
 .rb-glow { position: absolute; width: 440px; height: 440px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 240, 200, 0.95), rgba(255, 205, 130, 0.35) 40%, transparent 70%); opacity: 0; pointer-events: none; z-index: 2; }
 .rb-reveal { position: relative; z-index: 3; min-height: 8px; }
-.rb-card { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 30px 14px; border-radius: 18px; background: #121826; border: 2px solid var(--rb, #aab4c4); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5); }
+.rb-card { position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: 4px; min-width: 220px; padding: 16px 34px 14px; border-radius: 18px; background: #121826; border: 2px solid var(--rb, #aab4c4); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5); }
 .r-common { --rb: #aab4c4; }
 .r-rare { --rb: #5aa9ff; }
 .r-epic { --rb: #b57bff; }
 .r-legend { --rb: #f2b544; }
+.r-mythic { --rb: #ff6fb5; }
+.rb-card.r-legend { box-shadow: 0 0 34px rgba(242, 181, 68, 0.35), 0 18px 40px rgba(0, 0, 0, 0.5); }
+.rb-card.r-mythic { background: linear-gradient(160deg, #2a1230, #121826 55%); box-shadow: 0 0 44px rgba(255, 111, 181, 0.5), 0 18px 40px rgba(0, 0, 0, 0.5); }
+/* 배수 도장 — 카드 오른쪽 위에 쾅 */
+.rb-mult { position: absolute; right: -20px; top: -24px; padding: 4px 14px 6px; border-radius: 12px; background: var(--rb); color: #14100a; font: 900 clamp(34px, 3.6vw, 54px) / 1 var(--font-display); letter-spacing: -0.02em; box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5), inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+.r-mythic .rb-mult { background: linear-gradient(135deg, #ffd36f, #ff6fb5 55%, #9b7bff); color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25); }
+.rb-item { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 10px 16px 10px 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.06); text-align: left; }
+.rb-item .pv { --cw: 40px; width: 78px; height: 78px; }
+.rb-item-text { display: flex; flex-direction: column; gap: 2px; }
+.rb-vet { position: relative; padding: 3px 12px; border-radius: 999px; background: rgba(242, 181, 68, 0.14); color: #f6d79a; font-size: 13px; font-weight: 800; }
+.rb-flash { position: absolute; inset: 0; z-index: 5; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 55%, rgba(255, 246, 222, 0.9), rgba(255, 214, 140, 0.25) 40%, transparent 70%); }
 .rb-rarity { font-size: 13px; font-weight: 900; color: var(--rb); }
 .rb-points { font: 900 clamp(44px, 5vw, 72px) / 1 var(--font-display); color: var(--gold); }
 .rb-kind { color: #c9d2e2; font-size: 13px; }

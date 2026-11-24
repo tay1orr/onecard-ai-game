@@ -165,6 +165,11 @@ for (let score = 300000; score < 400000; score += 1000) {
   assert.ok(next && next.remaining <= 10000, `30만~40만 사이 어디서든 다음 보상이 1만 점 안에 있어야 함(${score}점 → ${next?.remaining})`);
 }
 count += 1;
+for (let score = 400000; score < 1000000; score += 2500) {
+  const next = nextCosmeticUnlock(score);
+  assert.ok(next && next.remaining <= 30000, `40만~100만 사이 어디서든 다음 보상이 3만 점 안에 있어야 함(${score}점 → ${next?.remaining})`);
+}
+count += 1;
 const roseItems = COSMETICS.filter((item) => (item.tags || []).includes('rose'));
 check(roseItems.length >= 40, `장미 아이템이 넉넉해야 함(지금 ${roseItems.length}개)`);
 check(COSMETICS.filter((item) => item.threshold > 300000 && item.threshold <= 400000).every((item) => (item.tags || []).length), '30만~40만 보상은 모두 장미 · 꽃이어야 함');
@@ -185,29 +190,35 @@ check(normalizeEquipped({ cardBack: 'back-s2-emblem', table: 'table-s2-arena' },
 check(charmToyConfig('charm-rose-dome', 0).img === 'rose-dome', '장난감 아이템은 실물 누끼를 가리켜야 함');
 check(lookOf('table', 'rose-ballroom').painted === 'rose-ballroom-table', '장미 무도회 맵은 시즌 1 그림을 그대로 써야 함');
 
-// 7. 보상 상자 — 셋 중 하나, 판마다 한 번, 상자 전용 아이템은 상자에서만
-const { rollRewardBoxes, boxBase } = await import('../src/core/reward-box.js');
+// 7. 보상 상자 — 셋 중 하나, 판마다 한 번. 점수는 어느 상자든 늘 있고(기본 × 배수), 상자 전용 아이템은 함께 나올 수 있다
+const { rollRewardBoxes, boxBase, veteranBonus, BOX_MULTIPLIERS, BOX_SHARE, expectedBoxPoints } = await import('../src/core/reward-box.js');
 const { claimRewardBox } = await import('../src/core/rating.js');
 const { BOX_ITEMS } = await import('../src/core/cosmetics.js');
 const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-check(Object.entries(WIN_REWARDS).every(([stars, reward]) => boxBase({ won: true, stars: Number(stars) }) === reward), '상자 점수 기준은 승리 보상과 같아야 함');
-const someBoxes = rollRewardBoxes({ won: true, stars: 7 }, seeded(7));
-check(someBoxes.length === 3 && someBoxes.every((box) => box.amount >= 10), '상자는 셋, 모두 점수(또는 대신 줄 점수)가 있어야 함');
-check(boxBase({ won: true, stars: 7 }) > boxBase({ won: false, stars: 7 }) && boxBase({ won: true, stars: 7, bonus: true }) === 2 * boxBase({ won: true, stars: 7 }), '이기면 더 크고 보너스판은 두 배');
+check(Object.entries(WIN_REWARDS).every(([stars, reward]) => Math.abs(boxBase({ won: true, stars: Number(stars) }) - reward * BOX_SHARE.win) < 1e-9), '상자 기본 점수는 승리 보상에 비례해야 함(reward-box 의 보상표가 rating 과 같아야 함)');
+check(boxBase({ won: true, stars: 7 }) > boxBase({ won: false, stars: 7 }) && boxBase({ won: false, stars: 7 }) > 0 && Math.abs(boxBase({ won: true, stars: 7, bonus: true }) - 2 * boxBase({ won: true, stars: 7 })) < 1e-9, '이기면 더 크고, 져도 점수가 있고, 보너스판은 두 배');
+check(veteranBonus(0) === 1 && veteranBonus(99) === 1 && Math.abs(veteranBonus(100) - 1.1) < 1e-9 && Math.abs(veteranBonus(900) - 1.9) < 1e-9 && veteranBonus(5000) === 2, '판수 보너스는 100판마다 +0.1배, 최대 ×2');
+check(BOX_MULTIPLIERS.map((entry) => entry.x).join() === '1,2,3,5,10' && BOX_MULTIPLIERS.reduce((sum, entry) => sum + entry.weight, 0) === 100, '배수는 ×1 · ×2 · ×3 · ×5 · ×10(가중치 합 100)');
+const someBoxes = Array.from({ length: 200 }, (_, index) => rollRewardBoxes({ won: index % 2 === 0, stars: 7, games: 900 }, seeded(index + 7))).flat();
+check(someBoxes.every((box) => box.amount >= 10 && box.amount === box.base * box.multiplier && [1, 2, 3, 5, 10].includes(box.multiplier)), '어느 상자든 점수가 있어야 함(기본 × 배수)');
+check(someBoxes.some((box) => box.multiplier === 10) && someBoxes.some((box) => box.multiplier === 1), '×10 상자도 가끔 나와야 함');
 const itemBoxes = rollRewardBoxes({ won: true, stars: 5 }, () => 0.01);
-check(itemBoxes.every((box) => box.kind === 'item') && new Set(itemBoxes.map((box) => box.itemId)).size === 3, '아이템 상자 셋은 서로 다른 상자 전용 아이템');
-check(rollRewardBoxes({ won: true, owned: BOX_ITEMS.map((entry) => entry.id) }, () => 0.01).every((box) => box.kind === 'points'), '상자 아이템을 다 가지면 점수만 나와야 함');
+check(itemBoxes.every((box) => box.itemId && box.amount > 0) && new Set(itemBoxes.map((box) => box.itemId)).size === 3, '아이템은 점수와 함께, 세 상자에 서로 다른 것');
+check(rollRewardBoxes({ won: true, owned: BOX_ITEMS.map((entry) => entry.id) }, () => 0.01).every((box) => !box.itemId && box.amount > 0), '상자 아이템을 다 가지면 점수만 나와야 함');
+check(expectedBoxPoints({ won: true, stars: 7, games: 900 }) > 1000, '33만 점대(약 900판)가 ★7 을 이기면 상자 하나가 평균 1,000점 넘게 줘야 함');
 check(BOX_ITEMS.length >= 30 && BOX_ITEMS.every((entry) => entry.threshold === null && !entry.pass), '상자 전용 아이템은 점수 · 패스로 안 열림');
 check(BOX_ITEMS.some((entry) => (entry.tags || []).includes('dessert')) && BOX_ITEMS.some((entry) => (entry.tags || []).includes('cute')) && BOX_ITEMS.some((entry) => (entry.tags || []).includes('flower')), '상자에는 디저트 · 귀여운 것 · 꽃이 모두 있어야 함');
 const boxStorage = memoryStorage({ [PROFILE_KEY]: JSON.stringify({ points: 330000, peakPoints: 330000, wins: 700, games: 900 }) });
-const pointsClaim = claimRewardBox({ matchId: 'm-1', box: { kind: 'points', amount: 2400 } }, boxStorage);
-check(pointsClaim.delta === 2400 && loadPlayerProfile(boxStorage).points === 332400, '점수 상자는 점수를 더해야 함');
-check(claimRewardBox({ matchId: 'm-1', box: { kind: 'points', amount: 2400 } }, boxStorage).duplicate, '같은 판 상자는 한 번만');
+const pointsClaim = claimRewardBox({ matchId: 'm-1', box: { base: 800, multiplier: 3, amount: 2400 } }, boxStorage);
+check(pointsClaim.delta === 2400 && pointsClaim.multiplier === 3 && loadPlayerProfile(boxStorage).points === 332400, '상자 점수(기본 × 배수)를 더해야 함');
+check(claimRewardBox({ matchId: 'm-1', box: { amount: 2400 } }, boxStorage).duplicate, '같은 판 상자는 한 번만');
 const teddy = BOX_ITEMS.find((entry) => entry.id === 'charm-box-teddy-rose');
 check(!isUnlocked(teddy, 1000000, 20, []), '상자 전용 아이템은 점수가 높아도 상자 없이는 잠겨 있어야 함');
-const itemClaim = claimRewardBox({ matchId: 'm-2', box: { kind: 'item', itemId: teddy.id, amount: 3000 } }, boxStorage);
-check(itemClaim.item?.id === teddy.id && loadPlayerProfile(boxStorage).boxItems.includes(teddy.id), '아이템 상자는 상자 전용 아이템을 줘야 함');
-check(claimRewardBox({ matchId: 'm-3', box: { kind: 'item', itemId: teddy.id, amount: 3000 } }, boxStorage).delta === 3000, '이미 가진 아이템이면 대신 점수');
+const itemClaim = claimRewardBox({ matchId: 'm-2', box: { amount: 1500, multiplier: 1, itemId: teddy.id } }, boxStorage);
+check(itemClaim.item?.id === teddy.id && itemClaim.delta === 1500 && loadPlayerProfile(boxStorage).boxItems.includes(teddy.id), '아이템이 든 상자는 아이템과 점수를 함께 줘야 함');
+const againClaim = claimRewardBox({ matchId: 'm-3', box: { amount: 900, multiplier: 1, itemId: teddy.id } }, boxStorage);
+check(againClaim.item === null && againClaim.delta === 900, '이미 가진 아이템이면 점수만');
+check(claimRewardBox({ matchId: 'm-4', box: { amount: 999999 } }, boxStorage).delta === 30000, '상자 하나 점수는 3만 점을 넘지 않음');
 check(normalizeEquipped({ charms: [teddy.id] }, 330000, 0, [teddy.id]).charms[0] === teddy.id && normalizeEquipped({ charms: [teddy.id] }, 330000, 0, []).charms[0] === 'charm-classic', '상자 아이템은 가졌을 때만 장착');
 const mergedBox = mergeProfiles3({ boxItems: ['charm-box-hedgehog'], claimedBoxIds: ['box:a'] }, { boxItems: ['charm-box-duckling'], claimedBoxIds: ['box:b'] }, base);
 check(mergedBox.boxItems.length === 2 && mergedBox.claimedBoxIds.length === 2, '두 기기의 상자 아이템 · 받은 상자를 모두 남겨야 함');

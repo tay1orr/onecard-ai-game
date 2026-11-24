@@ -98,7 +98,7 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
   // 무대 바닥 · 배경은 장착한 맵(사진 · 시즌 1 그림)
   const map = lookOf('table', cosmeticById(profile.equipped.table)?.look);
   Object.entries(mapVars(map)).forEach(([key, value]) => el.style.setProperty(key, value));
-  el.dataset.map = map.painted ? 'painted' : 'photo';
+  el.dataset.map = map.painted || map.surface ? 'painted' : 'photo';
   host.replaceChildren(el);
   if (!settings.reduced()) {
     gsap.from(el.querySelectorAll('.stage-rival'), { y: 60, opacity: 0, duration: 0.6, stagger: 0.07, ease: 'back.out(1.6)' });

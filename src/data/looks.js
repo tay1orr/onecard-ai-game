@@ -1,6 +1,7 @@
 // 꾸미기 모습 — 아이템마다 실제 에셋(사진 · 명화 · 실물 누끼 · 재질 사진 · 시즌 1 그림)으로 그린다.
 // 맵(table) · 뒷면(cardBack) · 앞면(cardFace) · 효과(effect) · 승리(victory) 칸이 같은 이름(look)을 함께 쓸 수 있다.
 import { PLATE_NAMES } from './plate-names.js';
+import { hasGptArt } from './gpt-art.js';
 
 // 그림 키: scene/<키> = 맵 사진, paint/<키> = 시즌 1 그림, back/<키> = 뒷면 그림, court/<묶음>/<키> = 그림카드, cut/<키> = 누끼
 
@@ -11,16 +12,20 @@ const M = (o) => ({
   top: ['felt', '#1d6b52', 'multiply', 420], rim: ['walnut', '#6a4429', 'multiply', 420], props: [], accent: '#f2b544', ...o,
 });
 const painted = (key, accent) => M({ painted: key, blur: 0, bright: 1, light: 'none', top: 'none', rim: 'none', accent });
+// 사진 한 장 판 — 위에서 내려다본 꽃 · 테이블 사진이 곧 판(조잡한 덧칠 탁자 대신, 11-24). 시즌 1 그림 판처럼 그린다
+const surface = (key, accent, o = {}) => M({ scene: key, surface: true, blur: 0, bright: 0.96, light: 'vignette', top: 'none', rim: 'none', props: [], accent, ...o });
+// GPT 그림(판NN)이 들어와 있으면 그 그림 한 장이 판 — 시즌 1 그림과 같은 방식. 없으면 지금 모습
+const gptMap = (number, fallback) => (hasGptArt(`map-${number}`) ? painted(`gpt-map-${number}`, fallback.accent) : fallback);
 
 export const MAPS = {
   classic: M({ scene: 'card-room', bright: 0.5, blur: 3, light: 'spot' }),
-  peach: M({ scene: 'cafe-terrace', bright: 0.74, light: 'day', top: ['linen', '#f0ae8c', 'multiply', 380], rim: ['cherry', null, 'normal', 380], shape: 'rect', props: [['peach', 7, 80, 15, -8], ['soda-glass', 92, 82, 30, 3]], accent: '#ffb48a' }),
-  'dessert-cafe': M({ scene: 'patisserie', bright: 0.66, light: 'warm', top: ['gingham', '#c6283b', 'multiply', 240], rim: ['cherry', null, 'normal', 380], shape: 'rect', props: [['strawberry-cake', 8, 82, 24, 0], ['coffee-cup', 92, 80, 18, 0], ['cupcake', 88, 62, 15, 6]], accent: '#ff8fa3' }),
-  'night-picnic': M({ scene: 'night-meadow', bright: 0.72, blur: 1, light: 'moon', top: ['gingham', '#2b416f', 'multiply', 280], rim: 'none', shape: 'rect', props: [['lantern', 8, 84, 34, 0], ['picnic-basket', 91, 86, 24, 0]], accent: '#ffd27a' }),
-  aquarium: M({ scene: 'aquarium', bright: 0.6, light: 'cool', top: ['suede', '#1b5466', 'multiply', 420], rim: ['brass', null, 'normal', 300], props: [['seashell', 8, 86, 16, 0], ['jellyfish', 92, 54, 30, 0]], accent: '#7fe3ff' }),
-  'rose-conservatory': M({ scene: 'glasshouse', bright: 0.72, light: 'day', top: ['marble-white', null, 'normal', 620], rim: ['brass', null, 'normal', 320], props: [['rose-vase', 8, 84, 40, 0], ['teapot', 91, 82, 20, 0], ['teacup', 87, 64, 12, 0]], accent: '#e8a0a8' }),
-  cherry: M({ scene: 'cherry-park', bright: 0.76, light: 'day', top: ['linen', '#f4c9d2', 'multiply', 380], rim: 'none', shape: 'rect', props: [['cherry-branch', 6, 72, 46, -10]], accent: '#ffb7c8' }),
-  dream: M({ scene: 'fairy-castle', bright: 0.64, light: 'dusk', top: ['velvet', '#8a6fc0', 'multiply', 520], rim: ['gold', '#b8913f', 'multiply', 320], props: [['candelabra', 8, 86, 44, 0], ['crown', 91, 80, 16, 6]], accent: '#d9c2ff' }),
+  peach: surface('surf-peach', '#ffb48a', { bright: 0.86 }),
+  'dessert-cafe': surface('surf-cafe-pink', '#ff8fa3', { bright: 0.92 }),
+  'night-picnic': surface('surf-fairy-lights', '#ffd27a', { bright: 1.05 }),
+  aquarium: surface('surf-sea-shells', '#7fe3ff', { bright: 0.92 }),
+  'rose-conservatory': gptMap('12', surface('surf-rose-wreath', '#e8a0a8')),
+  cherry: surface('surf-cherry', '#ffb7c8', { bright: 1.04 }),
+  dream: gptMap('13', M({ scene: 'fairy-castle', bright: 0.64, light: 'dusk', top: ['velvet', '#8a6fc0', 'multiply', 520], rim: ['gold', '#b8913f', 'multiply', 320], props: [['candelabra', 8, 86, 44, 0], ['crown', 91, 80, 16, 6]], accent: '#d9c2ff' })),
   'pink-cloud': painted('pink-cloud-table', '#ff9ccc'),
   'moon-rabbit': painted('moon-rabbit-table', '#cdd8ff'),
   'strawberry-parade': painted('strawberry-parade-table', '#ff8fa3'),
@@ -29,31 +34,26 @@ export const MAPS = {
   'neon-deepsea': painted('neon-deepsea-table', '#76efff'),
   'sun-temple': painted('sun-temple-table', '#ffd46c'),
   // 시즌 2
-  tulips: M({ scene: 'tulip-field', bright: 0.74, light: 'day', top: ['linen', '#f6efe2', 'multiply', 380], rim: ['walnut', '#6a4429', 'multiply', 380], shape: 'rect', props: [['tulip-bunch', 8, 84, 34, -4]], accent: '#ff7a8a' }),
-  lavender: M({ scene: 'lavender-field', bright: 0.72, light: 'dusk', top: ['linen', '#d9cdee', 'multiply', 380], rim: ['cherry', null, 'normal', 380], shape: 'rect', props: [['lilac', 8, 84, 36, -6]], accent: '#b9a2ff' }),
-  hydrangea: M({ scene: 'hydrangea', bright: 0.72, light: 'day', top: ['satin', '#a9c3ec', 'multiply', 520], rim: ['gold-pale', null, 'normal', 300], props: [['galle-vase', 8, 86, 30, 0]], accent: '#9fc4ff' }),
-  wisteria: M({ scene: 'wisteria', bright: 0.7, light: 'dusk', top: ['jacquard-floral', '#bfa6e6', 'multiply', 360], rim: ['rosewood', null, 'normal', 380], props: [['lilac', 92, 70, 40, 0, true]], accent: '#c8b0ff' }),
-  giverny: M({ scene: 'lotus-pond', bright: 0.72, light: 'day', top: ['linen', '#cfe3d2', 'multiply', 380], rim: ['walnut', '#6a4429', 'multiply', 380], props: [['lotus', 8, 86, 20, 0], ['lily', 92, 84, 36, 0]], accent: '#9fe0b5' }),
-  peony: M({ scene: 'peony-garden', bright: 0.72, light: 'warm', top: ['satin', '#f3c2cf', 'multiply', 520], rim: ['gold-pale', null, 'normal', 300], props: [['peony', 8, 84, 24, 0]], accent: '#ff9db5' }),
-  sunflower: M({ scene: 'sunflower-field', bright: 0.76, light: 'day', top: ['linen', '#f5e3b0', 'multiply', 380], rim: ['cherry', null, 'normal', 380], shape: 'rect', props: [['sunflower', 8, 86, 44, -6]], accent: '#ffd24a' }),
-  'rose-garden-1': M({ scene: 'rose-garden-1', bright: 0.72, light: 'day', top: ['marble-white', null, 'normal', 620], rim: ['gold-pale', null, 'normal', 300], props: [['rose-vase', 8, 86, 38, 0], ['rose-pink', 92, 82, 26, 10]], accent: '#ff9db0' }),
-  'rose-garden-2': M({ scene: 'rose-garden-2', bright: 0.7, light: 'warm', top: ['jacquard-floral', '#e9c9cf', 'multiply', 360], rim: ['walnut', '#6a4429', 'multiply', 380], props: [['rose-bouquet', 9, 86, 34, -8], ['teacup', 91, 82, 12, 0]], accent: '#f6a5b5' }),
-  'rose-garden-3': M({ scene: 'rose-garden-3', bright: 0.7, light: 'day', top: ['linen', '#f6efe6', 'multiply', 380], rim: ['brass', null, 'normal', 320], shape: 'rect', props: [['rose-white', 8, 84, 26, -6], ['perfume', 92, 82, 22, 0]], accent: '#f3d7d0' }),
-  'rose-garden-4': M({ scene: 'rose-garden-4', bright: 0.68, light: 'warm', top: ['velvet', '#8c1d36', 'multiply', 520], rim: ['gold', '#b8913f', 'multiply', 320], props: [['candelabra', 8, 86, 42, 0], ['rose-red', 92, 82, 26, -10]], accent: '#e8475f' }),
-  'rose-garden-5': M({ scene: 'rose-garden-5', bright: 0.7, light: 'day', top: ['terrazzo', null, 'normal', 520], rim: ['gold-pale', null, 'normal', 300], props: [['rose-yellow', 8, 84, 26, 8], ['macarons', 92, 84, 14, 0]], accent: '#ffd38a' }),
-  'rose-garden-6': M({ scene: 'rose-garden-6', bright: 0.7, light: 'dusk', top: ['satin', '#e7b7c4', 'multiply', 520], rim: ['rosewood', null, 'normal', 380], props: [['rose-dome', 8, 84, 30, 0], ['gramophone', 92, 86, 30, 0]], accent: '#f2a7c0' }),
-  'rose-night': M({ scene: 'rose-arch-night', bright: 0.7, light: 'candle', top: ['velvet', '#5d1428', 'multiply', 520], rim: ['gold', '#b8913f', 'multiply', 320], props: [['candelabra', 8, 86, 44, 0], ['champagne', 92, 82, 22, 0]], accent: '#ffb38a' }),
-  versailles: M({ scene: 'ballroom-mirrors', bright: 0.66, light: 'candle', top: ['velvet', '#6e1426', 'multiply', 520], rim: ['gold', '#b8913f', 'multiply', 320], props: [['candelabra', 8, 86, 46, 0], ['rose-vase', 92, 86, 40, 0, true]], accent: '#f3cf7a' }),
-  opera: M({ scene: 'opera-garnier', bright: 0.64, light: 'warm', top: ['velvet', '#7a1a2c', 'multiply', 520], rim: ['gold', '#b8913f', 'multiply', 320], props: [['champagne', 8, 82, 24, 0], ['rose-bouquet', 92, 86, 34, 8]], accent: '#f6d38a' }),
-  palace: M({ scene: 'palace-gallery', bright: 0.66, light: 'warm', top: ['checker-marble', null, 'normal', 360], rim: ['gold', '#b8913f', 'multiply', 320], props: [['candelabra', 8, 86, 44, 0], ['crown', 92, 80, 16, 0]], accent: '#f2d48a' }),
-  library: M({ scene: 'library-grand', bright: 0.62, light: 'warm', top: ['leather-red', '#7d2a22', 'multiply', 420], rim: ['walnut', '#6a4429', 'multiply', 380], props: [['books-stack', 8, 86, 26, 0], ['globe', 92, 86, 30, 0]], accent: '#d9b36c' }),
-  'winter-garden': M({ scene: 'winter-garden', bright: 0.72, light: 'day', top: ['marble-white', null, 'normal', 620], rim: ['brass', null, 'normal', 320], props: [['rose-vase', 8, 86, 40, 0], ['teapot', 92, 84, 18, 0]], accent: '#bfe3c6' }),
-  'million-roses': M({ scene: 'rose-field', bright: 0.74, light: 'dusk', top: ['velvet', '#a3122f', 'multiply', 520], rim: ['gold', '#b8913f', 'multiply', 320], props: [['rose-bouquet', 8, 88, 40, -6], ['rose-dome', 92, 86, 30, 0]], accent: '#ff5d73' }),
-  'golden-rose': M({ scene: 'ballroom-mirrors', bright: 0.56, blur: 4, light: 'candle', top: ['satin', '#c9a14a', 'multiply', 520], rim: ['gold', '#b8913f', 'multiply', 320], props: [['rose-gold', 8, 84, 30, -6], ['candelabra', 92, 86, 44, 0]], accent: '#ffd67a' }),
-  'black-rose': M({ scene: 'card-room', bright: 0.4, blur: 4, light: 'spot', top: ['onyx-black', null, 'normal', 520], rim: ['marble-black-gold', null, 'normal', 360], props: [['rose-black', 8, 84, 28, -8], ['candle', 92, 84, 26, 0]], accent: '#d8c7a0' }),
-  arena: M({ scene: 'opera-garnier', bright: 0.5, blur: 4, light: 'spot', top: ['herringbone', '#22325a', 'multiply', 420], rim: ['brass', null, 'normal', 300], props: [['trophy', 8, 84, 28, 0]], accent: '#f2b544' }),
-  'box-patisserie': M({ scene: 'patisserie', bright: 0.62, blur: 2, light: 'warm', top: ['satin', '#f2c4cf', 'multiply', 520], rim: ['gold-pale', null, 'normal', 300], props: [['wedding-cake', 8, 88, 40, 0], ['macaron-tower', 92, 86, 34, 0]], accent: '#ff9db0' }),
-  obsidian: M({ scene: 'night-city', bright: 0.48, blur: 3, light: 'spot', top: ['onyx-black', null, 'normal', 520], rim: ['marble-black', null, 'normal', 360], props: [['diamond', 92, 80, 12, 0]], accent: '#c9d3e6' }),
+  tulips: surface('surf-tulips-white', '#ff7a8a'),
+  lavender: surface('surf-lavender', '#b9a2ff', { bright: 1.02 }),
+  hydrangea: surface('surf-hydrangea', '#9fc4ff', { bright: 0.9 }),
+  wisteria: surface('surf-lilac', '#c8b0ff'),
+  giverny: surface('surf-water-lily', '#9fe0b5', { bright: 1.04 }),
+  peony: surface('surf-peony', '#ff9db5', { bright: 0.94 }),
+  sunflower: surface('surf-sunflower', '#ffd24a'),
+  'rose-garden-1': gptMap('01', surface('surf-rose-border', '#ff9db0')),
+  'rose-garden-2': gptMap('03', surface('surf-rose-white', '#f6a5b5', { bright: 0.92 })),
+  'rose-garden-3': gptMap('02', surface('surf-rose-apricot', '#f3d7d0', { bright: 1.02 })),
+  'rose-garden-4': gptMap('06', surface('surf-rose-pink', '#ff7aa2', { bright: 0.9 })),
+  'rose-garden-5': gptMap('05', M({ scene: 'rose-garden-5', bright: 0.7, light: 'day', top: ['terrazzo', null, 'normal', 520], rim: ['gold-pale', null, 'normal', 300], props: [['rose-yellow', 8, 84, 26, 8], ['macarons', 92, 84, 14, 0]], accent: '#ffd38a' })),
+  'rose-garden-6': gptMap('04', surface('surf-rose-red', '#e8475f', { bright: 1.04 })),
+  'rose-night': gptMap('07', surface('surf-rose-night', '#ffb38a', { bright: 1.04 })),
+  versailles: gptMap('08', M({ scene: 'ballroom-mirrors', bright: 0.66, light: 'candle', top: ['velvet', '#6e1426', 'multiply', 520], rim: ['gold', '#b8913f', 'multiply', 320], props: [['candelabra', 8, 86, 46, 0], ['rose-vase', 92, 86, 40, 0, true]], accent: '#f3cf7a' })),
+  'winter-garden': gptMap('11', surface('surf-white-blossom', '#bfe3c6', { bright: 1.02 })),
+  'million-roses': gptMap('10', surface('surf-rose-petals', '#ff5d73')),
+  'golden-rose': gptMap('09', surface('surf-dark-bloom', '#ffd67a', { bright: 1.08 })),
+  'box-patisserie': surface('surf-macarons', '#ff9db0', { bright: 0.9 }),
+  obsidian: gptMap('14', M({ scene: 'night-city', bright: 0.48, blur: 3, light: 'spot', top: ['onyx-black', null, 'normal', 520], rim: ['marble-black', null, 'normal', 360], props: [['diamond', 92, 80, 12, 0]], accent: '#c9d3e6' })),
 };
 
 // ── 카드 뒷면: 흰 테(종이 결) 안에 그림. 시즌 1 그림은 테 없이 꽉 채운다.
@@ -92,28 +92,18 @@ export const BACKS = {
   'redoute-05': redoute(5), 'redoute-06': redoute(6), 'redoute-07': redoute(7), 'redoute-08': redoute(8),
   'redoute-09': redoute(9), 'redoute-10': redoute(10), 'redoute-11': redoute(11), 'redoute-12': redoute(12),
   // 시즌 2 — 명화 속 꽃
-  'fantin-roses': B({ art: 'fantin-roses', border: '#1b1612', paper: null }),
   'vangogh-roses': B({ art: 'vangogh-roses', border: '#f2eee4' }),
   'vangogh-irises': B({ art: 'vangogh-irises', border: '#f2eee4' }),
   'vangogh-almond': B({ art: 'vangogh-almond', border: '#f2eee4' }),
-  'huysum-flowers': B({ art: 'huysum-flowers', border: '#16110c', paper: null }),
-  'ruysch-flowers': B({ art: 'ruysch-flowers', border: '#16110c', paper: null }),
-  'bosschaert-flowers': B({ art: 'bosschaert-flowers', border: '#16110c', paper: null }),
   'mucha-rose': B({ art: 'mucha-rose', border: '#efe6d2', paper: 'paper-cream' }),
   'mucha-lily': B({ art: 'mucha-lily', border: '#efe6d2', paper: 'paper-cream' }),
-  'klimt-roses': B({ art: 'klimt-roses', border: '#e9dcc0', paper: 'paper-cream' }),
   'monet-waterlilies': B({ art: 'monet-waterlilies', border: '#eef1ea' }),
-  'renoir-roses': B({ art: 'renoir-roses', border: '#f2eee4' }),
   'morris-rose': B({ art: 'morris-rose', border: '#efe6d2', paper: 'paper-cream' }),
   'morris-strawberry': B({ art: 'morris-strawberry', border: '#13233a', paper: null }),
   'japanese-peony': B({ art: 'japanese-peony', border: '#f1e9d8', paper: 'paper-cream' }),
   'japanese-cherry': B({ art: 'japanese-cherry', border: '#f1e9d8', paper: 'paper-cream' }),
-  'rose-damask': B({ art: 'rose-damask', border: '#2a0d16', paper: null, foil: true }),
-  'rose-window': B({ art: 'rose-window', border: '#0b0b12', paper: null, foil: true }),
   'hubble-rose': B({ art: 'hubble-rose', border: '#07080f', paper: null }),
-  'golden-rose': B({ art: 'rose-damask', border: '#c9a14a', paper: null, tex: null, foil: true, frame: '#f7dd96', filter: 'sepia(.55) saturate(1.4) hue-rotate(-8deg) brightness(1.05)' }),
-  'black-rose': B({ art: 'rose-window', border: '#0a0a0c', paper: null, frame: '#c9c2b0', filter: 'grayscale(1) contrast(1.25) brightness(.85)', foil: true }),
-  arena: B({ art: 'sunburst-gold', border: '#121a2b', paper: null, frame: '#f2b544' }),
+  'golden-rose': hasGptArt('back-01') ? s1Back('gpt-back-01') : B({ paint: 'rose-ballroom-back', border: 'none', fit: 'fill', foil: true, filter: 'grayscale(1) sepia(1) saturate(3.2) hue-rotate(-6deg) brightness(1.08) contrast(1.18)' }),
   obsidian: B({ tex: 'onyx-black', base: '#0d0d10', emblem: 'ONE!', frame: '#c9d3e6', border: '#0d0d10', paper: null, foil: true }),
 };
 
@@ -121,32 +111,32 @@ export const BACKS = {
 // court: 묶음 이름(영국식은 무늬마다 다른 그림, perSuit) 또는 { K, Q, J } 그림 값
 const F = (o) => ({
   paper: 'paper-white', tint: '#fbf8f1', ink: '#1b1d24', red: '#b8232f', accent: '#c9a25a',
-  court: 'english', perSuit: true, ace: { spades: 'aces/spade-1' }, courtBlend: 'multiply', courtFx: null, courtFit: 'cover',
+  court: 'english', perSuit: true, ace: null, courtBlend: 'multiply', courtFx: null, courtFit: 'cover',
   pips: 'ink', frame: null, joker: 'jokers/joker-1', ...o,
 });
-const set3 = (name, o = {}) => F({ court: name, perSuit: false, ace: `${name}/A`, ...o });
+// 에이스 그림은 따로 줄 때만(사각형 스캔 에이스는 붙여 넣은 티가 나서 큰 무늬로)
+const set3 = (name, o = {}) => F({ court: name, perSuit: false, ...o });
 
 export const FACES = {
   classic: F({}),
-  bunny: set3('potter', { paper: 'paper-cream', tint: '#fbf3e2', red: '#b8343c' }),
-  manuscript: set3('cloisters', { paper: 'paper-cream', tint: '#efdcb8', ink: '#3b2a18', red: '#9b2d20', frame: 'thin', accent: '#9b7a3a' }),
+  bunny: set3('potter', { paper: 'paper-white', tint: '#fbf6ec', red: '#b8343c' }),
+  manuscript: set3('cloisters', { paper: 'paper-white', tint: '#f4e7cc', ink: '#3b2a18', red: '#9b2d20', frame: 'thin', accent: '#9b7a3a' }),
   arcade: F({ paper: 'onyx-black', tint: '#17151f', ink: '#e9f1ff', red: '#ff5c93', court: { K: 'cut:joystick', Q: 'cut:gamepad', J: 'cut:dice' }, perSuit: false, ace: null, courtBlend: 'normal', courtFit: 'contain', frame: 'neon', accent: '#5cf2ff' }),
   deco: F({ paper: 'onyx-black', tint: '#131313', ink: '#e2c27a', red: '#e8c77e', courtFx: 'invert(1) sepia(1) saturate(2.4) hue-rotate(-10deg) brightness(.92)', courtBlend: 'screen', pips: 'gold', frame: 'deco', accent: '#e2c27a' }),
-  'stone-temple': set3('antiquity', { paper: 'sandstone', tint: '#efe2c8', ink: '#3a2b1c', red: '#8f3a1e', courtBlend: 'multiply' }),
-  'rose-conservatory': set3('botanical', { paper: 'paper-cream', tint: '#fbf2ea', red: '#b3263a' }),
+  'stone-temple': set3('antiquity', { paper: 'paper-white', tint: '#efe4cf', ink: '#3a2b1c', red: '#8f3a1e', courtBlend: 'multiply' }),
+  'rose-conservatory': set3('botanical', { paper: 'paper-white', tint: '#fbf6ee', red: '#b3263a', ace: { hearts: 'cut:rose-pink', diamonds: 'cut:rose-pink' } }),
   glass: F({ paper: 'paper-white', tint: '#eef5fb', ink: '#1d2a3a', red: '#c2304a', court: { K: 'cut:galle-vase', Q: 'cut:perfume', J: 'cut:diamond' }, perSuit: false, ace: null, courtBlend: 'normal', courtFit: 'contain', frame: 'glass', accent: '#7fc3e8' }),
-  'dessert-cafe': F({ paper: 'paper-cream', tint: '#fff8f1', ink: '#4a2a22', red: '#d0364d', court: { K: 'cut:birthday-cake', Q: 'cut:cake-slice', J: 'cut:cupcake' }, perSuit: false, ace: { hearts: 'cut:strawberry', diamonds: 'cut:strawberry' }, courtBlend: 'normal', courtFit: 'contain', accent: '#ff9db0' }),
+  'dessert-cafe': F({ paper: 'paper-white', tint: '#fff9f3', ink: '#4a2a22', red: '#d0364d', court: { K: 'cut:birthday-cake', Q: 'cut:cake-slice', J: 'cut:cupcake' }, perSuit: false, ace: { hearts: 'cut:strawberry', diamonds: 'cut:strawberry' }, courtBlend: 'normal', courtFit: 'contain', accent: '#ff9db0' }),
   blueprint: set3('patent', { paper: 'paper-white', tint: '#2a5ea8', ink: '#f2f7ff', red: '#ffffff', courtFx: 'invert(1)', courtBlend: 'screen', frame: 'grid', accent: '#cfe2ff' }),
-  ink: set3('ink', { paper: 'paper-cream', tint: '#f4ecdc', ink: '#1a1a1a', red: '#b3262e' }),
-  tarot: set3('tarot', { paper: 'paper-cream', tint: '#f3e6c8', ink: '#2a1d10', red: '#9e2a22', courtBlend: 'multiply', frame: 'gold' }),
-  dream: set3('fairy', { paper: 'paper-cream', tint: '#f8f3ea', ink: '#2b2240', red: '#a8324a', courtBlend: 'normal', frame: 'thin', accent: '#a58bd6' }),
+  ink: set3('ink', { paper: 'paper-white', tint: '#f7f1e4', ink: '#1a1a1a', red: '#b3262e' }),
+  tarot: set3('tarot', { paper: 'paper-white', tint: '#f6ecd6', ink: '#2a1d10', red: '#9e2a22', courtBlend: 'multiply', frame: 'gold' }),
+  dream: set3('fairy', { paper: 'paper-white', tint: '#fbf7f0', ink: '#2b2240', red: '#a8324a', courtBlend: 'normal', frame: 'thin', accent: '#a58bd6' }),
   'real-rose': F({ paper: null, tint: '#fbf3e6', court: { K: 'photo:rose-1', Q: 'photo:rose-2', J: 'photo:rose-3' }, perSuit: false, ace: { hearts: 'cut:rose-pink', diamonds: 'cut:rose-pink' }, courtBlend: 'normal', frame: 'paint:real-rose-face' }),
   // 시즌 2
-  league: F({ paper: 'paper-white', tint: '#fbf8f1', pips: 'gold', frame: 'gold' }),
-  silver: F({ paper: 'paper-white', tint: '#f7f8fa', ink: '#1d2230', red: '#a8243a', pips: 'silver', frame: 'thin', courtFx: 'grayscale(1) contrast(1.1)', accent: '#b9c2d4' }),
-  'golden-rose': F({ paper: 'paper-cream', tint: '#fbf3e2', ink: '#2a2014', red: '#a5212e', pips: 'gold', frame: 'gold', ace: { hearts: 'cut:rose-gold', diamonds: 'cut:rose-gold', spades: 'aces/spade-1' }, courtBlend: 'multiply', accent: '#d4a84a' }),
-  'black-rose': F({ paper: 'onyx-black', tint: '#121214', ink: '#e8e3d6', red: '#d9435a', courtFx: 'invert(1) grayscale(1) brightness(.9)', courtBlend: 'screen', pips: 'silver', frame: 'thin', ace: { hearts: 'cut:rose-black', diamonds: 'cut:rose-black' }, accent: '#c9c2b0' }),
-  redoute: F({ paper: 'paper-cream', tint: '#f8f0e0', ink: '#2b241a', red: '#a3223a', court: { K: 'redoute/K', Q: 'redoute/Q', J: 'redoute/J' }, perSuit: false, ace: { hearts: 'cut:rose-red', diamonds: 'cut:rose-pink', spades: 'aces/spade-1', clubs: 'cut:rose-white' }, courtBlend: 'multiply', frame: 'thin', accent: '#a3223a' }),
+  league: F({ paper: 'paper-white', tint: '#fbf8f1', frame: 'gold', accent: '#c29a3c' }),
+  silver: F({ paper: 'paper-white', tint: '#f8f9fb', ink: '#1d2230', red: '#a8243a', frame: 'thin', accent: '#8e9bb3' }),
+  'golden-rose': F({ paper: 'paper-white', tint: '#fcf8ef', ink: '#1f1a12', red: '#a5212e', frame: hasGptArt('face-01') ? 'paint:gpt-face-01' : 'gold', ace: { hearts: 'cut:rose-gold', diamonds: 'cut:rose-gold' }, courtBlend: 'multiply', accent: '#c9a043' }),
+  redoute: F({ paper: 'paper-white', tint: '#fbf6ec', ink: '#2b241a', red: '#a3223a', court: { K: 'redoute/K', Q: 'redoute/Q', J: 'redoute/J' }, perSuit: false, ace: { hearts: 'cut:rose-red', diamonds: 'cut:rose-pink' }, courtBlend: 'multiply', frame: 'thin', accent: '#a3223a' }),
   obsidian: F({ paper: 'onyx-black', tint: '#101012', ink: '#dfe5f0', red: '#e0566d', courtFx: 'invert(1) grayscale(1) brightness(.92)', courtBlend: 'screen', pips: 'silver', frame: 'thin', accent: '#c9d3e6' }),
 };
 
@@ -177,6 +167,9 @@ export const EFFECTS = {
   'golden-rose': E({ sprites: ['rose-gold', 'gold-coins'], motion: 'drop', count: 1, size: [130, 150] }),
   'black-rose': E({ sprites: ['rose-black', 'smoke'], motion: 'drop', count: 1, size: [130, 150] }),
   fireworks: E({ motion: 'sweep', band: 'fireworks-2', sprites: [], count: 0 }),
+  'lily-drop': E({ sprites: ['lily'], motion: 'drop', count: 1, size: [130, 150] }),
+  'lotus-float': E({ sprites: ['lotus', 'water-lily'], motion: 'float', count: 3, size: [80, 120] }),
+  'cherry-breeze': E({ sprites: ['cherry-branch', 'rose-petal-3'], motion: 'swirl', count: 4, size: [70, 110] }),
   'box-macarons': E({ sprites: ['macarons', 'macaron-tower'], motion: 'pop', count: 3, size: [80, 120] }),
   'box-flowers': E({ sprites: ['carnation', 'pansy', 'camomile', 'poppy'], motion: 'float', count: 4, size: [70, 110] }),
   'box-teddy': E({ sprites: ['teddy-red-bow'], motion: 'drop', count: 1, size: [130, 150] }),
@@ -211,8 +204,12 @@ export const VICTORIES = {
   'rose-fireworks': V({ backdrop: { scene: 'fireworks-2' }, hero: 'rose-red', heroSize: 1.1, motion: 'fireworks', fireworks: ['fireworks-2', 'fireworks-1'], accent: '#ff5d73' }),
   'million-roses': V({ backdrop: { scene: 'rose-field' }, hero: 'rose-bouquet', heroSize: 1.25, sprites: ['rose-red', 'rose-pink', 'rose-white'], motion: 'bloom', accent: '#ff5d73', zoom: true }),
   'golden-rose': V({ backdrop: { scene: 'ballroom-mirrors' }, hero: 'rose-gold', heroSize: 1.2, motion: 'rise', accent: '#ffd67a' }),
-  'black-rose': V({ backdrop: { scene: 'card-room' }, hero: 'rose-black', heroSize: 1.2, sprites: ['smoke'], motion: 'rise', accent: '#d8c7a0' }),
   versailles: V({ backdrop: { scene: 'ballroom-mirrors' }, hero: 'crown', motion: 'crown', accent: '#f3cf7a', zoom: true }),
+  lily: V({ backdrop: { scene: 'glasshouse' }, hero: 'lily', heroSize: 1.15, sprites: ['rose-petal-3', 'rose-petal-2'], motion: 'bloom', accent: '#ffb3c7' }),
+  tulip: V({ backdrop: { scene: 'tulip-field' }, hero: 'tulip-bunch', heroSize: 1.2, sprites: ['tulips-white', 'rose-petal-2'], motion: 'bloom', accent: '#ff8fa3' }),
+  lotus: V({ backdrop: { scene: 'lotus-pond' }, hero: 'lotus', heroSize: 1.15, sprites: ['water-lily', 'water-lily'], motion: 'bloom', accent: '#ff9fd1' }),
+  lavender: V({ backdrop: { scene: 'lavender-field' }, hero: 'lilac', heroSize: 1.15, sprites: ['lilac', 'rose-petal-3'], motion: 'bloom', accent: '#c4a8ff' }),
+  sunflower: V({ backdrop: { scene: 'sunflower-field' }, hero: 'sunflower', heroSize: 1.2, motion: 'rise', accent: '#ffd24a' }),
   'box-wedding': V({ backdrop: { scene: 'patisserie' }, hero: 'wedding-cake', heroSize: 1.25, sprites: ['rose-petal-1', 'rose-petal-2'], motion: 'rise', accent: '#ffd1dc', zoom: true }),
   'box-teddy': V({ hero: 'teddy-family', heroSize: 1.15, sprites: ['teddy-red-bow', 'teddy-angel', 'teddy-sweater'], motion: 'cannons', accent: '#e8b48a' }),
   obsidian: V({ backdrop: { scene: 'night-city' }, hero: 'diamond', heroSize: 1.1, motion: 'rise', accent: '#c9d3e6' }),
@@ -254,6 +251,19 @@ export const TOYS = {
   champagne: T({ img: 'champagne', size: 1.1, sound: 'glass', lines: ['건배!', '축하해요', '뽀글뽀글'], burst: ['soap-bubble'], motion: 'wobble' }),
   crown: T({ img: 'crown', sound: 'glass', lines: ['왕관을 써요', '오늘의 왕', '반짝'], motion: 'spin' }),
   candelabra: T({ img: 'candelabra', size: 1.35, sound: 'glass', lines: ['촛불 켜기', '은은한 빛', '무도회 시작'], motion: 'wobble' }),
+  'rose-pink': T({ img: 'rose-pink', size: 1.1, sound: 'pluck', lines: ['분홍 장미', '향긋해요', '살랑'], burst: ['rose-petal-2'], motion: 'bloom' }),
+  'rose-yellow': T({ img: 'rose-yellow', size: 1.3, sound: 'pluck', lines: ['노란 장미 다발', '오늘도 반짝', '받으세요!'], burst: ['rose-petal-3'], motion: 'wobble' }),
+  'bouquet-vintage': T({ img: 'bouquet-vintage', size: 1.3, sound: 'glass', lines: ['옛 꽃다발', '들꽃 향기', '선물이에요'], burst: ['rose-petal-1', 'rose-petal-2'], motion: 'wobble' }),
+  lily: T({ img: 'lily', size: 1.15, sound: 'glass', lines: ['백합 향기', '활짝!', '분홍 점이 콕콕'], motion: 'bloom' }),
+  'peony-vase': T({ img: 'peony', size: 1.3, sound: 'glass', lines: ['작약 꽃병', '풍성해요', '물 갈아 줄게요'], motion: 'wobble' }),
+  'tulip-bunch': T({ img: 'tulip-bunch', size: 1.25, sound: 'pluck', lines: ['튤립 다발', '봄이에요', '분홍 분홍'], motion: 'bloom' }),
+  lotus: T({ img: 'lotus', size: 1.1, sound: 'glass', lines: ['연꽃', '동동', '맑은 물 위에'], burst: ['water-splash'], motion: 'bloom' }),
+  'lilac-branch': T({ img: 'lilac', size: 1.15, sound: 'pluck', lines: ['라일락 향기', '보랏빛', '봄바람'], motion: 'wobble' }),
+  'cherry-branch': T({ img: 'cherry-branch', size: 1.2, sound: 'pluck', lines: ['벚꽃 한 가지', '살랑살랑', '봄이 왔어요'], burst: ['rose-petal-3'], motion: 'wobble' }),
+  sunflower: T({ img: 'sunflower', size: 1.15, sound: 'pluck', lines: ['해바라기', '해를 봐요', '쑥쑥!'], motion: 'spin' }),
+  'heart-lantern': T({ img: 'sky-lantern', size: 1.15, sound: 'whoosh', lines: ['소원을 빌어요', '둥실', '하늘 높이'], motion: 'launch' }),
+  pearls: T({ img: 'pearls', size: 1.05, sound: 'glass', lines: ['진주 목걸이', '반짝', '우아하게'], motion: 'wobble' }),
+  teapot: T({ img: 'teapot', size: 1.15, sound: 'fountain', lines: ['차 한 잔 할까요', '보글보글', '금테 주전자'], burst: ['water-splash'], motion: 'wobble' }),
   // 상자 전용 — 곰 인형 · 귀여운 친구들 · 디저트 · 꽃
   'teddy-rose': T({ img: 'teddy-rose', size: 1.25, sound: 'bong', lines: ['장미 받아요', '꼭 안아 줄게요', '오늘도 수고했어요'], burst: ['rose-petal-1'], motion: 'hop' }),
   'teddy-red-bow': T({ img: 'teddy-red-bow', size: 1.1, sound: 'bong', lines: ['안녕!', '리본 예쁘죠', '곰곰'], motion: 'hop' }),

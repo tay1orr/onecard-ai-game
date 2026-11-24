@@ -6,12 +6,12 @@ import { chooseAiReaction } from '../core/ai-reactions.js';
 import {
   loadPlayerProfile, recordMatchResult, rememberAiOpponent, rewardForStars, selectAiOpponent, bonusMatchChance, playerStarsForPoints, claimRewardBox,
 } from '../core/rating.js';
-import { rollRewardBoxes } from '../core/reward-box.js';
+import { rollRewardBoxes, veteranBonus } from '../core/reward-box.js';
 import { applyMissionEvents, missionEventsForCard, mergeUnlockedItems } from '../core/missions.js';
 import { bonusChanceWithEvent, isOpeningEventActive, OPENING_EVENT } from '../core/season.js';
 import { cosmeticById } from '../core/cosmetics.js';
 import { rivalByKey, pickLine } from '../data/characters.js';
-import { h, wait, formatNumber } from './dom.js';
+import { h, wait, formatNumber, josa } from './dom.js';
 import { openRewardBoxes } from './reward-boxes.js';
 import { createTable } from './table.js';
 import { createFx } from './fx.js';
@@ -263,21 +263,23 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     const profileNow = loadPlayerProfile();
     rivalCtl.react(won ? 'sad' : 'party', won ? 'lose' : 'win');
     const scene = won
-      ? fx.victory({ look: looks.victory, avatarEl: table.meImg, title: '승리', sub: `${rival.name}를 이겼어요` })
+      ? fx.victory({ look: looks.victory, avatarEl: table.meImg, title: '승리', sub: `${josa(rival.name, '을/를')} 이겼어요` })
       : fx.defeat({ rival, portrait: table.rivalPortrait });
     await scene.timeline;
-    // 보상 상자 — 내용은 지금 정해 두고, 고른 하나만 받는다(같은 판은 한 번만)
-    const boxes = rollRewardBoxes({ won, stars: rival.stars, bonus, owned: loadPlayerProfile().boxItems });
-    const pickedBox = await openRewardBoxes({ host: table.root, boxes, won });
+    // 보상 상자 — 내용은 지금 정해 두고, 고른 하나만 받는다(같은 판은 한 번만). 점수는 늘 있고, 판수가 쌓일수록 커진다
+    const beforeBox = loadPlayerProfile();
+    const boxes = rollRewardBoxes({ won, stars: rival.stars, bonus, games: beforeBox.games, owned: beforeBox.boxItems });
+    const pickedBox = await openRewardBoxes({ host: table.root, boxes, won, veteran: veteranBonus(beforeBox.games), games: beforeBox.games });
     const claim = claimRewardBox({ matchId, box: pickedBox });
     const profileAfter = loadPlayerProfile();
-    const boxLine = claim.duplicate ? null : h('p.res-box', {}, claim.item ? `보상 상자에서 ${claim.item.name}` : `보상 상자 +${formatNumber(claim.delta)}점`);
+    const boxPoints = `보상 상자 ${claim.multiplier > 1 ? `×${claim.multiplier} ` : ''}+${formatNumber(claim.delta)}점`;
+    const boxLine = claim.duplicate ? null : h('p.res-box', {}, claim.item ? `${boxPoints} · ${claim.item.name}` : boxPoints);
     const unlocked = mergeUnlockedItems([...(rating.unlockedItems || []), ...(claim.unlockedItems || [])], missionUnlocks);
     showResult({
       host: table.root, won, delta: rating.delta, bonus, profile: profileAfter, extra: boxLine,
       xpGained: profileNow.seasonXp - xpBefore, xpBefore, unlocked, missions: missionDone, missionPoints,
       stats: { time: Date.now() - startedAt, moves },
-      subtitle: won ? `${rival.title} ${rival.name}를 이겼어요` : pickLine(rival, 'win'),
+      subtitle: won ? `${rival.title} ${josa(rival.name, '을/를')} 이겼어요` : pickLine(rival, 'win'),
       primaryLabel: '다시 매칭',
       onPrimary: () => { cleanup(); onFinished?.({ again: true }); },
       onHome: () => { cleanup(); onFinished?.({ again: false }); },

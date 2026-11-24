@@ -177,26 +177,26 @@ export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId
   };
 }
 
-// 보상 상자 받기 — 판마다 한 번(matchId). 점수 상자는 점수를, 아이템 상자는 상자 전용 아이템을(이미 있으면 대신 점수)
+// 보상 상자 받기 — 판마다 한 번(matchId). 점수는 늘 받고(기본 × 배수), 상자 전용 아이템이 함께 들어 있으면 그것도 받는다.
+// 한 상자 점수 상한 3만 점(★8 · 보너스판 · 판수 ×2 · ×10 이 겹쳐도 넘지 않음)
+export const BOX_POINTS_CAP = 30000;
 export function claimRewardBox({ matchId, box }, storage = defaultStorage()) {
   const profile = loadPlayerProfile(storage);
   const id = `box:${String(matchId || '')}`;
-  if (!box || !matchId || profile.claimedBoxIds.includes(id)) return { profile, delta: 0, item: null, duplicate: true, unlockedItems: [] };
+  if (!box || !matchId || profile.claimedBoxIds.includes(id)) return { profile, delta: 0, multiplier: 1, item: null, duplicate: true, unlockedItems: [] };
   const previousPeak = profile.peakPoints;
-  let delta = 0;
+  const delta = Math.max(0, Math.min(BOX_POINTS_CAP, safeInteger(box.amount)));
+  profile.points += delta;
+  profile.peakPoints = Math.max(profile.peakPoints, profile.points);
   let item = null;
-  const boxItem = box.kind === 'item' ? cosmeticById(box.itemId) : null;
+  const boxItem = box.itemId ? cosmeticById(box.itemId) : null;
   if (boxItem?.box && !profile.boxItems.includes(boxItem.id)) {
     item = boxItem;
     profile.boxItems = [...profile.boxItems, boxItem.id];
-  } else {
-    delta = Math.max(0, Math.min(20000, safeInteger(box.amount)));
-    profile.points += delta;
-    profile.peakPoints = Math.max(profile.peakPoints, profile.points);
   }
   profile.claimedBoxIds = [...profile.claimedBoxIds, id].slice(-150);
   const saved = savePlayerProfile(profile, storage);
-  return { profile: saved, delta, item, duplicate: false, unlockedItems: [...(item ? [item] : []), ...newlyUnlockedCosmetics(previousPeak, saved.peakPoints)] };
+  return { profile: saved, delta, multiplier: Math.max(1, safeInteger(box.multiplier, 1)), item, duplicate: false, unlockedItems: [...(item ? [item] : []), ...newlyUnlockedCosmetics(previousPeak, saved.peakPoints)] };
 }
 
 export function playerStarsForPoints(points) {

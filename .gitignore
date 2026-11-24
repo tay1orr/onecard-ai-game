@@ -9,3 +9,6 @@ node_modules/
 dist/
 .asset-cache/
 tests/e2e/_shots/
+
+# GPT 로 만든 그림 원본(줄인 webp 만 public 에 올림)
+gpt그림/

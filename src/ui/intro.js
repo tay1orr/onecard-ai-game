@@ -1,6 +1,6 @@
 // 대전 소개 — 상대가 정해지는 VS 화면과 선공을 정하는 주사위
 import gsap from 'gsap';
-import { h, stars, formatNumber, wait } from './dom.js';
+import { h, stars, formatNumber, wait, josa } from './dom.js';
 import { cut } from '../data/assets.js';
 import { RIVALS } from '../data/characters.js';
 import { matchmakingWeights } from '../core/rating.js';
@@ -73,7 +73,7 @@ export async function showVersus({ host, me, rival, reward, bonus, eventName }) 
     const progress = index / Math.max(1, sequence.length - 1);
     await wait(40 + Math.round(progress ** 2.6 * 190));
   }
-  status.textContent = `${rival.title} ${rival.name}와 붙어요`;
+  status.textContent = `${rival.title} ${josa(rival.name, '과/와')} 붙어요`;
   rewardLine.textContent = `이기면 +${formatNumber(reward)}점`;
   play('bong');
   if (!reduced) {
