@@ -127,6 +127,47 @@ Use the attached picture as the exact character reference: same character design
 
 Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions. Draw Choonsik celebrating a victory: jumping for joy with both arms up, sparkling eyes and a big happy smile, holding his roasted sweet potato high in one hand. Full body. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character fills about 85% of the frame.
 
+## 카드 효과 조각(11-24 밤, 있으면 좋은 것)
+- 카드 효과의 움직임은 코드가 맡고, GPT 는 날아다니는 조각(꽃송이 · 꽃잎 · 작은 장식)을 그립니다.
+  - 지금 조각은 실물 사진 누끼라, GPT 그림인 맵 · 카드와 화풍이 조금 다릅니다. 같은 화풍으로 맞추는 것이 목적입니다.
+  - 움직이는 영상(Sora 등)으로는 만들지 않습니다. 파일이 무겁고 배경이 투명하지 않으며, 게임 상황(세기 · 카드 자리)에 맞춰 움직일 수 없습니다.
+- 한 장에 조각 6개(가로 3칸 × 세로 2칸)를 그리는 스티커 판으로 부탁합니다. 넣어 주시면 제가 6개로 잘라 넣습니다.
+  - 첨부: `뒷면04.png`(화풍 참고). 파일 이름: `효과01` ~ `효과08`. 보통 모드면 충분합니다.
+  - 1번 칸(왼쪽 위)은 맨 위 카드 구석에 작게 내려앉는 장식입니다. 작게 줄여도 알아보도록 단순한 모양이 좋습니다.
+  - 칸끼리 붙어 버린 그림은 다시 뽑아 주세요. 배경 투명이 안 되면 흰 배경도 됩니다(제가 지웁니다).
+
+**효과01 — 장미 한 송이** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a single red rose head with two leaves, (2) a red rose bud, (3) a curled red rose petal, (4) a flat red rose petal, (5) a small heart-shaped red petal, (6) a tiny golden sparkle star. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과02 — 하얀 장미** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a white rose head with two leaves, (2) a white rose bud, (3) a curled white rose petal, (4) a flat white rose petal, (5) a small white petal seen from the side, (6) a single small pearl. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과03 — 분홍 장미 꽃잎(장미 꽃잎 폭풍 · 꽃잎 바람)** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a pink garden rose head, (2) a pink rose bud with one leaf, (3) a curled pink rose petal, (4) a deep rose-red petal, (5) a pale pink petal folding in half, (6) a single small rose leaf. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과04 — 백합** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a pink stargazer lily flower, (2) a closed pink lily bud, (3) a pink lily petal with tiny dark spots, (4) a curved pink lily petal, (5) a small pale pink petal, (6) a small green leaf. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과05 — 벚꽃** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a cherry blossom flower with five petals, (2) a short cherry sprig with two blossoms, (3) a single pale pink cherry petal, (4) a cherry petal tilted sideways, (5) a tiny cherry petal, (6) a small pink cherry bud. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과06 — 하트 장미 부케** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a small heart-shaped bouquet of pink roses tied with a satin ribbon, (2) a pink satin bow, (3) a small glossy pink heart, (4) a curled pink rose petal, (5) a flat pink rose petal, (6) a tiny golden sparkle star. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과07 — 마카롱** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a little stack of three macarons (pink, pistachio, lavender), (2) a pink macaron, (3) a pistachio green macaron, (4) a lavender macaron, (5) a small piece of meringue, (6) a tiny sugar sparkle. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과08 — 곰 인형** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a tiny sitting teddy bear with a red bow, (2) a red satin bow, (3) a small red heart, (4) a little pink heart balloon, (5) a tiny golden star, (6) a small curl of red ribbon. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
 ## 어느 모델로 (2026-11-24 확인)
 - 그림 모델은 고를 필요가 없습니다. ChatGPT 에서 그림을 부탁하면 최신 그림 모델 **ChatGPT Images 2.6**(11-04 출시)이 저절로 그립니다.
 - **생각(추론) 모드를 켜고 그리시는 것을 권합니다.**
