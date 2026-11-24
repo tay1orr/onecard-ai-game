@@ -3,20 +3,24 @@
 // 11-24 선생님: 「점수 스케일은 100만 점으로 하고 상자에서 주는 점수를 늘리면 되는 거잖아」 · 「2배 3배 10배 이런 것도」
 //   · 「점수는 무조건 어떤 상자 골라도 나오게 하고 아이템은 랜덤(점수와 함께 받을 수도 있게)」
 // 그래서 상자마다: 기본 점수(상대 별 · 승패 · 보너스판 · 판수 보너스) × 배수(×1~×10) + 가끔 상자 전용 아이템.
-// 기댓값은 tests/economy-sim.mjs 로 잰다(33만 점 → 100만 점 약 450판).
+// 11-25 선생님: 「상자에서 얻는 점수 상향 및 배율 나오는 확률 상향」 — 기본 몫 28% · 12% → 34% · 15%, 배수 기댓값 ×2.11 → ×2.68.
+// 기댓값은 tests/economy-sim.mjs 로 잰다(33만 점 → 100만 점 가운데 393판 → 291판, 판당 약 1,692점 → 2,285점).
+
+// 상자 그림 — 셋 모두 선생님 GPT 「미스터리상자」(빨간 상자 · 금빛 장식 · 물음표, 11-25)
+export const BOX_ART = 'chest-mystery';
 import { BOX_ITEMS } from './cosmetics.js';
 
 const WIN_REWARDS = { 1: 125, 2: 180, 3: 250, 4: 340, 5: 500, 6: 700, 7: 1000, 8: 1400 }; // rating.js 와 같게(테스트로 확인)
 
-// 상자 기본 점수 = 그 판 승리 보상의 몇 할(이기면 28%, 져도 12%)
-export const BOX_SHARE = Object.freeze({ win: 0.28, lose: 0.12 });
-// 배수 — 상자 색(등급)이 배수를 알려 준다. 기댓값 ×2.11
+// 상자 기본 점수 = 그 판 승리 보상의 몇 할(이기면 34%, 져도 15%)
+export const BOX_SHARE = Object.freeze({ win: 0.34, lose: 0.15 });
+// 배수 — 상자 색(등급)이 배수를 알려 준다. 기댓값 ×2.68(×2 이상 66% · ×5 이상 18% · ×10 6%)
 export const BOX_MULTIPLIERS = Object.freeze([
-  { x: 1, weight: 48, rarity: 'common' },
-  { x: 2, weight: 28, rarity: 'rare' },
-  { x: 3, weight: 14, rarity: 'epic' },
-  { x: 5, weight: 7, rarity: 'legend' },
-  { x: 10, weight: 3, rarity: 'mythic' },
+  { x: 1, weight: 34, rarity: 'common' },
+  { x: 2, weight: 30, rarity: 'rare' },
+  { x: 3, weight: 18, rarity: 'epic' },
+  { x: 5, weight: 12, rarity: 'legend' },
+  { x: 10, weight: 6, rarity: 'mythic' },
 ]);
 export const RARITY_ORDER = Object.freeze(['common', 'rare', 'epic', 'legend', 'mythic']);
 export const RARITY_NAMES = Object.freeze({ common: '일반', rare: '희귀', epic: '영웅', legend: '전설', mythic: '신화' });

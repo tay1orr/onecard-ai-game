@@ -64,9 +64,10 @@ export function startOnline({ host, onExit, openRules }) {
   let stickerPanel = null;
   let diceOverlay = null;
   let presence = { host: true, guest: true };
+  let closed = false; // 방을 나간 뒤 늦게 도착한 판은 그리지 않는다(로비 위에 판이 다시 그려지거나 결과가 기록되지 않게)
 
   const client = new MultiplayerClient({
-    onView: (view) => director.run(() => applyView(view)),
+    onView: (view) => { if (!closed) director.run(() => applyView(view)); },
     onConnection: (state) => renderConnection(state),
     onEmote: (event) => handleEmote(event),
     onPresence: (next) => { presence = next; renderPresence(); },
@@ -182,7 +183,7 @@ export function startOnline({ host, onExit, openRules }) {
     });
     const looks = applyEquipped(table.root, profile.equipped, { propsEl: table.sceneProps });
     fx = createFx({ layer: table.fxLayer, root: table.root, director });
-    preloadEffect(table.looks.effect);
+    preloadEffect(looks.effect); // table.looks 는 몇 줄 아래에서야 채워진다 — 11-24 부터 여기서 멈춰 친구와 대전이 주사위 뒤 빈 화면이었다(11-25)
     host.replaceChildren(table.root);
     toys = mountToys({ layer: table.toysLayer, equipped: profile.equipped, fx });
     table.looks = looks;
@@ -260,16 +261,25 @@ export function startOnline({ host, onExit, openRules }) {
 
   // ── 서버 판 → 화면(차례대로)
   async function applyView(view) {
+    if (closed) return undefined;
     const previous = applied;
     applied = view;
     if (view.status === 'waiting') {
       closeResult();
+      dropDice();
       return renderRoom(view);
     }
     if (view.status === 'dice') {
       closeResult();
       if (table) { cleanupTable(); }
       return renderDice(view, previous);
+    }
+    // 주사위를 굴리던 중에 상대가 나감 — 게임을 시작하지 않았으니 승패로 세지 않고, 알린 뒤 방을 정리하고 로비로(서버도 이 방 전적에 넣지 않는다).
+    // 그대로 두면 빈 판에 승리 연출이 뜨고 승리로 기록됐다(11-25)
+    if (view.status === 'finished' && !table && (previous?.status === 'dice' || !view.topCard) && view.lastEvent?.eventType === 'left' && view.lastEvent.actorSeat !== view.mySeat) {
+      toast('상대가 방을 나갔어요', { tone: 'warn' });
+      setTimeout(() => leave(true), 0);
+      return undefined;
     }
     if (view.status === 'playing' && (!previous || previous.status !== 'playing') && !table?.dealt) {
       await finishDice(view);
@@ -283,6 +293,7 @@ export function startOnline({ host, onExit, openRules }) {
       await fx.slab({ text: isMyTurn(view) ? '내가 먼저' : '상대 먼저', color: '#f2b544', ink: '#121a2b', size: 'm', tilt: -6, hold: 0.4 });
       return undefined;
     }
+    dropDice();
     ensureTable(view);
     const event = view.lastEvent;
     if (event && event.id !== lastEventId) {
@@ -382,31 +393,78 @@ export function startOnline({ host, onExit, openRules }) {
       const theirDie = myDie.cloneNode(true);
       theirDie.style.setProperty('--die', onlineLook(opponent?.nickname || '').color);
       const note = h('p.dice-note', { role: 'status' }, '각자 주사위를 굴려요');
-      const button = h('button.btn.primary.dice-btn', { type: 'button', onClick: async () => { button.disabled = true; await run(() => client.rollDice()); } }, '주사위 굴리기');
-      diceOverlay = { el: h('div.versus.is-online', {}, h('div.vs-bg'), h('div.dice-panel', {},
+      const button = h('button.btn.primary.dice-btn', { type: 'button', onClick: () => rollMine() }, '주사위 굴리기');
+      // 나가기 — 상대가 굴리지 않거나 연결이 끊겨도 방에서 나올 수 있게(시즌 1부터 주사위 화면엔 나가는 단추가 없어 갇혔다, 11-25)
+      const top = h('header.page-top.dice-top', {},
+        h('button.icon-btn', { type: 'button', 'aria-label': '방 나가기', onClick: () => leave(), html: '<svg viewBox="0 0 24 24"><path d="M14.5 5 8 12l6.5 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' }),
+        h('h1.page-title', {}, '주사위'), pill);
+      diceOverlay = { el: h('div.versus.is-online', {}, h('div.vs-bg'), top, h('div.dice-panel', {},
         h('div.dice-row', {}, h('div.dice-col', {}, myDie, h('small', {}, mine?.nickname || '나'), h('b.dice-value.mine', {}, '')), h('div.dice-col', {}, theirDie, h('small', {}, opponent?.nickname || '상대'), h('b.dice-value.theirs', {}, ''))),
-        note, button)), myDie, theirDie, note, button, shown: [null, null] };
+        note, button)), myDie, theirDie, note, button, shown: [null, null], rolls: [Promise.resolve(), Promise.resolve()], tieId: null };
       host.replaceChildren(diceOverlay.el);
       roomEl = null;
     }
     const myValue = view.mySeat === 0 ? view.host?.die : view.guest?.die;
     const theirValue = view.mySeat === 0 ? view.guest?.die : view.host?.die;
-    if (view.diceTie) { diceOverlay.shown = [null, null]; diceOverlay.note.textContent = '같은 눈이에요. 다시 굴려요'; diceOverlay.button.disabled = false; diceOverlay.button.textContent = '다시 굴리기'; }
-    if (myValue && diceOverlay.shown[0] !== myValue) { diceOverlay.shown[0] = myValue; rollDie(diceOverlay.myDie, myValue).then(() => { diceOverlay.el.querySelector('.dice-value.mine').textContent = String(myValue); }); diceOverlay.button.disabled = true; }
-    if (theirValue && diceOverlay.shown[1] !== theirValue) { diceOverlay.shown[1] = theirValue; rollDie(diceOverlay.theirDie, theirValue).then(() => { diceOverlay.el.querySelector('.dice-value.theirs').textContent = String(theirValue); }); }
-    if (!myValue && !view.diceTie) diceOverlay.button.disabled = false;
+    // 같은 눈이면 서버는 두 눈을 둔 채 diceTie 를 켜고, 누가 다시 굴리면 두 눈을 지운다.
+    // 같은 눈이 풀리면(또는 새 같은 눈이면) 보인 눈을 비워, 새 눈이 앞 눈과 같은 수여도 다시 굴러가게 한다
+    const tieId = view.diceTie ? (view.lastEvent?.eventType === 'dice_tie' ? view.lastEvent.id : diceOverlay.tieId ?? 'tie') : null;
+    if (diceOverlay.tieId !== null && diceOverlay.tieId !== tieId) diceOverlay.shown = [null, null];
+    diceOverlay.tieId = tieId;
+    showDie(0, myValue);
+    showDie(1, theirValue);
+    // 같은 눈이면 두 사람 모두 다시 굴릴 수 있다 — 시즌 1은 같은 눈 판을 받으면 내 눈을 다시 굴리며 단추를 도로 잠가 둘 다 갇혔다(11-25)
+    diceOverlay.button.disabled = Boolean(myValue) && !view.diceTie;
+    diceOverlay.button.textContent = view.diceTie ? '다시 굴리기' : '주사위 굴리기';
+    diceOverlay.note.textContent = view.diceTie ? '같은 눈이에요. 다시 굴려요' : myValue && !theirValue ? '상대가 굴릴 때까지 기다려요' : '각자 주사위를 굴려요';
+  }
+
+  // 주사위 하나 — 새 눈이면 굴리고(멈춘 뒤 숫자), 눈이 지워졌으면 숫자도 지운다
+  function showDie(index, value) {
+    const overlay = diceOverlay;
+    const label = overlay.el.querySelector(index === 0 ? '.dice-value.mine' : '.dice-value.theirs');
+    if (!value) {
+      overlay.shown[index] = null;
+      label.textContent = '';
+      overlay.rolls[index] = Promise.resolve();
+      return overlay.rolls[index];
+    }
+    if (overlay.shown[index] === value) return overlay.rolls[index];
+    overlay.shown[index] = value;
+    label.textContent = '';
+    overlay.rolls[index] = rollDie(index === 0 ? overlay.myDie : overlay.theirDie, value).then(() => { if (overlay.shown[index] === value) label.textContent = String(value); });
+    return overlay.rolls[index];
+  }
+
+  async function rollMine() {
+    if (!diceOverlay || diceOverlay.button.disabled) return;
+    diceOverlay.button.disabled = true;
+    const view = await run(() => client.rollDice());
+    // 굴리지 못했으면(연결 끊김 · 판이 바뀜) 단추를 판에 맞게 되살리고 서버 판을 다시 받는다 — 시즌 1은 여기서도 잠긴 채였다
+    if (!view && diceOverlay && applied?.status === 'dice') {
+      renderDice(applied);
+      client.refresh().catch(() => {});
+    }
   }
 
   async function finishDice(view) {
     if (!diceOverlay) return;
     const myValue = view.mySeat === 0 ? view.host?.die : view.guest?.die;
     const theirValue = view.mySeat === 0 ? view.guest?.die : view.host?.die;
-    if (myValue && diceOverlay.shown[0] !== myValue) await rollDie(diceOverlay.myDie, myValue);
-    if (theirValue && diceOverlay.shown[1] !== theirValue) await rollDie(diceOverlay.theirDie, theirValue);
+    // 같은 눈에서 곧장 시작됐으면(두 사람이 거의 함께 다시 굴림) 두 눈 모두 새로 굴러가게
+    if (diceOverlay.tieId !== null) diceOverlay.shown = [null, null];
+    diceOverlay.button.disabled = true;
+    await Promise.all([showDie(0, myValue), showDie(1, theirValue)]);
+    if (!diceOverlay) return;
     diceOverlay.note.textContent = isMyTurn(view) ? `${myValue} 대 ${theirValue}, 내가 먼저 내요` : `${myValue} 대 ${theirValue}, 상대가 먼저 내요`;
     await wait(settings.reduced() ? 200 : 900);
+    if (!diceOverlay) return;
     await gsap.to(diceOverlay.el, { opacity: 0, duration: 0.25 });
-    diceOverlay.el.remove();
+    dropDice();
+  }
+
+  function dropDice() {
+    diceOverlay?.el.remove();
     diceOverlay = null;
   }
 
@@ -438,16 +496,21 @@ export function startOnline({ host, onExit, openRules }) {
   }
 
   async function leave(skipConfirm = false) {
-    if (!skipConfirm && applied?.status === 'playing') {
-      const ok = await confirmModal({ title: '방에서 나갈까요?', message: '게임 중에 나가면 상대의 승리가 돼요.', confirmLabel: '나가기', cancelLabel: '계속하기' });
-      if (!ok) return;
+    if (closed) return;
+    const status = applied?.status;
+    if (!skipConfirm && (status === 'playing' || status === 'dice')) {
+      const ok = await confirmModal({ title: '방에서 나갈까요?', message: status === 'dice' ? '지금 나가면 이 대전이 끝나요.' : '게임 중에 나가면 상대의 승리가 돼요.', confirmLabel: '나가기', cancelLabel: '계속하기' });
+      if (!ok || closed) return;
     }
+    closed = true;
     try { await client.leave(); } catch { /* 나가기는 최선만 */ }
     cleanupTable();
+    dropDice();
     exit();
   }
 
   function exit() {
+    closed = true;
     client.detachRoom({ forget: false }).catch(() => {});
     onExit?.();
   }

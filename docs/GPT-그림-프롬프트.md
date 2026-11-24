@@ -180,6 +180,9 @@ Use the attached picture only as a style reference (painting style, lighting and
 
 Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a tiny sitting teddy bear with a red bow, (2) a red satin bow, (3) a small red heart, (4) a little pink heart balloon, (5) a tiny golden star, (6) a small curl of red ribbon. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
 
+## 보상 상자(11-25 — 1장 들어감)
+- 파일 이름 `미스터리상자`(배경 투명) → `cut/chest-mystery.webp`. 보상 상자 셋이 모두 이 그림(src/core/reward-box.js 의 BOX_ART). 넣기: `node scripts/build-gpt.mjs`.
+
 ## 세로 판(11-24 밤 — 26장 들어감)
 - 휴대폰 세로 화면용 판. 넣으면 휴대폰 세로 화면의 로비 무대 · 게임판이 이 그림을 쓴다(없으면 가로 판의 가운데를 자른 그림).
 - 파일 이름: GPT 판은 `세로판NN`(판NN 과 같은 번호), 시즌 1 그림 판은 `세로판-핑크구름` · `-달토끼` · `-딸기퍼레이드` · `-장미무도회` · `-리얼로즈` · `-네온심해` · `-태양신전`(첨부 그림은 `gpt그림\참고\세로판-참고-…`).

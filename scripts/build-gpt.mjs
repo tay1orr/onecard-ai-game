@@ -32,6 +32,9 @@ const CHARACTER_FILES = {
   승리1: 'mymelody-win', 승리2: 'mangom-win', 승리3: 'sailormoon-win', 승리4: 'cinnamoroll-win', 승리5: 'pompompurin-win', 승리6: 'loopy-win', 승리7: 'choonsik-win',
 };
 
+// 보상 상자(11-25) — 배경이 이미 투명한 그림 → cut/chest-<이름>.webp
+const CHEST_FILES = { 미스터리상자: 'chest-mystery' };
+
 fs.mkdirSync(SRC, { recursive: true });
 const files = fs.readdirSync(SRC, { withFileTypes: true })
   .filter((entry) => entry.isFile() && /\.(png|jpe?g|webp)$/i.test(entry.name))
@@ -42,6 +45,11 @@ const files = fs.readdirSync(SRC, { withFileTypes: true })
       if (!target) return null;
       const full = path.join(SRC, entry.name);
       return { kind: 'tall', number: 0, target, label: `세로판 ${target}`, file: full, time: fs.statSync(full).mtimeMs, name: entry.name };
+    }
+    const chest = Object.keys(CHEST_FILES).find((name) => entry.name.startsWith(name));
+    if (chest) {
+      const full = path.join(SRC, entry.name);
+      return { kind: 'chest', number: 0, target: CHEST_FILES[chest], label: chest, file: full, time: fs.statSync(full).mtimeMs, name: entry.name };
     }
     const match = entry.name.match(/^(상대|나|울음|승리|판|뒷면|앞면|효과|배경)\s*0*(\d+)/);
     if (!match) return null;
@@ -54,7 +62,7 @@ const files = fs.readdirSync(SRC, { withFileTypes: true })
   .filter(Boolean);
 const latest = new Map();
 files.forEach((entry) => {
-  const key = entry.kind === 'tall' ? `tall-${entry.target}` : `${entry.kind}-${entry.number}`;
+  const key = entry.kind === 'tall' || entry.kind === 'chest' ? `${entry.kind}-${entry.target}` : `${entry.kind}-${entry.number}`;
   if (!latest.has(key) || latest.get(key).time < entry.time) latest.set(key, entry);
 });
 const skipped = fs.readdirSync(SRC).filter((name) => /\.(png|jpe?g|webp)$/i.test(name) && !files.some((entry) => entry.name === name));
@@ -115,6 +123,12 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
     await sharp(entry.file).resize(1600, 1068, { fit: 'cover' }).webp({ quality: 82 }).toFile(path.join(OUT, 'paint', `${key}.webp`));
     await sharp(entry.file).resize(384, 256, { fit: 'cover' }).webp({ quality: 78 }).toFile(path.join(OUT, 'paint', `${key}-s.webp`));
     made.push(`scene-${pad(entry.number)}`);
+  } else if (entry.kind === 'chest') {
+    // 보상 상자 — 투명 가장자리만 다듬어 상자 칸(최대 230px · 휴대폰 2배)에 맞게
+    const trimmed = await sharp(entry.file).trim({ threshold: 1 }).png().toBuffer();
+    await sharp(trimmed).resize(480, 480, { fit: 'inside' }).webp({ quality: 88, alphaQuality: 92 }).toFile(path.join(OUT, 'cut', `${entry.target}.webp`));
+    await sharp(trimmed).resize(160, 160, { fit: 'inside' }).webp({ quality: 82, alphaQuality: 88 }).toFile(path.join(OUT, 'cut', `${entry.target}-s.webp`));
+    made.push(entry.target);
   } else if (entry.kind === 'tall') {
     // 휴대폰 세로 화면용 판 — 화면을 덮는 크기 하나. look-apply 가 tall-<판> 이 있으면 세로 화면에서 이 그림을 쓴다
     const key = `tall-${entry.target}`;
@@ -156,7 +170,7 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
 const list = [
   ...fs.readdirSync(path.join(OUT, 'paint')).map((name) => name.match(/^gpt-((?:map|back|face|scene)-\d+)\.webp$/)?.[1]),
   ...fs.readdirSync(path.join(OUT, 'paint')).map((name) => name.match(/^(tall-[a-z0-9-]+)\.webp$/)?.[1]),
-  ...fs.readdirSync(path.join(OUT, 'cut')).map((name) => name.match(/^((?:char|fx)-[a-z0-9-]+?)\.webp$/)?.[1]).filter((key) => key && !key.endsWith('-s')),
+  ...fs.readdirSync(path.join(OUT, 'cut')).map((name) => name.match(/^((?:char|fx|chest)-[a-z0-9-]+?)\.webp$/)?.[1]).filter((key) => key && !key.endsWith('-s')),
 ].filter(Boolean).sort();
 fs.writeFileSync(path.join(root, 'src/data/gpt-art.js'), `// GPT 로 만든 그림 목록 — scripts/build-gpt.mjs 가 gpt그림/ 을 줄여 public 에 넣고 이 파일을 다시 쓴다(손으로 고치지 않음)\nexport const GPT_ART = Object.freeze(${JSON.stringify(list)});\nexport const hasGptArt = (key) => GPT_ART.includes(key);\n`);
 console.log(`GPT 그림 ${list.length}장: ${list.join(', ') || '없음'}`);

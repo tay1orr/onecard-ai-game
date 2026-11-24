@@ -1,4 +1,5 @@
-// 보상 상자 고르기 — 선물 상자 셋이 떨어지고, 하나를 고르면 흔들리다 열린다.
+// 보상 상자 고르기 — 미스터리 상자 셋이 떨어지고, 하나를 고르면 흔들리다 열린다.
+// 좋은 상자(영웅 이상)는 흔들릴 때 틈으로 금빛이 새고, 열리면 금빛 빛살이 사방으로 퍼진다(전설 이상은 빛기둥도, 11-25).
 // 열리면 기본 점수가 먼저 오르고, 배수(×2 · ×3 · ×5 · ×10) 도장이 찍히며 한 번 더 뛴다. 아이템이 들어 있으면 점수와 함께 나온다.
 // 고른 뒤 나머지 둘도 열어 무엇이 들어 있었는지 보여 준다. 내용은 미리 정해져 있고 고르는 것은 순수한 선택이다.
 import gsap from 'gsap';
@@ -6,14 +7,13 @@ import { Physics2DPlugin } from 'gsap/Physics2DPlugin';
 import { h, formatNumber } from './dom.js';
 import { cut } from '../data/assets.js';
 import { cosmeticById, COSMETIC_SLOTS } from '../core/cosmetics.js';
-import { RARITY_NAMES } from '../core/reward-box.js';
+import { BOX_ART, RARITY_NAMES, RARITY_ORDER } from '../core/reward-box.js';
 import { itemPreview } from './item-preview.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
 
 gsap.registerPlugin(Physics2DPlugin);
 
-const BOX_ART = ['box-heart', 'box-white', 'box-black'];
 const rand = (min, max) => min + Math.random() * (max - min);
 const slotName = (slot) => COSMETIC_SLOTS.find((entry) => entry.key === slot)?.name || '';
 const COINS = { common: 3, rare: 5, epic: 7, legend: 10, mythic: 16 };
@@ -32,7 +32,7 @@ export function openRewardBoxes({ host, boxes, won, veteran = 1, games = 0 }) {
     const buttons = boxes.map((box, index) => h('button.rb-box', {
       type: 'button', 'aria-label': `${index + 1}번 상자 열기`, dataset: { slot: index },
       onClick: () => pick(index),
-    }, h('span.rb-shadow'), h('img.rb-art', { src: cut(BOX_ART[index % BOX_ART.length]), alt: '', draggable: 'false' }), h('span.rb-peek')));
+    }, h('span.rb-shadow'), h('img.rb-art', { src: cut(BOX_ART), alt: '', draggable: 'false' }), h('span.rb-peek')));
     const row = h('div.rb-row', {}, ...buttons);
     const reveal = h('div.rb-reveal', { role: 'status', 'aria-live': 'polite' });
     const take = h('button.btn.primary.rb-take', { type: 'button', hidden: true }, '받기');
@@ -63,6 +63,44 @@ export function openRewardBoxes({ host, boxes, won, veteran = 1, games = 0 }) {
         gsap.to(coin, { physics2D: { velocity: rand(520, 860), angle: rand(-150, -30), gravity: 1400 }, rotation: rand(-240, 240), duration: 1.3, ease: 'none', delay: index * 0.04, onComplete: () => coin.remove() });
         gsap.to(coin, { opacity: 0, duration: 0.3, delay: 0.95 + index * 0.04 });
       }
+    }
+
+    // 금빛 빛살 — 상자 자리에서 사방으로 뻗어 천천히 돌다 사라진다. 전설 이상은 위로 빛기둥과 번쩍임, 신화는 장밋빛 빛살이 섞인다.
+    // 큰 원 한 장을 돌리지 않고 가늘고 긴 쐐기 여럿으로 그린다(휴대폰에서 그림 한 장이 너무 커지지 않게) · 열 때마다 각도 · 굵기가 조금씩 다르다
+    function goldBeams(at, rank, chest) {
+      const area = overlay.getBoundingClientRect();
+      const reach = Math.hypot(Math.max(at.x, area.width - at.x), Math.max(at.y, area.height - at.y));
+      const legend = rank >= RARITY_ORDER.indexOf('legend');
+      const mythic = rank >= RARITY_ORDER.indexOf('mythic');
+      const total = mythic ? 3.4 : legend ? 2.8 : 2.2;
+      const count = mythic ? 20 : legend ? 16 : 12;
+      const dim = overlay.querySelector('.rb-dim');
+      const fan = h('div.rb-beams');
+      gsap.set(fan, { left: at.x, top: at.y });
+      dim.after(fan); // 어둠 바로 위 — 상자 · 글씨 · 점수 카드보다 아래라 빛이 상자 뒤에서 터져 나온다
+      const start = rand(0, 360);
+      for (let index = 0; index < count; index += 1) {
+        const width = reach * rand(0.12, 0.22);
+        const beam = h(`i.rb-beam${mythic && index % 2 ? '.is-rose' : ''}`);
+        Object.assign(beam.style, { width: `${width}px`, height: `${reach * rand(0.72, 1.02)}px`, marginLeft: `${-width / 2}px` });
+        fan.append(beam);
+        gsap.set(beam, { rotation: start + (360 / count) * index + rand(-7, 7) });
+        const peak = rand(0.5, 0.92);
+        gsap.fromTo(beam, { scaleY: 0, opacity: 0 }, { scaleY: 1, opacity: peak, duration: rand(0.32, 0.5), delay: rand(0, 0.08), ease: 'power3.out' });
+        gsap.to(beam, { opacity: peak * 0.45, duration: rand(0.35, 0.6), delay: 0.6 + rand(0, 0.3), repeat: 3, yoyo: true, ease: 'sine.inOut' });
+      }
+      gsap.fromTo(fan, { rotation: 0, scale: 0.92 }, { rotation: rand(10, 18) * (Math.random() < 0.5 ? -1 : 1), scale: 1.04, duration: total, ease: 'sine.out' });
+      gsap.to(fan, { opacity: 0, duration: 0.7, delay: total - 0.7, ease: 'power1.in', onComplete: () => fan.remove() });
+      if (legend) {
+        const pillar = h('i.rb-pillar');
+        const width = chest.width * 0.8;
+        Object.assign(pillar.style, { left: `${at.x - width / 2}px`, width: `${width}px`, height: `${at.y + 60}px`, bottom: `${area.height - at.y}px` });
+        dim.after(pillar);
+        gsap.fromTo(pillar, { scaleY: 0, opacity: 0 }, { scaleY: 1, opacity: 0.85, duration: 0.42, ease: 'power3.out' });
+        gsap.to(pillar, { opacity: 0, duration: 0.9, delay: total * 0.55, onComplete: () => pillar.remove() });
+        gsap.fromTo(flash, { opacity: mythic ? 0.95 : 0.75 }, { opacity: 0, duration: 0.9, ease: 'power2.out' });
+      }
+      play('unlock', { volume: legend ? 0.9 : 0.6 });
     }
 
     // 점수 카드 — 기본 점수가 오른 뒤 배수 도장이 찍히고 다시 오른다. 아이템은 아래에 함께
@@ -115,13 +153,21 @@ export function openRewardBoxes({ host, boxes, won, veteran = 1, games = 0 }) {
         gsap.killTweensOf(button.querySelector('.rb-art'));
         if (other !== index) gsap.to(button, { opacity: 0.4, scale: 0.86, duration: 0.3 });
       });
+      // 좋은 상자(영웅 이상 — ×3 이상이거나 영웅 · 전설 아이템) — 흔들릴수록 틈으로 금빛이 새어 나온다
+      const rank = RARITY_ORDER.indexOf(box.rarity);
+      const good = rank >= RARITY_ORDER.indexOf('epic') && !reduced;
+      const art = chosen.querySelector('.rb-art');
+      const leak = good ? h('span.rb-leak') : null;
+      if (leak) art.before(leak);
       const shake = gsap.timeline();
       if (!reduced) {
         // 기대감 — 점점 세게 세 번 흔들린다
         play('dice', { volume: 0.7 });
         shake.to(chosen, { scale: 1.18, y: -18, duration: 0.25, ease: 'power2.out' });
         [5, 9, 14].forEach((power, beat) => {
-          shake.to(chosen, { rotation: power, duration: 0.06 }).to(chosen, { rotation: -power, duration: 0.08 }).to(chosen, { rotation: 0, duration: 0.07 });
+          shake.to(chosen, { rotation: power, duration: 0.06 });
+          if (leak) shake.to(leak, { opacity: 0.35 + beat * 0.3, scale: 0.7 + beat * 0.22, duration: 0.2, ease: 'power2.out' }, '<');
+          shake.to(chosen, { rotation: -power, duration: 0.08 }).to(chosen, { rotation: 0, duration: 0.07 });
           shake.to({}, { duration: 0.14 - beat * 0.03 });
         });
       }
@@ -132,8 +178,15 @@ export function openRewardBoxes({ host, boxes, won, veteran = 1, games = 0 }) {
       const box0 = overlay.getBoundingClientRect();
       const at = { x: rect.left - box0.left + rect.width / 2, y: rect.top - box0.top + rect.height * 0.45 };
       gsap.set(glow, { left: at.x, top: at.y, xPercent: -50, yPercent: -50 });
-      gsap.fromTo(glow, { scale: 0.2, opacity: 0.95 }, { scale: 2.6, opacity: 0, duration: reduced ? 0.2 : 0.9, ease: 'power2.out' });
-      gsap.to(chosen.querySelector('.rb-art'), { scale: 1.5, opacity: 0, duration: 0.35, ease: 'power2.in' });
+      gsap.fromTo(glow, { scale: 0.2, opacity: 0.95 }, { scale: good ? 3.4 : 2.6, opacity: 0, duration: reduced ? 0.2 : good ? 1.3 : 0.9, ease: 'power2.out' });
+      if (good) {
+        // 상자가 안에서 환히 빛나며 한 번 부풀었다가 빛 속으로 흩어지고, 그 뒤에서 빛살이 퍼진다
+        goldBeams(at, rank, rect);
+        gsap.timeline()
+          .fromTo(art, { filter: 'brightness(1) drop-shadow(0px 18px 16px rgba(0, 0, 0, 0.55))' }, { filter: 'brightness(2.1) drop-shadow(0px 0px 26px rgba(255, 222, 140, 0.95))', scale: 1.24, duration: 0.2, ease: 'power2.out' })
+          .to(art, { scale: 1.7, opacity: 0, duration: 0.42, ease: 'power2.in' });
+        gsap.to(leak, { opacity: 0, scale: 2.2, duration: 0.6, ease: 'power2.out' });
+      } else gsap.to(art, { scale: 1.5, opacity: 0, duration: 0.35, ease: 'power2.in' });
       sub.textContent = box.multiplier > 1 ? `${RARITY_NAMES[box.rarity]} 상자 — 점수 ×${box.multiplier}!` : '점수를 받았어요';
       await playContent(box, at);
       // 나머지 상자도 열어 보여 준다

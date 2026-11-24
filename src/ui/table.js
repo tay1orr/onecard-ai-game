@@ -252,6 +252,7 @@ export function createTable({ mode = 'ai', onPlay, onDraw, onPileTap, onExit, on
 
   // ── 더미
   function pushPile(card, rotation = rand(-9, 9)) {
+    pile.querySelectorAll('.fx-token-seat').forEach((seat) => seat.remove()); // 앞 카드에 내려앉은 효과 조각(카드보다 위층) — 새 카드가 덮으므로 걷는다
     const el = cardFace(card);
     el.classList.add('pile-card');
     gsap.set(el, { xPercent: -50, yPercent: -50, x: rand(-5, 5), y: rand(-4, 4), rotation });

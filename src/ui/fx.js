@@ -201,10 +201,15 @@ export function createFx({ layer, root, director }) {
   }
 
   // 내려앉음 — 맨 위 카드 오른쪽 위 구석에 작게 내려앉아, 다음 카드가 덮을 때까지 남는다(카드 숫자는 왼쪽 위 · 오른쪽 아래라 가리지 않음)
+  // 조각은 카드 안이 아니라 카드와 같은 자리 · 같은 기울기의 빈 틀(카드 바로 앞, 카드보다 위층)에 얹는다. 카드 안에 넣으면
+  // 카카오톡 안 브라우저(안드로이드 WebView)가 그 카드의 K · Q · J 그림(곱하기 섞기)을 그리지 않아, 내가 낸 뒤 상대가 낼 때까지 비었다(11-25)
   function settle(effect, onto, cw) {
-    onto.querySelector('.fx-token')?.remove();
+    onto.parentElement?.querySelectorAll(':scope > .fx-token-seat').forEach((el) => el.remove());
     const token = h('img.fx-token', { src: cut(effect.sprites[0]), alt: '', draggable: 'false' });
-    onto.append(token);
+    const seat = h('div.fx-token-seat', {}, token);
+    const style = getComputedStyle(onto);
+    Object.assign(seat.style, { left: `${onto.offsetLeft}px`, top: `${onto.offsetTop}px`, width: `${onto.offsetWidth}px`, height: `${onto.offsetHeight}px`, transform: style.transform, transformOrigin: style.transformOrigin });
+    onto.before(seat);
     return gsap.timeline().fromTo(token, { y: -cw * 0.7, scale: 1.6, opacity: 0, rotation: rand(-36, 36) }, { y: 0, scale: 1, opacity: 1, rotation: rand(-12, 12), duration: 0.36, ease: 'back.out(2.2)' });
   }
 

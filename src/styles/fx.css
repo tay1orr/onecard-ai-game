@@ -7,7 +7,9 @@
 .fx-land { position: absolute; border: 2px solid; pointer-events: none; }
 .fx-ribbon { position: absolute; background-size: 240% auto; background-repeat: no-repeat; mix-blend-mode: screen; pointer-events: none; border-radius: 50%;
   -webkit-mask: radial-gradient(ellipse 50% 50% at 50% 50%, #000 30%, transparent 72%); mask: radial-gradient(ellipse 50% 50% at 50% 50%, #000 30%, transparent 72%); }
-.card .fx-token { position: absolute; z-index: 3; right: 4%; top: 3%; width: 42%; height: 42%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.35)); }
+/* 내려앉은 효과 조각 — 카드 안이 아니라 카드와 같은 자리 · 같은 기울기의 빈 틀(카드 바로 앞, 카드보다 위층)에 얹는다(fx.js settle, 11-25) */
+.fx-token-seat { position: absolute; z-index: 1; pointer-events: none; }
+.fx-token-seat .fx-token { position: absolute; right: 4%; top: 3%; width: 42%; height: 42%; object-fit: contain; pointer-events: none; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.35)); }
 .fx-ring { position: absolute; border-radius: 50%; border-style: solid; pointer-events: none; }
 .fx-flash { position: absolute; inset: 0; pointer-events: none; }
 .fx-dim { position: absolute; inset: 0; background: #05070d; opacity: 0; }
@@ -141,4 +143,10 @@
 .rb-card .pv { --cw: 60px; width: 132px; height: 132px; }
 .rb-coin { position: absolute; width: 76px; height: 76px; object-fit: contain; pointer-events: none; z-index: 4; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45)); }
 .rb-take { position: relative; z-index: 3; min-width: 160px; margin-top: 6px; }
+/* 좋은 상자 — 흔들릴 때 새는 금빛 · 열릴 때 퍼지는 빛살 · 전설 이상의 빛기둥(reward-boxes.js goldBeams, 11-25) */
+.rb-leak { position: absolute; left: 50%; top: 48%; width: 150%; height: 150%; margin: -75% 0 0 -75%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 240, 190, 0.95), rgba(255, 200, 90, 0.5) 34%, transparent 68%); opacity: 0; pointer-events: none; }
+.rb-beams { position: absolute; width: 0; height: 0; pointer-events: none; }
+.rb-beam { position: absolute; left: 0; bottom: 0; transform-origin: 50% 100%; clip-path: polygon(50% 100%, 0 0, 100% 0); background: linear-gradient(to top, rgba(255, 250, 228, 0.95), rgba(255, 214, 110, 0.6) 30%, rgba(255, 190, 80, 0.18) 70%, transparent); }
+.rb-beam.is-rose { background: linear-gradient(to top, rgba(255, 246, 238, 0.95), rgba(255, 170, 205, 0.55) 30%, rgba(255, 140, 190, 0.16) 70%, transparent); }
+.rb-pillar { position: absolute; transform-origin: 50% 100%; border-radius: 50% 50% 0 0 / 10% 10% 0 0; background: linear-gradient(to top, rgba(255, 250, 232, 0.95), rgba(255, 222, 140, 0.55) 45%, transparent); filter: blur(6px); opacity: 0; pointer-events: none; }
 .res-box { margin: 6px auto 0; padding: 6px 14px; border-radius: 10px; background: rgba(242, 181, 68, 0.14); color: var(--gold); font-weight: 800; font-size: 15px; width: fit-content; }
