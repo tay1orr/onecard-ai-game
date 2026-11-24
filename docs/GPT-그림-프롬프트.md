@@ -180,6 +180,128 @@ Use the attached picture only as a style reference (painting style, lighting and
 
 Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a tiny sitting teddy bear with a red bow, (2) a red satin bow, (3) a small red heart, (4) a little pink heart balloon, (5) a tiny golden star, (6) a small curl of red ribbon. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
 
+## 아이템 보충(11-25 — 적은 칸부터)
+- 칸마다 아이템 수(11-25): 내 캐릭터 7 · 카드 앞면 26 · 카드 효과 27 · 승리 연출 31 · 맵 39 · 카드 뒷면 55 · 장난감 67.
+- 시즌 2 세트 가운데 승리 연출이 없는 곳: 왕실 겨울 정원 · 밀푀유 파티스리 · 두바이 쫀득쿠키 · 자수정 · 루비 왕관.
+- 카드 효과가 없는 곳: 왕실 겨울 정원 · 밀푀유 파티스리 · 베르사유 · 백만 송이 장미 · 패스 세트 셋(달빛 티아라 · 진주 조개 · 흑임자 몽블랑).
+- 아래를 모두 만드실 필요는 없습니다. 만드신 것만 그림을 보고 넣습니다. 앞 순위부터 권합니다.
+- 넣는 곳: 지금처럼 `gpt그림\` 폴더. 파일 이름은 앞 번호만 맞으면 됩니다(`나7.png`, `나7-리락쿠마.png` 모두 됨).
+
+### 1순위 — 내 캐릭터 10(정사각형, 배경 투명)
+- 새 대화창 하나에서 차례로 만듭니다. 첨부는 없습니다.
+- 첫 그림은 아래 프롬프트를 그대로 붙입니다. 같은 대화창의 둘째부터는 「같은 틀로, 이번엔 + 그 캐릭터 첫 문장」만 붙여도 됩니다.
+- GPT 가 캐릭터를 거절하면(디즈니 캐릭터가 잘 막힙니다) 공식 그림(배경이 단색인 것)을 받아 같은 이름으로 넣어 주셔도 됩니다.
+
+**나7 — 리락쿠마** · 곰 인형 · 디저트
+
+Rilakkuma, the relaxed brown bear from San-X, holding a small plate with a slice of strawberry shortcake, sleepy content smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+**나8 — 코리락쿠마** · 곰 인형 · 딸기
+
+Korilakkuma, the small white bear with a red button on her chest from San-X, hugging a big shiny strawberry, cheerful smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+**나9 — 곰돌이 푸** · 곰 인형
+
+Winnie the Pooh in his red shirt, holding a honey pot with one pink rose tucked into it, gentle happy smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+**나10 — 케어베어(러브어랏 베어)** · 곰 인형 · 장미
+
+Love-a-Lot Bear from the Care Bears, the pink bear with the two-hearts tummy symbol, holding a small bouquet of pink roses, sweet smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+**나11 — 벨리곰** · 곰 인형
+
+Bellygom, the big pink teddy bear character from Korea, sitting and hugging a bouquet of red roses, kind smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+**나12 — 어린왕자** · 장미
+
+The Little Prince from Antoine de Saint-Exupery's book, in the original watercolor illustration style, standing beside his single red rose under a glass dome, gentle smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+**나13 — 벨(미녀와 야수)** · 장미
+
+Belle from Beauty and the Beast (1991 animated film style), in her yellow ball gown, holding the enchanted red rose in a glass bell jar, warm smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+**나14 — 앨리스** · 장미
+
+Alice from Alice in Wonderland (1951 animated film style), blue dress and white apron, painting a white rose red with a small paintbrush, curious smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+**나15 — 미피** · 꽃
+
+Miffy, the little white rabbit by Dick Bruna, in her simple bold-outline style, holding a pink tulip with both hands. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+**나16 — 몰랑이** · 디저트
+
+Molang, the round white bunny character from Korea, holding a pink macaron with both paws, happy smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 2순위 — 승리 장면 배경 5(가로 3:2)
+- 이 세트들은 맵 · 카드는 있는데 이긴 뒤 넘어갈 「장면」이 없습니다. 맵은 가운데가 빈 탁자 그림이라 장면 배경으로는 맞지 않아, 같은 장소를 탁자 없이 눈높이로 그려 받습니다.
+- 첨부: 그 세트의 맵 그림(`gpt그림\판NN.png`). 캐릭터 · 소품 · 흩날리는 조각은 제가 효과 조각으로 얹습니다.
+
+**배경01 — 왕실 겨울 정원** · 첨부: `판11.png`
+
+Use the attached picture only as the reference for the place, painting style, lighting and colors. Paint the same place as a wide background seen from standing eye level, as if you just stepped back from the card table: the table is gone, and the center and the bottom third are an open, uncluttered floor where a character will stand. Keep the decorations of the place around the left and right edges and in the far background: a royal winter glasshouse with white roses and white camellias, frosted glass panes, snow falling outside the tall windows, silver candelabras. A soft glow in the middle distance behind where the character will stand. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, gentle depth of field. No people, no characters, no animals, no text, no playing cards. Landscape 3:2.
+
+**배경02 — 밀푀유 파티스리** · 첨부: `판15.png`
+
+Use the attached picture only as the reference for the place, painting style, lighting and colors. Paint the same place as a wide background seen from standing eye level, as if you just stepped back from the card table: the table is gone, and the center and the bottom third are an open, uncluttered floor where a character will stand. Keep the decorations of the place around the left and right edges and in the far background: an elegant Parisian patisserie with glass cake domes holding mille-feuille, pastel green cabinets, brass lamps, a window to a sunny street. A soft glow in the middle distance behind where the character will stand. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, gentle depth of field. No people, no characters, no animals, no text, no playing cards. Landscape 3:2.
+
+**배경03 — 루비 왕관** · 첨부: `판17.png`
+
+Use the attached picture only as the reference for the place, painting style, lighting and colors. Paint the same place as a wide background seen from standing eye level, as if you just stepped back from the card table: the table is gone, and the center and the bottom third are an open, uncluttered floor where a character will stand. Keep the decorations of the place around the left and right edges and in the far background: a royal treasury hall with jeweled crowns set with rubies on red velvet cushions, gilded columns, red velvet drapes, crystal chandeliers. A soft glow in the middle distance behind where the character will stand. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, gentle depth of field. No people, no characters, no animals, no text, no playing cards. Landscape 3:2.
+
+**배경04 — 자수정** · 첨부: `판18.png`
+
+Use the attached picture only as the reference for the place, painting style, lighting and colors. Paint the same place as a wide background seen from standing eye level, as if you just stepped back from the card table: the table is gone, and the center and the bottom third are an open, uncluttered floor where a character will stand. Keep the decorations of the place around the left and right edges and in the far background: a violet jewelry gallery with amethyst tiaras and earrings in glass cases, crystal chandeliers, a lilac marble floor. A soft glow in the middle distance behind where the character will stand. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, gentle depth of field. No people, no characters, no animals, no text, no playing cards. Landscape 3:2.
+
+**배경05 — 두바이 쫀득쿠키** · 첨부: `판19.png`
+
+Use the attached picture only as the reference for the place, painting style, lighting and colors. Paint the same place as a wide background seen from standing eye level, as if you just stepped back from the card table: the table is gone, and the center and the bottom third are an open, uncluttered floor where a character will stand. Keep the decorations of the place around the left and right edges and in the far background: a cozy dessert cafe with Dubai chewy cookies, pistachios, kadayif and chocolate on wooden counters, green tiles and warm lamps. A soft glow in the middle distance behind where the character will stand. Semi-realistic fantasy digital painting, painterly realism like a premium mobile card game, rich detail, gentle depth of field. No people, no characters, no animals, no text, no playing cards. Landscape 3:2.
+
+### 3순위 — 카드 효과 판 7(가로 3:2, 배경 투명)
+- 효과01~10 과 같은 스티커 판입니다. 첨부: `뒷면04.png`(화풍 참고). 1번 칸(왼쪽 위)은 맨 위 카드 구석에 앉는 장식입니다.
+
+**효과11 — 왕실 겨울 정원** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a white rose with frost on its petals, (2) a large snowflake crystal, (3) a frosted white rose petal, (4) a sprig of silver-green winter leaves with frost, (5) a small cluster of white winter berries, (6) a tiny icy sparkle. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과12 — 밀푀유 파티스리** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a slice of mille-feuille with layered puff pastry and cream, (2) a fresh strawberry, (3) a swirl of vanilla cream, (4) a flaky puff-pastry crumb, (5) a small mint leaf, (6) a tiny sugar sparkle. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과13 — 베르사유** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a pink rose with a gold ribbon, (2) a golden fleur-de-lis ornament, (3) a small stack of pastel macarons, (4) a small folding lace fan, (5) a pearl drop earring, (6) a tiny golden sparkle. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과14 — 백만 송이 장미** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a tight round bouquet of many small red roses, (2) a deep red rose head, (3) a dark velvet red petal, (4) a curled crimson petal, (5) a red rose bud, (6) a tiny golden sparkle. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과15 — 달빛 티아라** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a silver tiara with a moonstone, (2) a glowing crescent moon, (3) a small silver star, (4) a single round pearl, (5) a pale blue moonstone gem, (6) a tiny silver sparkle. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과16 — 진주 조개** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) an open scallop shell holding a pearl, (2) a single round pearl, (3) a small pink conch shell, (4) a tiny starfish, (5) a sea-foam bubble, (6) a tiny pearly sparkle. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+**효과17 — 흑임자 몽블랑** · 첨부: `뒷면04.png`
+
+Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a black sesame mont blanc pastry, (2) a glossy roasted chestnut, (3) a swirl of grey sesame cream, (4) a small pinch of black sesame seeds, (5) a small flake of gold leaf, (6) a tiny sugar sparkle. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
+
+### 4순위 — 베르사유 카드 두 장 · 백만 송이 장미 앞면(세로 2:3)
+- 베르사유는 맵 · 승리 연출만 있고 카드가 없습니다. 백만 송이 장미는 앞면이 없습니다.
+
+**뒷면13 — 베르사유 카드 뒷면** · 첨부: `뒷면04.png`(화풍 참고)
+
+The back of a single luxury playing card, portrait 2:3, the design fills the whole image edge to edge with slightly rounded corners. Perfectly symmetrical ornamental design, mirrored left-right and top-bottom like a real luxury card back. In the center, a golden sun medallion like the emblem of the Palace of Versailles, framed by small pink roses; around it, Rococo gold scrollwork and fleur-de-lis on soft powder blue, with a fine double gold border around the edge. Semi-realistic fantasy digital painting, intricate, rich detail, soft glow, no text, no letters, no numbers.
+
+**앞면11 — 베르사유 카드 앞면 테** · 첨부: `앞면02.png`(화풍 참고)
+
+A decorative border frame for the FRONT of a playing card, portrait 2:3. The center area (about 80% of the width and 84% of the height) is plain, smooth, empty warm ivory paper — leave it completely blank: no symbols, no letters, no numbers, no pictures. Only a narrow border is decorated: Rococo gold scrollwork with small pink roses, tiny pearls and pale blue ribbon bows, a small gold fleur-de-lis in each corner. Elegant and light, the border no wider than about 8% of the card width. Semi-realistic digital painting, fine detail, no text.
+
+**앞면12 — 백만 송이 장미 카드 앞면 테** · 첨부: `앞면02.png`(화풍 참고)
+
+A decorative border frame for the FRONT of a playing card, portrait 2:3. The center area (about 80% of the width and 84% of the height) is plain, smooth, empty warm ivory paper — leave it completely blank: no symbols, no letters, no numbers, no pictures. Only a narrow border is decorated: a garland of many small deep-red roses with dark green leaves along a thin gold line, a small cluster of red roses in each corner. Elegant and light, the border no wider than about 8% of the card width. Semi-realistic digital painting, fine detail, no text.
+
 ## 어느 모델로 (2026-11-24 확인)
 - 그림 모델은 고를 필요가 없습니다. ChatGPT 에서 그림을 부탁하면 최신 그림 모델 **ChatGPT Images 2.6**(11-04 출시)이 저절로 그립니다.
 - **생각(추론) 모드를 켜고 그리시는 것을 권합니다.**

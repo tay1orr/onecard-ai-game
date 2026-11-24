@@ -264,4 +264,20 @@ check(normalizeEquipped({ charms: [teddy.id] }, 330000, 0, [teddy.id]).charms[0]
 const mergedBox = mergeProfiles3({ boxItems: ['charm-box-hedgehog'], claimedBoxIds: ['box:a'] }, { boxItems: ['charm-box-duckling'], claimedBoxIds: ['box:b'] }, base);
 check(mergedBox.boxItems.length === 2 && mergedBox.claimedBoxIds.length === 2, '두 기기의 상자 아이템 · 받은 상자를 모두 남겨야 함');
 
+// 운영에 올릴 때 넣는 SQL · 휴면 막기(11-25)
+const launchSql = fs.readFileSync(path.join(root, 'supabase/2026-11-25-season2-launch.sql'), 'utf8');
+const sqlBacks = new Set([...launchSql.matchAll(/'(back-[a-z0-9-]+)'/g)].map((match) => match[1]));
+const missingBacks = COSMETICS.filter((entry) => entry.slot === 'cardBack' && !sqlBacks.has(entry.id)).map((entry) => entry.id);
+check(missingBacks.length === 0, `운영 SQL 의 카드 뒷면 허용 목록에 빠진 뒷면(온라인 상대에게 클래식으로 보임): ${missingBacks.join(', ')}`);
+check(launchSql.includes('grant execute on function public.onecard_keepalive() to anon'), '휴면 막기 함수는 공개 키(anon)로 부를 수 있어야 함');
+const { keepAlive } = await import('../api/keepalive.js');
+let keepCall = null;
+const keepOk = await keepAlive(async (url, init) => { keepCall = { url, init }; return { ok: true, status: 200, text: async () => '"2026-11-25T00:00:00+00:00"' }; }, { url: 'https://example.supabase.co', publishableKey: 'sb_publishable_test' });
+check(keepOk.ok && keepCall.url === 'https://example.supabase.co/rest/v1/rpc/onecard_keepalive' && keepCall.init.method === 'POST' && keepCall.init.headers.apikey === 'sb_publishable_test', '휴면 막기는 공개 키로 onecard_keepalive 를 부름');
+const keepMissing = await keepAlive(async () => ({ ok: false, status: 404, text: async () => '{"code":"PGRST202"}' }), { url: 'https://example.supabase.co', publishableKey: 'sb_publishable_test' });
+check(!keepMissing.ok && keepMissing.status === 404, 'SQL 을 아직 안 넣었으면 실패로 알려야 함');
+check(!/service_role|sb_secret_/.test(fs.readFileSync(path.join(root, 'api/keepalive.js'), 'utf8')), '휴면 막기에 비밀 키를 쓰지 않음');
+const keepCron = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8')).crons?.find((entry) => entry.path === '/api/keepalive');
+check(keepCron && /^\d{1,2} \d{1,2} \* \* \*$/.test(keepCron.schedule), 'Vercel 예약 실행은 하루 한 번(무료 요금제 한도)');
+
 console.log(`시즌 2 테스트 ${count}개 통과`);

@@ -4,6 +4,13 @@ import { tierForXp, xpForMatch } from './season.js';
 export const LEGACY_RECORD_KEY = 'onecard-record';
 export const LEGACY_BACKUP_KEY = 'onecard-record-backup-v1';
 export const PROFILE_KEY = 'onecard-player-profile-v2';
+// 운영에 올릴 때 기록을 지키는 열쇠 둘(11-25)
+// · S1_PROFILE_BACKUP_KEY 시즌 1 프로필 원본을 처음 한 번 그대로 떠 둔다(무엇이 잘못돼도 되살릴 수 있게)
+// · S2_PROGRESS_KEY 시즌 2 에만 있는 값(패스 경험치 · 상자 아이템 · 장착)을 따로도 적는다
+//   배포 전부터 열려 있던 시즌 1 탭은 프로필을 옛 모양으로 덮어쓰며 이 값들을 버리는데, 그래도 여기서 되살아난다
+//   줄어들지 않는 값이라 큰 값 · 합침으로 지킨다 — 시즌을 새로 열 때는 이 열쇠도 함께 비운다
+export const S1_PROFILE_BACKUP_KEY = 'onecard-player-profile-s1-backup';
+export const S2_PROGRESS_KEY = 'onecard-s2-progress-v1';
 
 // ★6~★8 은 5만 점부터 만나는 상대 — 더 세고, 이기면 더 많이, 지면 조금 더 잃는다
 export const WIN_REWARDS = Object.freeze({ 1: 125, 2: 180, 3: 250, 4: 340, 5: 500, 6: 700, 7: 1000, 8: 1400 });
@@ -55,6 +62,9 @@ function safeInteger(value, fallback = 0) {
   return Number.isFinite(number) && number >= 0 ? Math.floor(number) : fallback;
 }
 
+const listOf = (value) => (Array.isArray(value) ? value : []);
+const claimedList = (...groups) => [...new Set(groups.flatMap(listOf).map(String))].slice(-150);
+
 // 상자에서 얻은 아이템 — 목록에 있는 상자 전용 아이템만, 겹치지 않게
 export function boxItemList(value) {
   return Array.isArray(value) ? [...new Set(value.map(String))].filter(isBoxItemId) : [];
@@ -71,9 +81,12 @@ function write(storage, key, value) {
 export function loadPlayerProfile(storage = defaultStorage()) {
   const legacyRaw = storage?.getItem(LEGACY_RECORD_KEY) || '';
   const legacy = safeParse(legacyRaw) || {};
-  const saved = safeParse(storage?.getItem(PROFILE_KEY)) || {};
+  const savedRaw = storage?.getItem(PROFILE_KEY) || '';
+  const saved = safeParse(savedRaw) || {};
+  const kept = safeParse(storage?.getItem(S2_PROGRESS_KEY)) || {};
 
   if (legacyRaw && !storage?.getItem(LEGACY_BACKUP_KEY)) write(storage, LEGACY_BACKUP_KEY, legacyRaw);
+  if (savedRaw && saved.version !== 4 && !storage?.getItem(S1_PROFILE_BACKUP_KEY)) write(storage, S1_PROFILE_BACKUP_KEY, savedRaw);
 
   const legacyWins = safeInteger(legacy.wins);
   const legacyGames = safeInteger(legacy.games);
@@ -83,7 +96,10 @@ export function loadPlayerProfile(storage = defaultStorage()) {
   const games = Math.max(legacyGames, savedGames, wins);
   const points = safeInteger(saved.points);
   const peakPoints = Math.max(points, safeInteger(saved.peakPoints));
-  const seasonXp = safeInteger(saved.seasonXp);
+  const seasonXp = Math.max(safeInteger(saved.seasonXp), safeInteger(kept.seasonXp));
+  const boxItems = boxItemList([...listOf(saved.boxItems), ...listOf(kept.boxItems)]);
+  // 프로필이 시즌 1 모양인데 시즌 2 장착이 따로 있으면 시즌 1 탭이 덮어쓴 것 — 시즌 2 장착을 되살린다
+  const equipped = saved.version !== 4 && kept.equipped ? kept.equipped : saved.equipped;
   const profile = {
     version: 4,
     seasonId: 's2',
@@ -99,9 +115,9 @@ export function loadPlayerProfile(storage = defaultStorage()) {
     multiGames: safeInteger(saved.multiGames),
     awardedMatchIds: Array.isArray(saved.awardedMatchIds) ? saved.awardedMatchIds.slice(-150) : [],
     recentAiStars: Array.isArray(saved.recentAiStars) ? saved.recentAiStars.filter((value) => value >= 1 && value <= MAX_AI_STARS).slice(-2) : [],
-    boxItems: boxItemList(saved.boxItems),
-    claimedBoxIds: Array.isArray(saved.claimedBoxIds) ? saved.claimedBoxIds.map(String).slice(-150) : [],
-    equipped: normalizeEquipped(saved.equipped || DEFAULT_EQUIPPED, peakPoints, tierForXp(seasonXp), boxItemList(saved.boxItems)),
+    boxItems,
+    claimedBoxIds: claimedList(saved.claimedBoxIds, kept.claimedBoxIds),
+    equipped: normalizeEquipped(equipped || DEFAULT_EQUIPPED, peakPoints, tierForXp(seasonXp), boxItems),
     reducedEffects: Boolean(saved.reducedEffects),
   };
   // 읽을 때마다 다시 쓰지 않는다 — 옛 형식에서 옮겨 올 때만 저장
@@ -124,6 +140,14 @@ export function savePlayerProfile(profile, storage = defaultStorage()) {
     reducedEffects: Boolean(profile.reducedEffects),
   };
   write(storage, PROFILE_KEY, JSON.stringify(normalized));
+
+  const kept = safeParse(storage?.getItem(S2_PROGRESS_KEY)) || {};
+  write(storage, S2_PROGRESS_KEY, JSON.stringify({
+    seasonXp: Math.max(seasonXp, safeInteger(kept.seasonXp)),
+    boxItems: boxItemList([...normalized.boxItems, ...listOf(kept.boxItems)]),
+    claimedBoxIds: claimedList(kept.claimedBoxIds, normalized.claimedBoxIds),
+    equipped: normalized.equipped,
+  }));
 
   const legacy = safeParse(storage?.getItem(LEGACY_RECORD_KEY)) || {};
   write(storage, LEGACY_RECORD_KEY, JSON.stringify({

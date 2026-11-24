@@ -241,8 +241,11 @@ export function mergeMissionStates(localState = {}, remoteState = {}, options = 
 }
 
 // base(지난 동기화 기준점)가 있으면 3방향으로 합쳐 패배 · 다른 기기 기록이 모두 남는다
+// 서버 기록이 시즌 1 모양(version 3)이면 큰 값 고르기로 — 배포 전부터 열린 시즌 1 탭이 덮어쓴 것이라
+// 기준점과 어긋나(경험치가 빠져 있고 그 탭의 판은 이 브라우저에도 이미 들어 있음) 3방향으로 합치면 줄거나 두 번 셈해진다
 export function mergeAccountBundles(localBundle = {}, remoteBundle = {}, base = null) {
-  const profile = base && remoteBundle.hasProfile !== false
+  const remoteIsSeason2 = Number(remoteBundle.profile?.version) >= 4;
+  const profile = base && remoteBundle.hasProfile !== false && remoteIsSeason2
     ? (() => {
       const merged = mergeProfiles3(localBundle.profile || {}, remoteBundle.profile || {}, base);
       return { ...merged, equipped: normalizeEquipped(merged.equipped || DEFAULT_EQUIPPED, merged.peakPoints, tierForXp(merged.seasonXp), merged.boxItems) };

@@ -56,6 +56,12 @@
 .stage-rival:nth-child(even) .rival-plate { transform: rotate(2.5deg); }
 .rival-plate small { font-size: 11px; font-weight: 800; opacity: 0.8; }
 .rival-plate b { font-size: clamp(15px, 1.2vw, 19px); font-weight: 900; line-height: 1.1; }
+.rival-say {
+  position: absolute; left: 50%; bottom: 94%; z-index: 3; pointer-events: none; transform-origin: 50% 100%;
+  padding: 7px 13px; border-radius: 14px; background: #fffdf7; color: #121a2b; box-shadow: var(--hard);
+  font-size: clamp(13px, 1vw, 15px); font-weight: 800; white-space: nowrap;
+}
+.rival-say::after { content: ''; position: absolute; left: calc(50% + var(--tail, 0px)); top: 100%; margin-left: -7px; border: 7px solid transparent; border-top-color: #fffdf7; }
 .rival-meta { margin-top: 6px; display: flex; flex-direction: column; align-items: center; font-size: 11px; }
 .rival-meta i { font-style: normal; color: var(--gold); letter-spacing: 1px; }
 .rival-meta em { font-style: normal; color: #c9d2e2; }

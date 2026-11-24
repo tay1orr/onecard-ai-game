@@ -4,7 +4,7 @@ import { h, formatNumber, stars } from './dom.js';
 import { cut } from '../data/assets.js';
 import { lookOf } from '../data/looks.js';
 import { mapVars } from './look-apply.js';
-import { shufflePersonas } from '../data/characters.js';
+import { CHARACTERS, pickLine, shufflePersonas } from '../data/characters.js';
 import { loadMissionDashboard } from '../core/missions.js';
 import { tierProgress, isOpeningEventActive, openingEventDaysLeft, OPENING_EVENT, SEASON, PASS_REWARDS } from '../core/season.js';
 import { cosmeticById, nextCosmeticUnlock, DEFAULT_EQUIPPED } from '../core/cosmetics.js';
@@ -21,6 +21,23 @@ const ICON = {
 
 function soundIcon() { return settings.get().sound ? ICON.sound : ICON.mute; }
 
+// 무대 캐릭터를 누르면 그 캐릭터의 인사 한마디
+function say(button, line) {
+  if (!line) return;
+  button.querySelector('.rival-say')?.remove();
+  const bubble = h('span.rival-say', { 'aria-hidden': 'true' }, line);
+  button.append(bubble);
+  // 가장자리 캐릭터의 긴 말은 무대 밖으로 잘린다 — 무대 안으로 밀고, 꼬리는 그대로 캐릭터를 가리키게
+  gsap.set(bubble, { xPercent: -50 });
+  const box = bubble.getBoundingClientRect();
+  const stage = button.closest('.stage')?.getBoundingClientRect();
+  const shift = !stage ? 0 : box.left < stage.left + 8 ? stage.left + 8 - box.left : box.right > stage.right - 8 ? stage.right - 8 - box.right : 0;
+  bubble.style.setProperty('--tail', `${-shift}px`);
+  gsap.timeline({ onComplete: () => bubble.remove() })
+    .fromTo(bubble, { x: shift, scale: 0.6, opacity: 0 }, { x: shift, scale: 1, opacity: 1, duration: 0.25, ease: 'back.out(2)' })
+    .to(bubble, { opacity: 0, duration: 0.3 }, '+=2.1');
+}
+
 export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCollection, onPass, onMissions, onSettings, onAccount, onProfile, onToggleSound }) {
   const progress = ratingProgress(profile.points);
   const weights = matchmakingWeights(profile.points);
@@ -32,23 +49,30 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
   const avatar = cosmeticById(profile.equipped.avatar) || cosmeticById(DEFAULT_EQUIPPED.avatar);
   const eventOn = isOpeningEventActive();
 
-  // 캐릭터와 난이도는 따로 무작위 — 무대에는 캐릭터 넷을 섞어 세우고, 이 점수에서 만나는 난이도 확률은 따로 한 줄로(30만 점대면 ★5~★8)
+  // 캐릭터와 난이도는 따로 무작위 — 이 점수에서 만나는 난이도 확률은 따로 한 줄로(30만 점대면 ★5~★8)
+  // 무대 자리는 넓으면 다섯 · 좁으면 넷이고, 상대 열다섯이 몇 초마다 한 자리씩 번갈아 앉는다(11-25 「넷만 나오는 게 아깝다」)
   const odds = weights.map((chance, index) => ({ stars: index + 1, chance })).filter((level) => level.chance > 0);
-  const lineup = shufflePersonas(4);
-  const rivals = lineup.map((rival, index) => {
-    return h(`button.stage-rival.r${index}`, {
-      type: 'button', vars: { '--rival': rival.color, '--bob-delay': `${(index * 0.37) % 1.4}s`, '--lineup': lineup.length, '--lift': `${Math.round((1 - Math.abs((lineup.length > 1 ? (2 * index) / (lineup.length - 1) : 1) - 1)) * 16)}%` },
-      'aria-label': `${rival.title} ${rival.name}`,
-      onClick: (event) => {
-        play('select');
-        const target = event.currentTarget.querySelector('img');
-        gsap.fromTo(target, { y: 0 }, { y: -26, duration: 0.2, yoyo: true, repeat: 1, ease: 'power2.out' });
-      },
+  const order = shufflePersonas(CHARACTERS.length);
+  const lineupEl = h('div.stage-lineup');
+  let holdUntil = 0;
+  let hovering = false;
+  const seat = (rival, index, count) => h(`button.stage-rival.r${index}`, {
+    type: 'button', vars: { '--rival': rival.color, '--bob-delay': `${(index * 0.37) % 1.4}s`, '--lineup': count, '--lift': `${Math.round((1 - Math.abs((count > 1 ? (2 * index) / (count - 1) : 1) - 1)) * 16)}%` },
+    'aria-label': `${rival.title} ${rival.name}`,
+    dataset: { name: rival.name },
+    onPointerenter: (event) => { if (event.pointerType === 'mouse') hovering = true; },
+    onPointerleave: () => { hovering = false; },
+    onClick: (event) => {
+      play('select');
+      holdUntil = Date.now() + 2800;
+      const button = event.currentTarget;
+      gsap.fromTo(button, { y: 0 }, { y: -22, duration: 0.18, yoyo: true, repeat: 1, ease: 'power2.out' });
+      say(button, pickLine(rival, 'intro'));
     },
-    h('span.rival-spot'),
-    h('img.rival-art', { src: cut(rival.portrait), alt: '', draggable: 'false' }),
-    h('span.rival-plate', {}, h('small', {}, rival.title), h('b', {}, rival.name)));
-  });
+  },
+  h('span.rival-spot'),
+  h('img.rival-art', { src: cut(rival.portrait), alt: '', draggable: 'false' }),
+  h('span.rival-plate', {}, h('small', {}, rival.title), h('b', {}, rival.name)));
 
   const missionRows = missions.daily.missions.map((mission) => h(`li.mission-row${mission.completed ? '.is-done' : ''}`, {},
     h('div.mission-line', {}, h('b', {}, mission.title), h('small', {}, `+${mission.reward}점`)),
@@ -75,7 +99,7 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
           h('p.stage-sub', {}, '캐릭터와 난이도는 판마다 따로 정해져요'),
           h('p.stage-odds', { 'aria-label': `${formatNumber(profile.points)}점에서 만나는 난이도` }, h('small', {}, '만나는 난이도'), ...odds.map((level) => h('span', {}, h('i', {}, `★${level.stars}`), ` ${level.chance}%`))),
           eventOn ? h('p.event-ribbon', {}, h('b', {}, OPENING_EVENT.name), h('span', {}, `${openingEventDaysLeft()}일 남음, 경험치 2배에 보너스판이 더 자주 나와요`)) : null),
-        h('div.stage-lineup', {}, ...rivals)),
+        lineupEl),
       h('aside.lobby-actions', {},
         h('button.play-btn.is-primary', { type: 'button', onClick: () => onAi?.() },
           h('span.play-label', {}, h('b', {}, 'AI 대전'), h('small', {}, '끝나면 보상 상자 하나를 골라 열어요')),
@@ -99,6 +123,42 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
   Object.entries(mapVars(map)).forEach(([key, value]) => el.style.setProperty(key, value));
   el.dataset.map = map.painted || map.surface ? 'painted' : 'photo';
   host.replaceChildren(el);
+
+  // 자리 수는 무대 너비로(실습실 1920 은 다섯, 노트북 · 휴대폰은 넷)
+  const seatCount = el.querySelector('.stage').clientWidth >= 900 ? 5 : 4;
+  lineupEl.append(...order.slice(0, seatCount).map((rival, index) => seat(rival, index, seatCount)));
+  // 한 자리씩 바꿔 앉기 — 아직 무대에 없던 캐릭터를 차례로. 마우스를 올렸거나 말풍선이 떠 있으면 기다린다
+  const reduced = settings.reduced();
+  let next = seatCount;
+  let lastSeat = -1;
+  let swapping = false;
+  const timer = setInterval(() => {
+    if (!el.isConnected) { clearInterval(timer); return; }
+    if (swapping || document.hidden || hovering || Date.now() < holdUntil) return;
+    const seated = new Set([...lineupEl.children].map((button) => button.dataset.name));
+    let incoming = null;
+    for (let step = 0; step < order.length && !incoming; step += 1, next += 1) {
+      const candidate = order[next % order.length];
+      if (!seated.has(candidate.name)) incoming = candidate;
+    }
+    if (!incoming) return;
+    let index = Math.floor(Math.random() * seatCount);
+    if (index === lastSeat) index = (index + 1) % seatCount;
+    lastSeat = index;
+    const leaving = lineupEl.children[index];
+    const arriving = seat(incoming, index, seatCount);
+    const art = new Image();
+    art.src = cut(incoming.portrait);
+    swapping = true;
+    art.decode().catch(() => {}).then(() => {
+      if (!leaving.isConnected) { swapping = false; return; }
+      gsap.timeline({ onComplete: () => { swapping = false; } })
+        .to(leaving, reduced ? { opacity: 0, duration: 0.35 } : { yPercent: 18, opacity: 0, duration: 0.3, ease: 'power2.in' })
+        .add(() => leaving.replaceWith(arriving))
+        .fromTo(arriving, reduced ? { opacity: 0 } : { yPercent: -30, opacity: 0 }, reduced ? { opacity: 1, duration: 0.45 } : { yPercent: 0, opacity: 1, duration: 0.6, ease: 'bounce.out' });
+    });
+  }, reduced ? 5200 : 3400);
+
   if (!settings.reduced()) {
     gsap.from(el.querySelectorAll('.stage-rival'), { y: 60, opacity: 0, duration: 0.6, stagger: 0.07, ease: 'back.out(1.6)' });
     gsap.from(el.querySelector('.logo'), { y: -20, opacity: 0, duration: 0.5, ease: 'power3.out' });
