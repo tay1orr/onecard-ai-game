@@ -138,6 +138,10 @@ assert.equal(desktop16[0].x, -desktop16[15].x, '부채꼴은 가운데를 기준
 const mobile5 = fanLayout(5, 366, 66, { compact: true });
 assert.ok(mobile5[0].r < 0 && mobile5[4].r > 0 && mobile5[2].r === 0, '모바일 5장은 왼쪽 · 가운데 · 오른쪽으로 펼쳐져야 함');
 assert.ok(mobile5[2].y <= mobile5[0].y, '가운데 카드가 가장 높아야 함');
+// 휴대폰 8장(너비 360 휴대폰의 손패 폭 338 · 카드 62) — 아래 가운데를 축으로 기운 끝 카드의 위 모서리까지 폭 안에(11-24 끝 카드가 화면 밖으로 잘림)
+const mobile8 = fanLayout(8, 338, 62, { compact: true });
+const reach = (pos) => { const angle = (Math.abs(pos.r) * Math.PI) / 180; return Math.abs(pos.x) + 31 * Math.cos(angle) + 62 * 1.4 * Math.sin(angle); };
+assert.ok(mobile8.every((pos) => reach(pos) <= 338 / 2), `휴대폰 8장은 기울어진 모서리까지 손패 폭 안에 들어와야 함(끝 카드 ${Math.round(reach(mobile8[7]))} / ${338 / 2})`);
 assert.deepEqual(sortHand([card('hearts', 'K'), card('spades', '2'), { id: 'joker-1', suit: 'joker', rank: 'JOKER' }, card('hearts', 'A')]).map((item) => item.id), ['spades-2', 'hearts-A', 'hearts-K', 'joker-1'], '손패는 무늬 · 숫자 차례로 정렬하고 조커는 끝에 둬야 함');
 
 assert.equal(chooseAiReaction('player-win', 'hard', () => 0.99), 'gg', '게임 종료에는 AI가 반드시 GG로 반응해야 함');

@@ -13,9 +13,6 @@
   background-blend-mode: multiply, normal;
   color: var(--ink, #1b1d24);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 5px 12px rgba(0, 0, 0, 0.3);
-  /* 그림 카드 · 에이스 그림은 종이와 곱하기로 섞인다 — 섞는 범위를 카드 안으로 늘 고정해 둔다(11-24 휴대폰에서 Q · J 그림이 깜빡임).
-     못 내는 카드의 흐림 필터 · 효과 조각이 붙었다 떨어질 때마다 섞는 범위가 바뀌어 다시 그려지며 휴대폰이 한두 장면을 놓쳤다. 보이는 모습은 같다 */
-  isolation: isolate;
 }
 .card.face.is-red { color: var(--red, #b8232f); }
 .card .suit { display: block; fill: currentColor; }
@@ -52,9 +49,12 @@
 .card.r-A .ace-art { opacity: var(--ace-on, 0); }
 .card.r-A .ace-suit { width: calc(64% - var(--ace-on, 0) * 42%); top: calc(50% + var(--ace-on, 0) * 40%); }
 
-/* 그림카드 — 실제 옛 카드 · 명화 · 사진 한 장을 판에 넣는다 */
+/* 그림카드 — 실제 옛 카드 · 명화 · 사진 한 장을 판에 넣는다
+   액자(.court)는 그림을 자르지 않는다(overflow 없음) — 카카오톡 안 브라우저(안드로이드 WebView)는 둥글게 자르는 틀 안의 곱하기 섞기 그림을
+   멈춘 동안 그리지 않아 K · Q · J 가 비고 턴이 바뀔 때만 잠깐 보였다(11-24). 같은 섞기를 카드 한 겹 안에서만 쓰는 조커는 멀쩡했다.
+   그림은 액자 크기에 꼭 맞게 채워지므로(inset 0 · cover) 자르지 않아도 넘치지 않고, 달라지는 것은 모서리 2~3px 둥글림뿐 */
 .card .court {
-  position: absolute; inset: -4% -9% -4%; border-radius: calc(var(--cw) * 0.04); overflow: hidden;
+  position: absolute; inset: -4% -9% -4%; border-radius: calc(var(--cw) * 0.04);
   box-shadow: inset 0 0 0 1.2px color-mix(in srgb, currentColor 38%, transparent);
 }
 .card .court-art { position: absolute; inset: 0; background-position: center; background-size: var(--court-fit, cover); background-repeat: no-repeat; mix-blend-mode: var(--court-blend, multiply); filter: var(--court-fx, none); }
