@@ -3,6 +3,7 @@
 import { h } from './dom.js';
 import { backArt, court, cut, paint, photo, scene, tex } from '../data/assets.js';
 import { lookOf } from '../data/looks.js';
+import { hasGptArt } from '../data/gpt-art.js';
 import { cosmeticById } from '../core/cosmetics.js';
 
 const url = (value) => (value ? `url("${value}")` : 'none');
@@ -35,7 +36,9 @@ export function mapVars(map, { small = false } = {}) {
   const vars = {};
   if (map.painted) {
     vars['--scene-photo'] = url(paint(map.painted, small ? 's' : ''));
-    vars['--scene-photo-tall'] = url(paint(map.painted, small ? 's' : 'm'));
+    // 휴대폰 세로 화면 — 선생님이 GPT 로 따로 그린 세로 판(tall-<판>)이 있으면 그것, 없으면 가로 그림의 가운데를 자른 것(-m)
+    const tall = `tall-${map.painted}`;
+    vars['--scene-photo-tall'] = url(small ? paint(map.painted, 's') : hasGptArt(tall) ? paint(tall) : paint(map.painted, 'm'));
   } else if (map.scene) {
     vars['--scene-photo'] = url(scene(map.scene, small ? 's' : ''));
     vars['--scene-photo-tall'] = url(scene(map.scene, small ? 's' : 'm'));

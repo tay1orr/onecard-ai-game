@@ -192,6 +192,7 @@ const gptUsed = new Set([
   ...COSMETICS.map((item) => item.portrait),
   ...COSMETICS.filter((item) => LOOKS_BY_SLOT[item.slot]).map((item) => gptKeyOf(item.slot, LOOKS_BY_SLOT[item.slot][item.look])),
   ...Object.values(EFFECTS).flatMap((effect) => [...effect.sprites, ...(effect.petals || [])]),
+  ...Object.values(MAPS).filter((look) => look.painted).map((look) => `tall-${look.painted}`),
   ...Object.values(VICTORIES).flatMap((look) => [look.hero, (look.backdrop?.paint || '').replace(/^gpt-/, ''), ...(look.sprites || []), ...(look.petals || []), ...(look.sweep || [])]),
 ]);
 const unusedGpt = GPT_ART.filter((key) => !gptUsed.has(key));

@@ -18,6 +18,8 @@
 
 .stage { position: relative; min-height: 0; border-radius: 30px; overflow: hidden; background: var(--scene-base, #0c1322); }
 /* 무대 배경 = 장착한 맵 사진(시즌 1 그림이면 그 그림). 글자 쪽은 어둡게 */
+/* 휴대폰 세로 화면에서는 게임판처럼 세로 그림(세로 판이 있으면 그것) */
+@media (max-aspect-ratio: 4/5) { .lobby .stage-scene { background-image: var(--scene-photo-tall, var(--scene-photo, none)); } }
 .stage-scene { position: absolute; inset: -2%; background: var(--scene-photo, none) center / cover no-repeat; filter: brightness(var(--scene-bright, 0.7)) saturate(var(--scene-sat, 1)); }
 .stage-scene::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8, 11, 18, 0.78) 0%, rgba(8, 11, 18, 0.25) 42%, rgba(8, 11, 18, 0.1) 70%, rgba(8, 11, 18, 0.5) 100%), var(--scene-light, none); }
 /* 무대 앞 탁자 가장자리 — 맵의 탁자 재질(시즌 1 그림 맵이면 숨김) */

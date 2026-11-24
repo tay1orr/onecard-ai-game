@@ -17,6 +17,8 @@ const KINDS = { 상대: 'rival', 나: 'me', 울음: 'cry', 승리: 'win', 판: '
 const FX_SHEETS = { 1: 'rose', 2: 'white', 3: 'pink', 4: 'lily', 5: 'cherry', 6: 'heart', 7: 'macaron', 8: 'teddy', 9: 'dubai', 10: 'jewel',
   // 11~18 은 11-24 저녁 둘째 묶음
   11: 'winter', 12: 'millefeuille', 13: 'versailles', 14: 'million', 15: 'moon', 16: 'pearl', 17: 'montblanc', 18: 'christmas' };
+// 세로판(휴대폰 세로 화면용 판, 11-24) — 세로판NN 은 GPT 판NN, 세로판-<이름> 은 시즌 1 그림 판 → paint/tall-<그 판 그림>.webp
+const TALL_S1 = { 핑크구름: 'pink-cloud-table', 달토끼: 'moon-rabbit-table', 딸기퍼레이드: 'strawberry-parade-table', 장미무도회: 'rose-ballroom-table', 리얼로즈: 'real-rose-garden-table', 네온심해: 'neon-deepsea-table', 태양신전: 'sun-temple-table' };
 // 그림 속 캐릭터(11-24 선생님이 넣은 22장을 하나씩 보고 적음) → cut/char-<이름>.webp
 const CHARACTER_FILES = {
   상대1: 'choonsik', 상대2: 'chiikawa', 상대3: 'hachiware', 상대4: 'usagi', 상대5: 'shinchan', 상대6: 'sakura', 상대7: 'rakko', 상대8: 'sailormoon',
@@ -34,6 +36,13 @@ fs.mkdirSync(SRC, { recursive: true });
 const files = fs.readdirSync(SRC, { withFileTypes: true })
   .filter((entry) => entry.isFile() && /\.(png|jpe?g|webp)$/i.test(entry.name))
   .map((entry) => {
+    const tall = entry.name.match(/^세로판\s*(?:0*(\d+)|-([^.]+))/);
+    if (tall) {
+      const target = tall[1] ? `gpt-map-${String(Number(tall[1])).padStart(2, '0')}` : TALL_S1[tall[2].trim()];
+      if (!target) return null;
+      const full = path.join(SRC, entry.name);
+      return { kind: 'tall', number: 0, target, label: `세로판 ${target}`, file: full, time: fs.statSync(full).mtimeMs, name: entry.name };
+    }
     const match = entry.name.match(/^(상대|나|울음|승리|판|뒷면|앞면|효과|배경)\s*0*(\d+)/);
     if (!match) return null;
     const kind = KINDS[match[1]];
@@ -45,7 +54,7 @@ const files = fs.readdirSync(SRC, { withFileTypes: true })
   .filter(Boolean);
 const latest = new Map();
 files.forEach((entry) => {
-  const key = `${entry.kind}-${entry.number}`;
+  const key = entry.kind === 'tall' ? `tall-${entry.target}` : `${entry.kind}-${entry.number}`;
   if (!latest.has(key) || latest.get(key).time < entry.time) latest.set(key, entry);
 });
 const skipped = fs.readdirSync(SRC).filter((name) => /\.(png|jpe?g|webp)$/i.test(name) && !files.some((entry) => entry.name === name));
@@ -106,6 +115,11 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
     await sharp(entry.file).resize(1600, 1068, { fit: 'cover' }).webp({ quality: 82 }).toFile(path.join(OUT, 'paint', `${key}.webp`));
     await sharp(entry.file).resize(384, 256, { fit: 'cover' }).webp({ quality: 78 }).toFile(path.join(OUT, 'paint', `${key}-s.webp`));
     made.push(`scene-${pad(entry.number)}`);
+  } else if (entry.kind === 'tall') {
+    // 휴대폰 세로 화면용 판 — 화면을 덮는 크기 하나. look-apply 가 tall-<판> 이 있으면 세로 화면에서 이 그림을 쓴다
+    const key = `tall-${entry.target}`;
+    await sharp(entry.file).resize(1024, 1536, { fit: 'cover' }).webp({ quality: 80 }).toFile(path.join(OUT, 'paint', `${key}.webp`));
+    made.push(key);
   } else if (entry.kind === 'fx') {
     // 스티커 판 — 3 × 2 칸을 하나씩 잘라 배경을 지우고(투명하지 않으면) 가장자리를 다듬는다
     const theme = FX_SHEETS[entry.number] || `sheet${entry.number}`;
@@ -141,6 +155,7 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
 // 목록은 public 에 실제로 있는 그림으로 — 원본 폴더(gpt그림/, 저장소에 안 올림)가 없는 PC 에서 돌려도 넣어 둔 그림이 빠지지 않게
 const list = [
   ...fs.readdirSync(path.join(OUT, 'paint')).map((name) => name.match(/^gpt-((?:map|back|face|scene)-\d+)\.webp$/)?.[1]),
+  ...fs.readdirSync(path.join(OUT, 'paint')).map((name) => name.match(/^(tall-[a-z0-9-]+)\.webp$/)?.[1]),
   ...fs.readdirSync(path.join(OUT, 'cut')).map((name) => name.match(/^((?:char|fx)-[a-z0-9-]+?)\.webp$/)?.[1]).filter((key) => key && !key.endsWith('-s')),
 ].filter(Boolean).sort();
 fs.writeFileSync(path.join(root, 'src/data/gpt-art.js'), `// GPT 로 만든 그림 목록 — scripts/build-gpt.mjs 가 gpt그림/ 을 줄여 public 에 넣고 이 파일을 다시 쓴다(손으로 고치지 않음)\nexport const GPT_ART = Object.freeze(${JSON.stringify(list)});\nexport const hasGptArt = (key) => GPT_ART.includes(key);\n`);
