@@ -170,37 +170,40 @@ export const FACES = {
 // 세기는 게임이 정한다: 보통 카드는 작게 · 공격 · 건너뛰기 · 무늬 바꾸기 · 한 장 남음 · 연속으로 낼 때는 조금 크게 · 조커 · 큰 공격은 크게
 // moves 돌려 쓰는 동작(바로 앞과 같은 동작은 다시 안 나옴): fan 카드 가장자리에서 부채꼴로 · ring 카드 둘레를 돎 · rise 위로 떠오름
 //   · breeze 카드 위아래로 바람처럼 지나감 · settle 맨 위 카드 구석에 내려앉아 다음 카드가 덮을 때까지 남음 · sweep 빛 리본이 카드 위로 지나감
-// tone 카드를 놓을 때 둘레에 번지는 빛 색 · petals 함께 날리는 꽃잎(장미 꽃잎 사진) · petalTint 꽃잎을 그 꽃 색으로 · band 빛 리본 사진
+// tone 카드를 놓을 때 둘레에 번지는 빛 색 · petals 함께 날리는 꽃잎 · 작은 조각 · petalTint 장미 꽃잎 사진을 그 꽃 색으로 · band 빛 리본 사진
+// fx-<주제>-<칸> 은 선생님이 GPT 로 그린 효과 조각(스티커 판 10장 · 60조각, 11-24) — 맵 · 카드와 같은 그림 화풍
 const E = (o) => ({ sprites: [], moves: ['fan'], tone: '#ffe6a8', petals: null, petalTint: null, band: null, ...o });
-const FX_PETALS = ['rose-petal-1', 'rose-petal-2'];
-const PINK_PETAL = 'saturate(0.38) brightness(1.7) hue-rotate(-10deg)';
 
 export const EFFECTS = {
   classic: E({ sprites: ['poker-chips', 'gold-coins'], moves: ['fan', 'settle'], tone: '#ffd66b' }),
   cloud: E({ sprites: ['soap-bubble', 'balloon-pink'], moves: ['rise', 'fan'], tone: '#ffc6e6' }),
   aurora: E({ band: 'aurora', moves: ['sweep'], tone: '#9ef0c8' }),
-  'rose-conservatory': E({ sprites: ['rose-pink'], moves: ['breeze', 'ring', 'fan'], petals: FX_PETALS, tone: '#ff9db0' }),
+  'rose-conservatory': E({ sprites: ['fx-pink-1', 'fx-pink-2'], moves: ['breeze', 'ring', 'fan'], petals: ['fx-pink-3', 'fx-pink-4', 'fx-pink-5', 'fx-pink-6'], tone: '#ff9db0' }),
   arcade: E({ sprites: ['gamepad', 'joystick'], moves: ['fan', 'settle'], tone: '#5cf2ff' }),
-  dream: E({ sprites: ['crown', 'diamond', 'pearls'], moves: ['settle', 'fan', 'ring'], tone: '#d9c2ff' }),
+  dream: E({ sprites: ['fx-jewel-1', 'fx-jewel-4', 'fx-white-6'], moves: ['settle', 'fan', 'ring'], petals: ['fx-jewel-6'], tone: '#d9c2ff' }),
   'pink-cloud': E({ sprites: ['balloon-pink', 'soap-bubble'], moves: ['rise', 'fan'], tone: '#ff9ccc' }),
   'moon-rabbit': E({ sprites: ['moon', 'rabbit'], moves: ['ring'], tone: '#cdd8ff' }),
   'strawberry-parade': E({ sprites: ['strawberry', 'gift-box'], moves: ['fan', 'settle'], tone: '#ff8fa3' }),
-  'rose-ballroom': E({ sprites: ['rose-red'], moves: ['ring', 'breeze', 'settle'], petals: FX_PETALS, tone: '#f1cf8b' }),
-  'real-rose': E({ sprites: ['rose-bouquet'], moves: ['settle', 'breeze'], petals: FX_PETALS, tone: '#f4c2a8' }),
+  'rose-ballroom': E({ sprites: ['fx-rose-1'], moves: ['ring', 'breeze', 'settle'], petals: ['fx-rose-3', 'fx-rose-4', 'fx-rose-5'], tone: '#f1cf8b' }),
+  'real-rose': E({ sprites: ['rose-bouquet'], moves: ['settle', 'breeze'], petals: ['fx-pink-3', 'fx-pink-5', 'fx-rose-3'], tone: '#f4c2a8' }),
   'neon-deepsea': E({ sprites: ['jellyfish', 'soap-bubble'], moves: ['rise', 'ring'], tone: '#76efff' }),
   'sun-temple': E({ sprites: ['gold-coins', 'diamond'], moves: ['fan', 'settle'], tone: '#ffd46c' }),
   // 시즌 2
-  'single-rose': E({ sprites: ['rose-red'], moves: ['settle', 'fan'], petals: FX_PETALS, tone: '#ff5d73' }),
-  'petal-wind': E({ moves: ['breeze'], petals: ['rose-petal-1', 'rose-petal-2', 'rose-petal-3'], tone: '#ff7d8f' }),
-  'white-rose': E({ sprites: ['rose-white'], moves: ['ring', 'settle', 'breeze'], petals: FX_PETALS, petalTint: 'grayscale(1) brightness(3) sepia(0.12)', tone: '#f6f1e6' }),
+  'single-rose': E({ sprites: ['fx-rose-1', 'fx-rose-2'], moves: ['settle', 'fan', 'breeze'], petals: ['fx-rose-3', 'fx-rose-4', 'fx-rose-5', 'fx-rose-6'], tone: '#ff5d73' }),
+  'petal-wind': E({ moves: ['breeze'], petals: ['fx-rose-3', 'fx-pink-3', 'fx-rose-4', 'fx-pink-5', 'fx-rose-5'], tone: '#ff7d8f' }),
+  'white-rose': E({ sprites: ['fx-white-1', 'fx-white-2'], moves: ['ring', 'settle', 'breeze'], petals: ['fx-white-3', 'fx-white-4', 'fx-white-5', 'fx-white-6'], tone: '#f6f1e6' }),
   'black-rose': E({ sprites: ['rose-black'], moves: ['settle', 'ring'], tone: '#b08aa0' }),
-  'lily-drop': E({ sprites: ['lily'], moves: ['settle', 'rise'], petals: FX_PETALS, petalTint: PINK_PETAL, tone: '#ffb3c7' }),
+  'lily-drop': E({ sprites: ['fx-lily-1', 'fx-lily-2'], moves: ['settle', 'rise', 'fan'], petals: ['fx-lily-3', 'fx-lily-4', 'fx-lily-5', 'fx-lily-6'], tone: '#ffb3c7' }),
   'lotus-float': E({ sprites: ['lotus', 'water-lily'], moves: ['rise', 'ring'], tone: '#ff9fd1' }),
-  'cherry-breeze': E({ sprites: ['cherry-branch'], moves: ['breeze', 'settle'], petals: FX_PETALS, petalTint: PINK_PETAL, tone: '#ffb7c8' }),
-  'box-macarons': E({ sprites: ['macarons', 'macaron-tower'], moves: ['fan', 'settle'], tone: '#ffb3c7' }),
+  'cherry-breeze': E({ sprites: ['fx-cherry-1', 'fx-cherry-2'], moves: ['breeze', 'settle', 'fan'], petals: ['fx-cherry-3', 'fx-cherry-4', 'fx-cherry-5', 'fx-cherry-6'], tone: '#ffb7c8' }),
+  'box-macarons': E({ sprites: ['fx-macaron-1', 'fx-macaron-2', 'fx-macaron-3', 'fx-macaron-4'], moves: ['fan', 'settle', 'rise'], petals: ['fx-macaron-5', 'fx-macaron-6'], tone: '#ffb3c7' }),
   'box-flowers': E({ sprites: ['carnation', 'pansy', 'camomile', 'poppy'], moves: ['fan', 'rise', 'settle'], tone: '#ffcf8a' }),
-  'box-teddy': E({ sprites: ['teddy-red-bow'], moves: ['settle'], tone: '#e8b48a' }),
-  'rose-heart': E({ sprites: ['bouquet-heart'], moves: ['settle', 'fan'], petals: FX_PETALS, tone: '#ff8fb1' }),
+  'box-teddy': E({ sprites: ['fx-teddy-1', 'fx-teddy-3', 'fx-teddy-4'], moves: ['settle', 'fan', 'rise'], petals: ['fx-teddy-2', 'fx-teddy-5', 'fx-teddy-6'], tone: '#e8b48a' }),
+  'rose-heart': E({ sprites: ['fx-heart-1', 'fx-heart-2', 'fx-heart-3'], moves: ['settle', 'fan', 'rise'], petals: ['fx-heart-4', 'fx-heart-5', 'fx-heart-6'], tone: '#ff8fb1' }),
+  // 선생님 GPT 세트에 새로 붙인 효과(11-24) — 두바이 쫀득쿠키 · 루비 왕관 · 자수정
+  dubai: E({ sprites: ['fx-dubai-2', 'fx-dubai-1'], moves: ['settle', 'fan', 'rise'], petals: ['fx-dubai-3', 'fx-dubai-4', 'fx-dubai-5', 'fx-dubai-6'], tone: '#c2d27a' }),
+  'ruby-crown': E({ sprites: ['fx-jewel-2', 'fx-jewel-1'], moves: ['settle', 'ring', 'fan'], petals: ['fx-jewel-4', 'fx-jewel-5', 'fx-jewel-6'], tone: '#ff5d73' }),
+  amethyst: E({ sprites: ['fx-jewel-3', 'fx-jewel-4'], moves: ['ring', 'settle', 'fan'], petals: ['fx-jewel-5', 'fx-jewel-6'], tone: '#b9a2ff' }),
 };
 
 // ── 승리 연출(src/ui/victory.js): 탁자 → 우는 상대 → 뛰어오르는 내 캐릭터 → 장면. 아이템은 장면과 붙는 방식을 정한다(11-24 「오브젝트 하나 떨구고 배경 · 글씨만이 다가 아님」)
@@ -209,39 +212,40 @@ export const EFFECTS = {
 // ambient 분위기(petals 꽃잎이 날림 · cannons 색종이 대포 · fireworks 불꽃 · bubbles 비눗방울 · sparkles 반짝임) · petals 날리는 꽃잎
 // petalTint 장미 꽃잎 사진을 그 꽃 색으로 물들이는 필터 · sweep 꽃바람 전환에 쓰는 실물(없으면 꽃밭 꽃 + 꽃잎) · lift 뒤 소품을 머리보다 더 높이(크기 비율)
 const V = (o) => ({ backdrop: null, transition: null, hero: 'trophy', heroSize: 1, anchor: 'beside', sprites: [], ambient: null, petals: null, petalTint: null, sweep: null, lift: 0, accent: '#f2b544', ...o });
-const ROSE_PETALS = ['rose-petal-1', 'rose-petal-2', 'rose-petal-3'];
+const ROSE_PETALS = ['fx-rose-3', 'fx-rose-4', 'fx-rose-5'];
+const PINK_PETALS = ['fx-pink-3', 'fx-pink-5', 'fx-heart-5'];
 
 export const VICTORIES = {
   classic: V({ transition: 'confetti', hero: 'trophy', anchor: 'beside', ambient: 'sparkles' }),
   cloud: V({ transition: 'flash', hero: 'balloon-pink', anchor: 'sky', sprites: ['balloon-pink'], ambient: 'bubbles', accent: '#ffc6e6' }),
   fireworks: V({ backdrop: { scene: 'fireworks-1' }, transition: 'flash', hero: 'trophy', anchor: 'beside', ambient: 'fireworks', fireworks: ['fireworks-1', 'fireworks-2', 'fireworks-3'], accent: '#ffcf5c' }),
   confetti: V({ transition: 'confetti', hero: 'gift-box', heroSize: 1.1, anchor: 'beside', sprites: ['confetti', 'gift-box'], ambient: 'cannons', accent: '#ff5c8a' }),
-  'rose-conservatory': V({ backdrop: { scene: 'glasshouse' }, transition: 'petals', hero: 'rose-bouquet', heroSize: 1.1, anchor: 'feet', sprites: ['rose-pink', 'rose-red'], ambient: 'petals', petals: ROSE_PETALS, accent: '#ff9db0' }),
+  'rose-conservatory': V({ backdrop: { scene: 'glasshouse' }, transition: 'petals', hero: 'rose-bouquet', heroSize: 1.1, anchor: 'feet', sprites: ['fx-pink-1', 'fx-rose-1'], ambient: 'petals', petals: PINK_PETALS, accent: '#ff9db0' }),
   celestial: V({ backdrop: { scene: 'crab-nebula' }, transition: 'flash', hero: 'gold-star', heroSize: 0.6, anchor: 'behind', lift: 0.12, ambient: 'sparkles', accent: '#b8c8ff' }),
   'neon-concert': V({ backdrop: { scene: 'concert-lights' }, transition: 'flash', hero: 'trophy', anchor: 'beside', sprites: ['confetti'], ambient: 'cannons', accent: '#ff6bd6' }),
-  cherry: V({ backdrop: { scene: 'cherry-park' }, transition: 'pan', hero: 'cherry-branch', anchor: 'frame', ambient: 'petals', petals: ['rose-petal-2', 'rose-petal-1'], petalTint: PINK_PETAL, accent: '#ffb7c8' }),
+  cherry: V({ backdrop: { scene: 'cherry-park' }, transition: 'pan', hero: 'cherry-branch', anchor: 'frame', ambient: 'petals', petals: ['fx-cherry-3', 'fx-cherry-4', 'fx-cherry-5'], accent: '#ffb7c8' }),
   arcade: V({ transition: 'confetti', hero: 'trophy', anchor: 'beside', sprites: ['gamepad', 'joystick'], ambient: 'cannons', accent: '#5cf2ff', word: 'HIGH SCORE' }),
   dream: V({ backdrop: { scene: 'fairy-castle' }, transition: 'pan', hero: 'crown', anchor: 'head', ambient: 'sparkles', accent: '#d9c2ff' }),
   'pink-cloud': V({ backdrop: { paint: 'pink-cloud-table' }, transition: 'pan', hero: 'balloon-pink', anchor: 'sky', sprites: ['balloon-pink'], ambient: 'bubbles', accent: '#ff9ccc' }),
   'moon-rabbit': V({ backdrop: { paint: 'moon-rabbit-table' }, transition: 'pan', hero: 'moon', heroSize: 1.05, anchor: 'behind', ambient: 'sparkles', accent: '#cdd8ff' }),
   'strawberry-parade': V({ backdrop: { paint: 'strawberry-parade-table' }, transition: 'confetti', hero: 'strawberry-cake', heroSize: 1.1, anchor: 'beside', sprites: ['strawberry', 'gift-box'], ambient: 'cannons', accent: '#ff8fa3' }),
-  'rose-ballroom': V({ backdrop: { paint: 'rose-ballroom-table' }, transition: 'petals', hero: 'crown', anchor: 'head', ambient: 'petals', petals: ROSE_PETALS, sweep: ['rose-red', 'rose-petal-1', 'rose-pink', 'rose-petal-2'], accent: '#f1cf8b' }),
-  'real-rose': V({ backdrop: { photo: 'rose-1' }, transition: 'petals', hero: 'rose-bouquet', heroSize: 1.15, anchor: 'feet', sprites: ['rose-pink', 'rose-red'], ambient: 'petals', petals: ROSE_PETALS, accent: '#f4c2a8' }),
+  'rose-ballroom': V({ backdrop: { paint: 'rose-ballroom-table' }, transition: 'petals', hero: 'crown', anchor: 'head', ambient: 'petals', petals: ROSE_PETALS, sweep: ['fx-rose-1', 'fx-rose-3', 'fx-pink-1', 'fx-rose-4'], accent: '#f1cf8b' }),
+  'real-rose': V({ backdrop: { photo: 'rose-1' }, transition: 'petals', hero: 'rose-bouquet', heroSize: 1.15, anchor: 'feet', sprites: ['fx-pink-1', 'fx-rose-1'], ambient: 'petals', petals: PINK_PETALS, accent: '#f4c2a8' }),
   'neon-deepsea': V({ backdrop: { paint: 'neon-deepsea-table' }, transition: 'pan', hero: 'whale', heroSize: 1.2, anchor: 'behind', lift: 0.42, ambient: 'bubbles', accent: '#76efff' }),
   'sun-temple': V({ backdrop: { paint: 'sun-temple-table' }, transition: 'flash', hero: 'sun', heroSize: 1.1, anchor: 'behind', ambient: 'sparkles', accent: '#ffd46c' }),
   // 시즌 2
   champion: V({ backdrop: { scene: 'fireworks-3' }, transition: 'flash', hero: 'trophy', heroSize: 1.15, anchor: 'beside', ambient: 'fireworks', fireworks: ['fireworks-3', 'fireworks-1'], accent: '#f2b544' }),
   legend: V({ backdrop: { scene: 'aurora' }, transition: 'pan', hero: 'crown', anchor: 'head', ambient: 'sparkles', accent: '#9ef0c8' }),
-  'curtain-call': V({ backdrop: { scene: 'stage-curtain' }, transition: 'flash', hero: 'rose-bouquet', heroSize: 1.1, anchor: 'feet', sprites: ['rose-red', 'rose-pink'], ambient: 'petals', petals: ROSE_PETALS, accent: '#ffcf7a' }),
-  'rose-fireworks': V({ backdrop: { scene: 'fireworks-2' }, transition: 'flash', hero: 'rose-red', anchor: 'feet', sprites: ['rose-red', 'rose-pink'], ambient: 'fireworks', fireworks: ['fireworks-2', 'fireworks-1'], accent: '#ff5d73' }),
-  'million-roses': V({ backdrop: { scene: 'rose-field' }, transition: 'petals', hero: 'rose-bouquet', heroSize: 1.2, anchor: 'feet', sprites: ['rose-red', 'rose-pink', 'rose-white'], ambient: 'petals', petals: ROSE_PETALS, accent: '#ff5d73' }),
+  'curtain-call': V({ backdrop: { scene: 'stage-curtain' }, transition: 'flash', hero: 'rose-bouquet', heroSize: 1.1, anchor: 'feet', sprites: ['fx-rose-1', 'fx-pink-1'], ambient: 'petals', petals: ROSE_PETALS, accent: '#ffcf7a' }),
+  'rose-fireworks': V({ backdrop: { scene: 'fireworks-2' }, transition: 'flash', hero: 'fx-rose-1', anchor: 'feet', sprites: ['fx-rose-1', 'fx-pink-1'], ambient: 'fireworks', fireworks: ['fireworks-2', 'fireworks-1'], accent: '#ff5d73' }),
+  'million-roses': V({ backdrop: { scene: 'rose-field' }, transition: 'petals', hero: 'rose-bouquet', heroSize: 1.2, anchor: 'feet', sprites: ['fx-rose-1', 'fx-pink-1', 'fx-white-1'], ambient: 'petals', petals: ROSE_PETALS, accent: '#ff5d73' }),
   versailles: V({ backdrop: { scene: 'ballroom-mirrors' }, transition: 'pan', hero: 'crown', anchor: 'head', ambient: 'sparkles', accent: '#f3cf7a' }),
-  lily: V({ backdrop: { scene: 'glasshouse' }, transition: 'petals', hero: 'lily', heroSize: 1.1, anchor: 'feet', sprites: ['lily'], ambient: 'petals', petals: ['rose-petal-2', 'rose-petal-1'], petalTint: PINK_PETAL, accent: '#ffb3c7' }),
-  tulip: V({ backdrop: { scene: 'tulip-field' }, transition: 'pan', hero: 'tulip-bunch', heroSize: 1.1, anchor: 'feet', sprites: ['tulips-white', 'tulip-bunch'], ambient: 'petals', petals: ['rose-petal-2', 'rose-petal-1'], petalTint: 'saturate(0.7) brightness(1.3)', accent: '#ff8fa3' }),
+  lily: V({ backdrop: { scene: 'glasshouse' }, transition: 'petals', hero: 'fx-lily-1', heroSize: 1.1, anchor: 'feet', sprites: ['fx-lily-1', 'fx-lily-2'], ambient: 'petals', petals: ['fx-lily-3', 'fx-lily-5', 'fx-lily-4'], accent: '#ffb3c7' }),
+  tulip: V({ backdrop: { scene: 'tulip-field' }, transition: 'pan', hero: 'tulip-bunch', heroSize: 1.1, anchor: 'feet', sprites: ['tulips-white', 'tulip-bunch'], ambient: 'petals', petals: PINK_PETALS, accent: '#ff8fa3' }),
   lotus: V({ backdrop: { scene: 'lotus-pond' }, transition: 'pan', hero: 'lotus', heroSize: 1.1, anchor: 'feet', sprites: ['water-lily'], ambient: 'bubbles', accent: '#ff9fd1' }),
   lavender: V({ backdrop: { scene: 'lavender-field' }, transition: 'pan', hero: 'lilac', heroSize: 1.1, anchor: 'feet', sprites: ['lilac'], ambient: 'petals', petals: ['rose-petal-2'], petalTint: 'hue-rotate(255deg) saturate(0.5) brightness(1.45)', accent: '#c4a8ff' }),
   sunflower: V({ backdrop: { scene: 'sunflower-field' }, transition: 'pan', hero: 'sunflower', heroSize: 1.1, anchor: 'feet', sprites: ['sunflower'], ambient: 'sparkles', accent: '#ffd24a' }),
-  'box-wedding': V({ backdrop: { scene: 'patisserie' }, transition: 'petals', hero: 'wedding-cake', heroSize: 1.15, anchor: 'beside', ambient: 'petals', petals: ROSE_PETALS, sweep: ['rose-pink', 'rose-petal-1', 'rose-white', 'rose-petal-2'], accent: '#ffd1dc' }),
+  'box-wedding': V({ backdrop: { scene: 'patisserie' }, transition: 'petals', hero: 'wedding-cake', heroSize: 1.15, anchor: 'beside', ambient: 'petals', petals: PINK_PETALS, sweep: ['fx-pink-1', 'fx-pink-3', 'fx-white-1', 'fx-heart-5'], accent: '#ffd1dc' }),
   'box-teddy': V({ transition: 'confetti', hero: 'teddy-family', heroSize: 1.15, anchor: 'beside', sprites: ['teddy-red-bow', 'teddy-angel', 'teddy-sweater'], ambient: 'cannons', accent: '#e8b48a' }),
   obsidian: V({ backdrop: { scene: 'night-city' }, transition: 'flash', hero: 'diamond', heroSize: 0.9, anchor: 'beside', ambient: 'sparkles', accent: '#c9d3e6' }),
 };

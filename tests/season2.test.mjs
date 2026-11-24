@@ -191,9 +191,11 @@ const gptUsed = new Set([
   ...CHARACTERS.map((persona) => persona.portrait),
   ...COSMETICS.map((item) => item.portrait),
   ...COSMETICS.filter((item) => LOOKS_BY_SLOT[item.slot]).map((item) => gptKeyOf(item.slot, LOOKS_BY_SLOT[item.slot][item.look])),
+  ...Object.values(EFFECTS).flatMap((effect) => [...effect.sprites, ...(effect.petals || [])]),
+  ...Object.values(VICTORIES).flatMap((look) => [look.hero, ...(look.sprites || []), ...(look.petals || []), ...(look.sweep || [])]),
 ]);
 const unusedGpt = GPT_ART.filter((key) => !gptUsed.has(key));
-check(GPT_ART.length === 62 && unusedGpt.length === 0, `선생님 GPT 그림 62장은 모두 써야 함(안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
+check(GPT_ART.length === 122 && unusedGpt.length === 0, `선생님 GPT 그림 62장 + 효과 조각 60개는 모두 써야 함(안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
 const gptBox = COSMETICS.filter((item) => item.box && LOOKS_BY_SLOT[item.slot] && GPT_ART.includes(gptKeyOf(item.slot, LOOKS_BY_SLOT[item.slot][item.look])));
 check(gptBox.length === 2, `GPT 그림 아이템 가운데 상자 전용은 둘뿐(지금 ${gptBox.map((item) => item.id).join(', ')})`);
 check(!['effect-golden-rose', 'victory-golden-rose', 'charm-golden-rose'].some((id) => cosmeticById(id)) && cosmeticById('table-golden-rose'), '황금 장미 효과 · 피날레 · 장난감은 빼고 맵은 남김(11-24)');

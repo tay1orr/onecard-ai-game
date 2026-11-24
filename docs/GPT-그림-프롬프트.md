@@ -127,7 +127,19 @@ Use the attached picture as the exact character reference: same character design
 
 Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions. Draw Choonsik celebrating a victory: jumping for joy with both arms up, sparkling eyes and a big happy smile, holding his roasted sweet potato high in one hand. Full body. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character fills about 85% of the frame.
 
-## 카드 효과 조각(11-24 밤, 있으면 좋은 것)
+## 카드 효과 조각(11-24 밤 — 효과01~10 모두 들어감)
+- 넣은 자리(조각은 `cut/fx-<주제>-<칸>`, 칸은 왼쪽 위부터):
+  - 효과01 장미 → 장미 한 송이 · 장미 왈츠 효과, 장미 승리 장면 꽃잎 · 꽃밭
+  - 효과02 하얀 장미 → 하얀 장미 효과(진주는 꿈빛 마법에도)
+  - 효과03 분홍 장미 → 장미 꽃잎 폭풍 · 꽃잎 바람 · 리얼 로즈 샤워 효과, 분홍 꽃잎 승리 장면
+  - 효과04 백합 → 백합 한 송이 효과 · 백합 온실 피날레
+  - 효과05 벚꽃 → 벚꽃 바람 효과 · 천앵화 피날레 꽃잎
+  - 효과06 하트 장미 부케 → 하트 장미 부케 효과(시즌 패스 12단계)
+  - 효과07 마카롱 → 마카롱 팝 효과(상자)
+  - 효과08 곰 인형 → 곰 인형 착지 효과(상자)
+  - 효과09 두바이 → 새 효과 「두바이 쫀득쿠키 효과」(72만 5천, 두바이 세트)
+  - 효과10 보석 → 새 효과 「루비 왕관 효과」(83만 5천) · 「자수정 효과」(78만 5천), 꿈빛 마법 효과의 왕관 · 다이아몬드
+
 - 카드 효과의 움직임은 코드가 맡고, GPT 는 날아다니는 조각(꽃송이 · 꽃잎 · 작은 장식)을 그립니다.
   - 지금 조각은 실물 사진 누끼라, GPT 그림인 맵 · 카드와 화풍이 조금 다릅니다. 같은 화풍으로 맞추는 것이 목적입니다.
   - 움직이는 영상(Sora 등)으로는 만들지 않습니다. 파일이 무겁고 배경이 투명하지 않으며, 게임 상황(세기 · 카드 자리)에 맞춰 움직일 수 없습니다.

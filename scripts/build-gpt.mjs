@@ -1,6 +1,7 @@
 // GPT 로 만든 그림 넣기 — node scripts/build-gpt.mjs
 // 선생님이 gpt그림/ 에 넣은 그림을 게임 크기로 줄여 public/assets/s2/r 에 넣고, src/data/gpt-art.js 에 있는 그림 목록을 적는다.
-// 파일 이름은 앞 번호만 본다: 상대N · 나N(캐릭터) · 울음NN(우는 상대) · 승리NN(기뻐하는 내 캐릭터) · 판NN(맵) · 뒷면NN(카드 뒷면) · 앞면NN(카드 앞면 테). 프롬프트는 docs/GPT-그림-프롬프트.md
+// 파일 이름은 앞 번호만 본다: 상대N · 나N(캐릭터) · 울음NN(우는 상대) · 승리NN(기뻐하는 내 캐릭터) · 판NN(맵) · 뒷면NN(카드 뒷면) · 앞면NN(카드 앞면 테)
+// · 효과NN(카드 효과 조각 — 가로 3 × 세로 2 칸 스티커 판을 여섯 조각으로 잘라 cut/fx-<주제>-<1~6>). 프롬프트는 docs/GPT-그림-프롬프트.md
 // 같은 번호 파일이 여럿이면 가장 최근 것을 쓴다. 캐릭터 그림은 배경이 투명하지 않으면 가장자리 단색 배경을 지운다.
 // 캐릭터는 파일 이름(상대 · 나)이 아니라 그림을 보고 누구인지 아래 표에 적는다. 상대로 쓸지 내 캐릭터로 쓸지는 src/data/characters.js · src/core/cosmetics.js 가 정한다.
 import fs from 'node:fs';
@@ -11,7 +12,9 @@ import sharp from 'sharp';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(root, 'gpt그림');
 const OUT = path.join(root, 'public/assets/s2/r');
-const KINDS = { 상대: 'rival', 나: 'me', 울음: 'cry', 승리: 'win', 판: 'map', 뒷면: 'back', 앞면: 'face' };
+const KINDS = { 상대: 'rival', 나: 'me', 울음: 'cry', 승리: 'win', 판: 'map', 뒷면: 'back', 앞면: 'face', 효과: 'fx' };
+// 효과 스티커 판의 주제(11-24 선생님이 넣은 10장을 보고 적음) — 칸 번호는 왼쪽 위부터 오른쪽으로, 윗줄 다음 아랫줄
+const FX_SHEETS = { 1: 'rose', 2: 'white', 3: 'pink', 4: 'lily', 5: 'cherry', 6: 'heart', 7: 'macaron', 8: 'teddy', 9: 'dubai', 10: 'jewel' };
 // 그림 속 캐릭터(11-24 선생님이 넣은 22장을 하나씩 보고 적음) → cut/char-<이름>.webp
 const CHARACTER_FILES = {
   상대1: 'choonsik', 상대2: 'chiikawa', 상대3: 'hachiware', 상대4: 'usagi', 상대5: 'shinchan', 상대6: 'sakura', 상대7: 'rakko', 상대8: 'sailormoon',
@@ -27,7 +30,7 @@ fs.mkdirSync(SRC, { recursive: true });
 const files = fs.readdirSync(SRC, { withFileTypes: true })
   .filter((entry) => entry.isFile() && /\.(png|jpe?g|webp)$/i.test(entry.name))
   .map((entry) => {
-    const match = entry.name.match(/^(상대|나|울음|승리|판|뒷면|앞면)\s*0*(\d+)/);
+    const match = entry.name.match(/^(상대|나|울음|승리|판|뒷면|앞면|효과)\s*0*(\d+)/);
     if (!match) return null;
     const kind = KINDS[match[1]];
     const number = Number(match[2]);
@@ -93,6 +96,20 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
     await sharp(entry.file).extract({ left: Math.round((meta.width - cropWidth) / 2), top: 0, width: cropWidth, height: meta.height }).resize(720, 1080, { fit: 'cover' }).webp({ quality: 80 }).toFile(path.join(OUT, 'paint', `${key}-m.webp`));
     await sharp(entry.file).resize(384, 256, { fit: 'cover' }).webp({ quality: 78 }).toFile(path.join(OUT, 'paint', `${key}-s.webp`));
     made.push(`map-${pad(entry.number)}`);
+  } else if (entry.kind === 'fx') {
+    // 스티커 판 — 3 × 2 칸을 하나씩 잘라 배경을 지우고(투명하지 않으면) 가장자리를 다듬는다
+    const theme = FX_SHEETS[entry.number] || `sheet${entry.number}`;
+    const cellW = Math.floor(meta.width / 3);
+    const cellH = Math.floor(meta.height / 2);
+    for (let cell = 0; cell < 6; cell += 1) {
+      const piece = await sharp(entry.file).extract({ left: (cell % 3) * cellW, top: Math.floor(cell / 3) * cellH, width: cellW, height: cellH }).png().toBuffer();
+      const clean = await cutOut(piece);
+      const trimmed = await sharp(clean).trim({ threshold: 1 }).png().toBuffer();
+      const key = `fx-${theme}-${cell + 1}`;
+      await sharp(trimmed).resize(360, 360, { fit: 'inside' }).webp({ quality: 86, alphaQuality: 90 }).toFile(path.join(OUT, 'cut', `${key}.webp`));
+      await sharp(trimmed).resize(120, 120, { fit: 'inside' }).webp({ quality: 82, alphaQuality: 88 }).toFile(path.join(OUT, 'cut', `${key}-s.webp`));
+    }
+    made.push(`fx-${theme}`);
   } else if (entry.kind === 'back' || entry.kind === 'face') {
     const key = `gpt-${entry.kind}-${pad(entry.number)}`;
     await sharp(entry.file).resize(500, 750, { fit: 'cover' }).webp({ quality: 84 }).toFile(path.join(OUT, 'paint', `${key}.webp`));
@@ -114,7 +131,7 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
 // 목록은 public 에 실제로 있는 그림으로 — 원본 폴더(gpt그림/, 저장소에 안 올림)가 없는 PC 에서 돌려도 넣어 둔 그림이 빠지지 않게
 const list = [
   ...fs.readdirSync(path.join(OUT, 'paint')).map((name) => name.match(/^gpt-((?:map|back|face)-\d+)\.webp$/)?.[1]),
-  ...fs.readdirSync(path.join(OUT, 'cut')).map((name) => name.match(/^(char-[a-z0-9-]+?)\.webp$/)?.[1]).filter((key) => key && !key.endsWith('-s')),
+  ...fs.readdirSync(path.join(OUT, 'cut')).map((name) => name.match(/^((?:char|fx)-[a-z0-9-]+?)\.webp$/)?.[1]).filter((key) => key && !key.endsWith('-s')),
 ].filter(Boolean).sort();
 fs.writeFileSync(path.join(root, 'src/data/gpt-art.js'), `// GPT 로 만든 그림 목록 — scripts/build-gpt.mjs 가 gpt그림/ 을 줄여 public 에 넣고 이 파일을 다시 쓴다(손으로 고치지 않음)\nexport const GPT_ART = Object.freeze(${JSON.stringify(list)});\nexport const hasGptArt = (key) => GPT_ART.includes(key);\n`);
 console.log(`GPT 그림 ${list.length}장: ${list.join(', ') || '없음'}`);
