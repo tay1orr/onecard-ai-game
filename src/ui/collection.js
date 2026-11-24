@@ -25,6 +25,7 @@ const isFlower = (item) => (item.tags || []).some((tag) => tag === 'rose' || tag
 
 function stateText(item, profile, passTier) {
   if (isUnlocked(item, profile.peakPoints, passTier, profile.boxItems)) return '';
+  if (item.gift) return '시즌 2 첫 판을 마치면 받아요';
   if (item.box) return 'AI 대전 보상 상자에서만 나와요';
   if (item.pass) return `시즌 패스 ${item.pass}단계`;
   return `${formatNumber(item.threshold)}점에 열려요`;

@@ -3,7 +3,7 @@
 --   여러 번 넣어도 괜찮다(있으면 고쳐 쓰기만 한다). 기록 표(onecard_profiles)와 방 · 패 기록은 건드리지 않는다
 -- 들어 있는 것
 --   1) 휴면 막기 — 꼭 넣기. 하루 한 번 Vercel 예약 실행이 이 함수를 불러 데이터베이스에 한 줄을 쓴다
---   2) 시즌 2 카드 뒷면 55종을 온라인 상대에게도 그대로 보이게(넣지 않으면 상대 화면에는 클래식으로)
+--   2) 시즌 2 카드 뒷면을 온라인 상대에게도 그대로 보이게 — 이름이 back- 로 시작하면 받는다(뒷면이 늘어도 다시 넣지 않아도 됨)
 --   3) (선택) 기한이 지난 방 · 패 · 기록을 매시간 지우는 예약 — pg_cron 을 켠 뒤 맨 아래 줄의 주석을 풀어 따로 실행
 
 -- 1) 휴면 막기
@@ -40,7 +40,7 @@ $$;
 revoke execute on function public.onecard_keepalive() from public;
 grant execute on function public.onecard_keepalive() to anon, authenticated;
 
--- 2) 시즌 2 카드 뒷면 허용 목록(src/core/cosmetics.js 의 카드 뒷면 55종 그대로 — 검사가 빠진 뒷면을 잡는다)
+-- 2) 카드 뒷면 — 이름이 back- 로 시작하면 받는다(11-24 저녁: 뒷면이 늘 때마다 목록을 고쳐 넣지 않게). 모르는 이름은 화면이 클래식으로 그린다
 create or replace function public.onecard_set_card_back(p_room_id uuid, p_card_back text)
 returns jsonb
 language plpgsql security definer
@@ -52,19 +52,7 @@ declare
   v_seat smallint;
   v_card_back text := coalesce(p_card_back, 'back-classic');
 begin
-  if v_card_back not in (
-    'back-classic', 'back-strawberry-milk', 'back-antique-atlas', 'back-star-candy', 'back-bauhaus',
-    'back-jade-rune', 'back-rose-arbor', 'back-brass-orbit', 'back-monochrome-wave', 'back-space-whale',
-    'back-antique-library', 'back-dream-kingdom', 'back-pink-cloud-pop', 'back-moon-rabbit-observatory', 'back-strawberry-toy-parade',
-    'back-rose-ballroom', 'back-real-rose-garden', 'back-neon-deepsea-city', 'back-ancient-sun-temple', 'back-s2-mucha',
-    'back-moon-tiara', 'back-pearl-shell', 'back-s2-hubble', 'back-montblanc', 'back-pink-rose',
-    'back-obsidian', 'back-vangogh-almond', 'back-japanese-cherry', 'back-vangogh-irises', 'back-monet-waterlilies',
-    'back-japanese-peony', 'back-morris-rose', 'back-morris-strawberry', 'back-redoute-01', 'back-redoute-02',
-    'back-redoute-03', 'back-redoute-04', 'back-redoute-05', 'back-redoute-06', 'back-redoute-07',
-    'back-redoute-08', 'back-redoute-09', 'back-redoute-10', 'back-redoute-11', 'back-redoute-12',
-    'back-winter-garden', 'back-vangogh-roses', 'back-mucha-rose', 'back-millefeuille', 'back-dubai',
-    'back-amethyst', 'back-ruby-crown', 'back-golden-rose', 'back-million-roses', 'back-box-pistachio'
-  ) then
+  if v_card_back !~ '^back-[a-z0-9-]{1,48}$' then
     v_card_back := 'back-classic';
   end if;
   select * into v_room from public.onecard_rooms where id = p_room_id for update;

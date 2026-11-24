@@ -1,7 +1,7 @@
 // 시즌 2 첫 방문 선물 — 들어오자마자 최고 점수로 이미 열린 시즌 2 새 아이템을 한 번만 보여 준다(30만 점대 플레이어는 수십 개가 한꺼번에 열린다)
 // 그 뒤에 판을 하며 열리는 것은 결과 화면이 보여 준다.
 import { h, formatNumber } from './dom.js';
-import { COSMETICS, COSMETIC_SLOTS, isUnlocked } from '../core/cosmetics.js';
+import { COSMETICS, COSMETIC_SLOTS, FIRST_GAME_GIFT, isUnlocked } from '../core/cosmetics.js';
 import { itemPreview } from './item-preview.js';
 import { openModal } from './modal.js';
 
@@ -31,6 +31,7 @@ export function showSeasonGift(profile, { onOpenCollection } = {}) {
   const body = h('div.gift', {},
     h('p.modal-text', {}, `최고 점수 ${formatNumber(profile.peakPoints)}점으로 시즌 2 새 아이템 ${items.length}개가 열렸어요.`),
     roses ? h('p.modal-text.gift-sub', {}, `그중 ${roses}개는 장미와 꽃이에요. 보관함의 「장미와 꽃」에서 모아 볼 수 있어요.`) : null,
+    FIRST_GAME_GIFT.some((item) => !(profile.boxItems || []).includes(item.id)) ? h('p.modal-text.gift-sub', {}, '시즌 2 첫 판을 마치면 크리스마스 세트를 드려요.') : null,
     h('ul.gift-grid', {}, ...shown.map((item) => h('li.gift-item', {}, itemPreview(item), h('small', {}, slotName(item.slot)), h('b', {}, item.name)))),
     items.length > shown.length ? h('p.gift-more', {}, `이 밖에 ${items.length - shown.length}개 더`) : null);
   return openModal({

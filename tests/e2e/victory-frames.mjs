@@ -33,6 +33,13 @@ const PRESETS = [
   { name: 'lavender', table: 'table-s2-lavender', victory: 'victory-lavender', avatar: 'avatar-cinnamoroll', rival: '쿠로미' },
   { name: 'deepsea', table: 'table-amethyst', victory: 'victory-neon-deepsea-city', avatar: 'avatar-choonsik', rival: '한교동' },
   { name: 'fireworks', table: 'table-ruby-crown', victory: 'victory-dual-fireworks', avatar: 'avatar-mymelody', rival: '랏코' },
+  // 11-24 저녁 GPT 승리 장면 배경 여섯 · 새 내 캐릭터
+  { name: 'christmas', table: 'table-christmas', victory: 'victory-christmas', avatar: 'avatar-rilakkuma', rival: '치이카와' },
+  { name: 'winter-garden', table: 'table-winter-garden', victory: 'victory-winter-garden', avatar: 'avatar-little-prince', rival: '헬로키티' },
+  { name: 'ruby-crown', table: 'table-ruby-crown', victory: 'victory-ruby-crown', avatar: 'avatar-bellygom', rival: '키드' },
+  { name: 'amethyst', table: 'table-amethyst', victory: 'victory-amethyst', avatar: 'avatar-molang', rival: '쿠로미' },
+  { name: 'dubai', table: 'table-dubai', victory: 'victory-dubai', avatar: 'avatar-korilakkuma', rival: '짱구' },
+  { name: 'millefeuille', table: 'table-millefeuille', victory: 'victory-millefeuille', avatar: 'avatar-carebear', rival: '우사기' },
 ].filter((preset) => !only.length || only.includes(preset.name));
 
 fs.mkdirSync(outDir, { recursive: true });

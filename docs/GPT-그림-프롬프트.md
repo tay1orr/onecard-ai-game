@@ -180,7 +180,14 @@ Use the attached picture only as a style reference (painting style, lighting and
 
 Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a tiny sitting teddy bear with a red bow, (2) a red satin bow, (3) a small red heart, (4) a little pink heart balloon, (5) a tiny golden star, (6) a small curl of red ribbon. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
 
-## 아이템 보충(11-24 — 적은 칸부터)
+## 아이템 보충(11-24 — 적은 칸부터 · 저녁에 30장 들어감)
+- 넣은 자리(11-24 저녁, 그림을 보고 정함):
+  - 내 캐릭터 일곱(나9 곰돌이 푸 · 나13 벨 · 나14 앨리스는 GPT 가 그리지 않음): 몰랑이 20만 · 미피 26만 · 코리락쿠마 30만(33만 점대면 시즌 2 를 열자마자) · 리락쿠마 47만 · 러브어랏 베어 55만 5천 · 벨리곰 75만 5천 · 어린 왕자 94만.
+  - 승리 장면 배경01~05 → 겨울 정원(46만) · 밀푀유(64만 5천) · 루비 왕관(84만 5천, 왕관이 머리에) · 자수정(79만 5천, 보석이 하늘로) · 두바이(73만 5천, 발밑에 쿠키).
+  - 효과11~17 → 겨울 정원(44만) · 밀푀유(62만 5천) · 베르사유(87만 5천) · 백만 송이(98만 5천) · 달빛 티아라(48만) · 진주 조개(53만 5천) · 흑임자 몽블랑(59만 5천).
+  - 뒷면14 · 앞면13 → 베르사유 카드(85만 5천) · 앞면(86만 5천). 앞면12 → 백만 송이 장미 앞면(96만). (제가 드린 번호 뒷면13 · 앞면11 은 앞서 넣은 그림과 겹쳐 선생님이 번호를 바꾸심)
+  - **크리스마스 세트 = 시즌 2 첫 판 선물**(선생님 「시즌 2 첫 게임 보상으로 크리스마스 세트」): 판20 맵 · 뒷면15 · 앞면14 · 효과18 · 배경06 승리. 시즌 2 에서 판을 처음 마치면 받고, 결과 화면의 새 아이템에 뜸. 상자에서는 안 나옴.
+
 - 칸마다 아이템 수(11-24): 내 캐릭터 7 · 카드 앞면 26 · 카드 효과 27 · 승리 연출 31 · 맵 39 · 카드 뒷면 55 · 장난감 67.
 - 시즌 2 세트 가운데 승리 연출이 없는 곳: 왕실 겨울 정원 · 밀푀유 파티스리 · 두바이 쫀득쿠키 · 자수정 · 루비 왕관.
 - 카드 효과가 없는 곳: 왕실 겨울 정원 · 밀푀유 파티스리 · 베르사유 · 백만 송이 장미 · 패스 세트 셋(달빛 티아라 · 진주 조개 · 흑임자 몽블랑).

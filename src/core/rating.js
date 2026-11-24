@@ -1,4 +1,4 @@
-import { DEFAULT_EQUIPPED, cosmeticById, isBoxItemId, newlyUnlockedByPass, newlyUnlockedCosmetics, normalizeEquipped } from './cosmetics.js';
+import { DEFAULT_EQUIPPED, FIRST_GAME_GIFT, cosmeticById, isOwnedItemId, newlyUnlockedByPass, newlyUnlockedCosmetics, normalizeEquipped } from './cosmetics.js';
 import { tierForXp, xpForMatch } from './season.js';
 
 export const LEGACY_RECORD_KEY = 'onecard-record';
@@ -65,9 +65,9 @@ function safeInteger(value, fallback = 0) {
 const listOf = (value) => (Array.isArray(value) ? value : []);
 const claimedList = (...groups) => [...new Set(groups.flatMap(listOf).map(String))].slice(-150);
 
-// 상자에서 얻은 아이템 — 목록에 있는 상자 전용 아이템만, 겹치지 않게
+// 가진 아이템 — 상자에서 얻은 것과 시즌 2 첫 판 선물만, 겹치지 않게
 export function boxItemList(value) {
-  return Array.isArray(value) ? [...new Set(value.map(String))].filter(isBoxItemId) : [];
+  return Array.isArray(value) ? [...new Set(value.map(String))].filter(isOwnedItemId) : [];
 }
 
 function defaultStorage() {
@@ -188,6 +188,9 @@ export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId
   const xpGained = xpForMatch({ won, stars: safeStars, bonus: bonusMultiplier > 1, mode });
   profile.seasonXp = safeInteger(profile.seasonXp) + xpGained;
   const tier = tierForXp(profile.seasonXp);
+  // 시즌 2 첫 판 선물(크리스마스 세트) — 아직 없으면 이 판으로 받는다. 결과 화면의 새로 얻은 아이템에 함께 뜬다
+  const gifts = FIRST_GAME_GIFT.filter((entry) => !profile.boxItems.includes(entry.id));
+  if (gifts.length) profile.boxItems = [...profile.boxItems, ...gifts.map((entry) => entry.id)];
   return {
     profile: savePlayerProfile(profile, storage),
     delta,
@@ -197,7 +200,7 @@ export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId
     xpGained,
     previousTier,
     tier,
-    unlockedItems: [...newlyUnlockedCosmetics(previousPeak, profile.peakPoints), ...newlyUnlockedByPass(previousTier, tier)],
+    unlockedItems: [...newlyUnlockedCosmetics(previousPeak, profile.peakPoints), ...newlyUnlockedByPass(previousTier, tier), ...gifts],
   };
 }
 

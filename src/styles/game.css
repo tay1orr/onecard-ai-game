@@ -282,7 +282,7 @@
 .res-label { font-weight: 800; font-size: 14px; margin-bottom: 6px; }
 .res-unlocks { width: 100%; }
 .unlock-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; perspective: 600px; }
-.unlock-card { width: 108px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; background: rgba(242, 181, 68, 0.1); border: 1px solid rgba(242, 181, 68, 0.4); }
+.unlock-card { width: 90px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; background: rgba(242, 181, 68, 0.1); border: 1px solid rgba(242, 181, 68, 0.4); }
 .unlock-card small { font-size: 12px; font-weight: 700; }
 .res-missions { width: 100%; padding: 10px 12px; border-radius: 12px; background: rgba(79, 209, 161, 0.08); }
 .res-mission-names { color: #cfe9de; font-size: 13px; }

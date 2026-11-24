@@ -181,7 +181,7 @@ check(playerStarsForPoints(330000) === 7 && playerStarsForPoints(400000) === 8, 
 check(AI_OPPONENTS.length === 8 && CHARACTERS.length === 15 && new Set(CHARACTERS.map((persona) => persona.id)).size === 15, '난이도 ★1~★8 여덟 단계, 상대 캐릭터 열다섯');
 check(!CHARACTERS.some((persona) => COSMETICS.some((item) => item.portrait === persona.portrait)), '상대 캐릭터와 내 캐릭터는 겹치지 않아야 함');
 const avatars = COSMETICS.filter((item) => item.slot === 'avatar');
-check(avatars.length === 7 && avatars.every((item) => item.character && item.portrait.startsWith('char-')), '내 캐릭터는 동물 없이 GPT 캐릭터 일곱뿐(11-24 동물 뺌)');
+check(avatars.length === 14 && avatars.every((item) => item.character && item.portrait.startsWith('char-')), '내 캐릭터는 동물 없이 GPT 캐릭터 열넷뿐(11-24 동물 뺌 · 저녁 일곱 더함)');
 check(avatars.filter((item) => item.threshold === 0).length === 3 && avatars.filter((item) => item.pass).length === 4, '셋은 처음부터, 넷은 시즌 패스');
 // 선생님 GPT 그림(11-24) — 넣은 그림은 모두 아이템 · 캐릭터로 쓰이고, 그 가운데 상자 전용은 둘뿐
 const { GPT_ART } = await import('../src/data/gpt-art.js');
@@ -192,10 +192,13 @@ const gptUsed = new Set([
   ...COSMETICS.map((item) => item.portrait),
   ...COSMETICS.filter((item) => LOOKS_BY_SLOT[item.slot]).map((item) => gptKeyOf(item.slot, LOOKS_BY_SLOT[item.slot][item.look])),
   ...Object.values(EFFECTS).flatMap((effect) => [...effect.sprites, ...(effect.petals || [])]),
-  ...Object.values(VICTORIES).flatMap((look) => [look.hero, ...(look.sprites || []), ...(look.petals || []), ...(look.sweep || [])]),
+  ...Object.values(VICTORIES).flatMap((look) => [look.hero, (look.backdrop?.paint || '').replace(/^gpt-/, ''), ...(look.sprites || []), ...(look.petals || []), ...(look.sweep || [])]),
 ]);
 const unusedGpt = GPT_ART.filter((key) => !gptUsed.has(key));
-check(GPT_ART.length === 122 && unusedGpt.length === 0, `선생님 GPT 그림 62장 + 효과 조각 60개는 모두 써야 함(안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
+check(GPT_ART.length === 189 && unusedGpt.length === 0, `선생님 GPT 그림(캐릭터 29 · 판 19 · 뒷면 14 · 앞면 13 · 승리 배경 6 · 효과 조각 108)은 모두 써야 함(지금 ${GPT_ART.length} · 안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
+// 시즌 2 첫 판 선물 — 크리스마스 다섯 칸, 상자에서는 나오지 않음
+const { FIRST_GAME_GIFT } = await import('../src/core/cosmetics.js');
+check(FIRST_GAME_GIFT.length === 5 && new Set(FIRST_GAME_GIFT.map((item) => item.slot)).size === 5 && FIRST_GAME_GIFT.every((item) => !item.box && item.set === 'christmas'), '첫 판 선물은 크리스마스 세트 다섯 칸(맵 · 뒷면 · 앞면 · 효과 · 승리)');
 const gptBox = COSMETICS.filter((item) => item.box && LOOKS_BY_SLOT[item.slot] && GPT_ART.includes(gptKeyOf(item.slot, LOOKS_BY_SLOT[item.slot][item.look])));
 check(gptBox.length === 2, `GPT 그림 아이템 가운데 상자 전용은 둘뿐(지금 ${gptBox.map((item) => item.id).join(', ')})`);
 check(!['effect-golden-rose', 'victory-golden-rose', 'charm-golden-rose'].some((id) => cosmeticById(id)) && cosmeticById('table-golden-rose'), '황금 장미 효과 · 피날레 · 장난감은 빼고 맵은 남김(11-24)');
@@ -266,9 +269,9 @@ check(mergedBox.boxItems.length === 2 && mergedBox.claimedBoxIds.length === 2, '
 
 // 운영에 올릴 때 넣는 SQL · 휴면 막기(11-24)
 const launchSql = fs.readFileSync(path.join(root, 'supabase/2026-11-24-season2-launch.sql'), 'utf8');
-const sqlBacks = new Set([...launchSql.matchAll(/'(back-[a-z0-9-]+)'/g)].map((match) => match[1]));
-const missingBacks = COSMETICS.filter((entry) => entry.slot === 'cardBack' && !sqlBacks.has(entry.id)).map((entry) => entry.id);
-check(missingBacks.length === 0, `운영 SQL 의 카드 뒷면 허용 목록에 빠진 뒷면(온라인 상대에게 클래식으로 보임): ${missingBacks.join(', ')}`);
+check(launchSql.includes("v_card_back !~ '^back-[a-z0-9-]{1,48}$'"), '운영 SQL 은 카드 뒷면을 이름 모양(back-…)으로 받아야 함');
+const missingBacks = COSMETICS.filter((entry) => entry.slot === 'cardBack' && !/^back-[a-z0-9-]{1,48}$/.test(entry.id)).map((entry) => entry.id);
+check(missingBacks.length === 0, `카드 뒷면 이름이 back-… 모양이 아니면 온라인 상대에게 클래식으로 보임: ${missingBacks.join(', ')}`);
 check(launchSql.includes('grant execute on function public.onecard_keepalive() to anon'), '휴면 막기 함수는 공개 키(anon)로 부를 수 있어야 함');
 const { keepAlive } = await import('../api/keepalive.js');
 let keepCall = null;

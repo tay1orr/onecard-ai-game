@@ -23,6 +23,8 @@ const pass = (id, slot, tier, look, name, description, extra = {}) => Object.fre
 const s2 = (id, slot, threshold, look, name, description, extra = {}) => item(id, slot, threshold, look, name, description, { season: 's2', ...extra });
 // 상자 전용 — 점수로는 안 열리고 AI 대전 뒤 보상 상자에서만 나온다(rare · epic · legend 순으로 드묾)
 const box = (id, slot, rarity, look, name, description, extra = {}) => Object.freeze({ id, slot, threshold: null, box: true, boxRarity: rarity, look, name, description, season: 's2', ...extra });
+// 시즌 2 첫 판 선물(11-24 선생님 「시즌 2 첫 게임 보상으로 크리스마스 세트」) — 판 결과를 처음 기록할 때 가진 아이템(boxItems)에 들어간다(rating.js)
+const gift = (id, slot, look, name, description, extra = {}) => Object.freeze({ id, slot, threshold: null, gift: 's2-first-game', look, name, description, season: 's2', ...extra });
 const CUTE = ['cute'];
 const DESSERT = ['dessert'];
 const ROSE = ['rose'];
@@ -135,6 +137,15 @@ export const COSMETICS = Object.freeze([
   s2('avatar-choonsik', 'avatar', 0, null, '춘식이', '군고구마를 든 춘식이', { portrait: 'char-choonsik', character: true }),
   s2('avatar-mymelody', 'avatar', 0, null, '마이멜로디', '분홍 장미를 든 마이멜로디', { portrait: 'char-mymelody', character: true }),
   s2('avatar-cinnamoroll', 'avatar', 0, null, '시나모롤', '시나몬롤을 안은 시나모롤', { portrait: 'char-cinnamoroll', character: true }),
+  // 11-24 저녁 둘째 묶음 — 점수로 열린다. 셋은 30만 점 아래(시즌 1 기록이 그만큼이면 시즌 2 를 열자마자), 넷은 40만 점 위의 목표
+  // 출처: 리락쿠마 · 코리락쿠마(산엑스) · 러브어랏 베어(아메리칸 그리팅스 「케어베어」) · 벨리곰(롯데홈쇼핑) · 어린 왕자(생텍쥐페리) · 미피(딕 브루너) · 몰랑이(윤혜지) — 수업 자료(저작권 교육 예외)
+  s2('avatar-molang', 'avatar', 200000, null, '몰랑이', '분홍 마카롱을 든 몰랑이', { portrait: 'char-molang', character: true, tags: DESSERT }),
+  s2('avatar-miffy', 'avatar', 260000, null, '미피', '분홍 튤립을 든 미피', { portrait: 'char-miffy', character: true, tags: FLOWER }),
+  s2('avatar-korilakkuma', 'avatar', 300000, null, '코리락쿠마', '커다란 딸기를 안은 코리락쿠마', { portrait: 'char-korilakkuma', character: true }),
+  s2('avatar-rilakkuma', 'avatar', 470000, null, '리락쿠마', '딸기 쇼트케이크를 든 리락쿠마', { portrait: 'char-rilakkuma', character: true, tags: DESSERT }),
+  s2('avatar-carebear', 'avatar', 555000, null, '러브어랏 베어', '분홍 장미 꽃다발을 든 케어베어', { portrait: 'char-carebear', character: true, tags: ROSE }),
+  s2('avatar-bellygom', 'avatar', 755000, null, '벨리곰', '빨간 장미 꽃다발을 안은 벨리곰', { portrait: 'char-bellygom', character: true, tags: ROSE }),
+  s2('avatar-little-prince', 'avatar', 940000, null, '어린 왕자', '유리 덮개 속 장미 곁의 어린 왕자', { portrait: 'char-little-prince', character: true, tags: ROSE }),
 
   // ── 시즌 2 — 시즌 패스 보상(11-24 점검 — 동물 캐릭터 · 흐릿한 스포트라이트 · 번개 · 테만 두른 금박 · 은테 카드 · 주사위 · 지구본 · 고래를 빼고
   // 캐릭터 넷 · 선생님 GPT 카드 세 벌(달빛 티아라 · 진주 조개 · 흑임자 몽블랑) · 분홍 장미 카드 · 꽃 판 둘 · 하트 장미 부케 효과로. 큰 보상은 1 · 5 · 10 · 19 캐릭터, 16 · 20 승리 연출)
@@ -158,6 +169,13 @@ export const COSMETICS = Object.freeze([
   pass('charm-pink-rose', 'charm', 18, null, '분홍 장미', '갓 핀 분홍 장미 한 송이', { toy: 'rose-pink', tags: ROSE }),
   pass('avatar-sailormoon', 'avatar', 19, null, '세일러문', '빨간 장미를 든 세일러문', { portrait: 'char-sailormoon', character: true }),
   pass('victory-s2-legend', 'victory', 20, 'legend', '오로라 대관식', '시즌 2 마지막 단계 — 오로라 아래 내 캐릭터에 왕관이 씌워져요', { legendary: true }),
+
+  // ── 시즌 2 첫 판 선물 — 크리스마스(11-24 선생님 GPT 그림 판20 · 뒷면15 · 앞면14 · 효과18 · 배경06)
+  gift('table-christmas', 'table', 'christmas', '크리스마스 오두막', '트리와 흔들목마가 있는 눈 오는 날의 오두막', { legendary: true, set: 'christmas' }),
+  gift('back-christmas', 'cardBack', 'christmas', '크리스마스 트리 카드', '촛불과 방울을 단 크리스마스트리', { legendary: true, set: 'christmas' }),
+  gift('face-christmas', 'cardFace', 'christmas', '크리스마스 앞면', '솔잎 · 방울 · 빨간 리본을 두른 테', { legendary: true, set: 'christmas' }),
+  gift('effect-christmas', 'effect', 'christmas', '크리스마스 효과', '선물 상자가 카드 구석에 앉고 별 · 방울이 반짝여요', { legendary: true, set: 'christmas' }),
+  gift('victory-christmas', 'victory', 'christmas', '크리스마스 피날레', '눈 내리는 오두막에 선물 상자가 내려앉아요', { legendary: true, set: 'christmas' }),
 
   // ── 시즌 2 — 블랙 오닉스(4만 5천~5만)
   s2('table-obsidian', 'table', 45000, 'obsidian', '블랙 오닉스 테이블', '밤의 도시를 내려다보는 검은 오닉스 탁자', { legendary: true, set: 'obsidian' }),
@@ -209,26 +227,33 @@ export const COSMETICS = Object.freeze([
   s2('table-winter-garden', 'table', 435000, 'winter-garden', '왕실 겨울 정원', '흰 장미와 동백이 핀 유리 온실', { legendary: true, set: 'winter-garden', tags: ROSE }),
   s2('back-winter-garden', 'cardBack', 445000, 'winter-garden', '하얀 장미 카드', '은빛 덩굴과 진주로 두른 하얀 장미', { legendary: true, set: 'winter-garden', tags: ROSE }),
   s2('face-winter-garden', 'cardFace', 455000, 'winter-garden', '하얀 장미 앞면', '하얀 장미와 진주 덩굴 테', { legendary: true, set: 'winter-garden', tags: ROSE }),
+  s2('effect-winter-garden', 'effect', 440000, 'winter-garden', '서리 장미 효과', '서리 내린 흰 장미가 앉고 눈송이가 흩날려요', { legendary: true, set: 'winter-garden', tags: ROSE }),
+  s2('victory-winter-garden', 'victory', 460000, 'winter-garden', '겨울 정원 피날레', '유리 온실에 눈이 내리고 발밑에 서리 장미가 피어요', { legendary: true, set: 'winter-garden', tags: ROSE }),
   s2('charm-rose-vase', 'charm', 465000, null, '장미 꽃병', '활짝 핀 장미 한 다발', { toy: 'rose-vase', tags: ROSE }),
   s2('table-rose-night', 'table', 475000, 'rose-night', '밤의 장미 정원', '등불과 달빛이 비추는 장미 정원', { set: 'rose-gardens', tags: ROSE }),
+  s2('effect-moon-tiara', 'effect', 480000, 'moon-tiara', '달빛 티아라 효과', '티아라가 앉고 초승달 · 별 · 진주가 반짝여요', { legendary: true, set: 'moon-tiara' }),
   s2('back-vangogh-roses', 'cardBack', 485000, 'vangogh-roses', '반 고흐 — 장미', '빈센트 반 고흐, 1890', { set: 'masterpiece', tags: ROSE }),
   s2('charm-yellow-roses', 'charm', 495000, null, '노란 장미 다발', '노란 장미 마흔 송이를 묶은 다발', { toy: 'rose-yellow', tags: ROSE }),
   s2('charm-vintage-bouquet', 'charm', 510000, null, '빈티지 꽃다발', '장미와 들꽃을 엮은 옛 꽃다발', { toy: 'bouquet-vintage', tags: ROSE }),
   s2('back-mucha-rose', 'cardBack', 520000, 'mucha-rose', '무하 — 장미', '알폰스 무하 「꽃」 연작의 장미(1898)', { set: 'masterpiece', tags: ROSE }),
   s2('effect-lily-drop', 'effect', 530000, 'lily-drop', '백합 한 송이', '낸 카드 위에 분홍 백합이 내려앉아요', { tags: FLOWER }),
+  s2('effect-pearl-shell', 'effect', 535000, 'pearl-shell', '진주 조개 효과', '진주를 품은 조개가 앉고 물방울이 떠올라요', { legendary: true, set: 'pearl-shell' }),
   s2('charm-lily', 'charm', 540000, null, '스타게이저 백합', '분홍 점이 박힌 백합', { toy: 'lily', tags: FLOWER }),
   s2('victory-lily', 'victory', 550000, 'lily', '백합 온실 피날레', '유리 온실 가운데에서 백합이 피어나요', { tags: FLOWER }),
   s2('charm-peony-vase', 'charm', 560000, null, '작약 꽃병', '흰 작약을 꽂은 둥근 꽃병', { toy: 'peony-vase', tags: FLOWER }),
   s2('charm-tulips', 'charm', 570000, null, '튤립 다발', '분홍 · 흰 튤립 한 다발', { toy: 'tulip-bunch', tags: FLOWER }),
   s2('victory-tulip', 'victory', 580000, 'tulip', '튤립 들판 피날레', '튤립 들판 한가운데에서 꽃다발이 피어나요', { tags: FLOWER }),
   s2('charm-lotus', 'charm', 590000, null, '연꽃', '물 위에 핀 분홍 연꽃', { toy: 'lotus', tags: FLOWER }),
+  s2('effect-montblanc', 'effect', 595000, 'montblanc', '흑임자 몽블랑 효과', '몽블랑이 앉고 밤 · 깨 · 금박이 톡톡', { legendary: true, set: 'montblanc', tags: DESSERT }),
 
   // ── 시즌 2 — 디저트 · 보석의 방 · 베르사유 · 황금 장미 · 백만 송이 장미(60만~100만, 1만 점마다 · 끝은 1만 5천~2만 5천)
   s2('table-millefeuille', 'table', 600000, 'millefeuille', '밀푀유 파티스리', '오렌지 밀푀유가 놓인 파리 과자점의 탁자', { legendary: true, set: 'millefeuille', tags: DESSERT }),
   s2('effect-lotus-float', 'effect', 610000, 'lotus-float', '연꽃 둥실', '연꽃과 수련이 둥실 떠올라요', { tags: FLOWER }),
   s2('back-millefeuille', 'cardBack', 620000, 'millefeuille', '오렌지 밀푀유 카드', '밀푀유와 오렌지 조각, 바닐라 꽃', { legendary: true, set: 'millefeuille', tags: DESSERT }),
+  s2('effect-millefeuille', 'effect', 625000, 'millefeuille', '밀푀유 효과', '밀푀유가 앉고 딸기 · 크림이 톡톡', { legendary: true, set: 'millefeuille', tags: DESSERT }),
   s2('victory-lotus', 'victory', 630000, 'lotus', '연꽃 연못 피날레', '연못 위로 연꽃이 활짝 피어나요', { tags: FLOWER }),
   s2('face-millefeuille', 'cardFace', 640000, 'millefeuille', '오렌지 밀푀유 앞면', '오렌지 조각을 단 금테', { legendary: true, set: 'millefeuille', tags: DESSERT }),
+  s2('victory-millefeuille', 'victory', 645000, 'millefeuille', '파티스리 피날레', '파리의 파티스리에 커다란 밀푀유가 내려앉아요', { legendary: true, set: 'millefeuille', tags: DESSERT }),
   s2('charm-lilac', 'charm', 650000, null, '라일락 가지', '보랏빛 라일락 한 가지', { toy: 'lilac-branch', tags: FLOWER }),
   s2('victory-lavender', 'victory', 660000, 'lavender', '라벤더 언덕 피날레', '보랏빛 언덕 위로 라일락이 피어나요', { tags: FLOWER }),
   s2('charm-cherry-branch', 'charm', 670000, null, '벚꽃 가지', '분홍 벚꽃 한 가지', { toy: 'cherry-branch', tags: FLOWER }),
@@ -239,6 +264,7 @@ export const COSMETICS = Object.freeze([
   s2('victory-sunflower', 'victory', 720000, 'sunflower', '해바라기 피날레', '해바라기 들판 위로 해바라기가 떠올라요', { tags: FLOWER }),
   s2('effect-dubai', 'effect', 725000, 'dubai', '두바이 쫀득쿠키 효과', '쫀득쿠키가 카드 구석에 앉고 피스타치오 · 초콜릿이 톡톡', { legendary: true, set: 'dubai', tags: DESSERT }),
   s2('face-dubai', 'cardFace', 730000, 'dubai', '두바이 쫀득쿠키 앞면', '와플 무늬와 피스타치오를 단 테', { legendary: true, set: 'dubai', tags: DESSERT }),
+  s2('victory-dubai', 'victory', 735000, 'dubai', '쫀득쿠키 피날레', '디저트 카페에서 발밑으로 쫀득쿠키 · 와플이 쌓여요', { legendary: true, set: 'dubai', tags: DESSERT }),
   s2('charm-heart-lantern', 'charm', 740000, null, '하트 풍등', '누르면 하늘로 둥실 떠올라요', { toy: 'heart-lantern' }),
   s2('table-amethyst', 'table', 750000, 'amethyst', '자수정 무도회장', '크리스털 샹들리에 아래 자수정을 박은 탁자', { legendary: true, set: 'amethyst' }),
   s2('back-amethyst', 'cardBack', 760000, 'amethyst', '자수정 카드', '다이아몬드 테 안의 커다란 자수정', { legendary: true, set: 'amethyst' }),
@@ -246,22 +272,29 @@ export const COSMETICS = Object.freeze([
   s2('face-amethyst', 'cardFace', 780000, 'amethyst', '자수정 앞면', '자수정과 다이아몬드를 박은 은테', { legendary: true, set: 'amethyst' }),
   s2('effect-amethyst', 'effect', 785000, 'amethyst', '자수정 효과', '자수정과 다이아몬드가 카드 둘레를 돌아요', { legendary: true, set: 'amethyst' }),
   s2('charm-teapot', 'charm', 790000, null, '금테 찻주전자', '누르면 찻물이 보글보글', { toy: 'teapot' }),
+  s2('victory-amethyst', 'victory', 795000, 'amethyst', '자수정 피날레', '보석 갤러리에서 자수정이 하늘로 떠올라요', { legendary: true, set: 'amethyst' }),
   s2('table-ruby-crown', 'table', 800000, 'ruby-crown', '루비 왕관의 방', '왕관과 루비 목걸이가 놓인 진홍 벨벳 방', { legendary: true, set: 'ruby-crown' }),
   s2('back-ruby-crown', 'cardBack', 810000, 'ruby-crown', '루비 왕관 카드', '금빛 왕관 아래 커다란 루비', { legendary: true, set: 'ruby-crown' }),
   s2('effect-black-rose', 'effect', 820000, 'black-rose', '흑장미 한 송이', '연기 속에서 흑장미가 내려앉아요', { legendary: true, tags: ROSE }),
   s2('face-ruby-crown', 'cardFace', 830000, 'ruby-crown', '루비 왕관 앞면', '루비와 진주를 박은 금테', { legendary: true, set: 'ruby-crown' }),
   s2('effect-ruby-crown', 'effect', 835000, 'ruby-crown', '루비 왕관 효과', '루비가 카드 구석에 앉고 왕관 · 보석이 반짝여요', { legendary: true, set: 'ruby-crown' }),
   s2('charm-black-rose', 'charm', 840000, null, '흑장미', '신비로운 검붉은 장미', { legendary: true, toy: 'rose-black', tags: ROSE }),
+  s2('victory-ruby-crown', 'victory', 845000, 'ruby-crown', '루비 대관식', '보물실에서 루비 왕관이 머리에 내려앉아요', { legendary: true, set: 'ruby-crown' }),
   s2('table-versailles', 'table', 850000, 'versailles', '베르사유 거울의 방', '샹들리에와 금빛 거울의 방', { legendary: true, set: 'versailles' }),
+  s2('back-versailles', 'cardBack', 855000, 'versailles', '베르사유 카드', '금빛 태양 문장과 분홍 장미', { legendary: true, set: 'versailles', tags: ROSE }),
   s2('charm-candelabra', 'charm', 860000, null, '금빛 촛대', '누르면 촛불이 흔들려요', { toy: 'candelabra' }),
+  s2('face-versailles', 'cardFace', 865000, 'versailles', '베르사유 앞면', '로코코 금테와 분홍 장미 · 하늘색 리본', { legendary: true, set: 'versailles', tags: ROSE }),
   s2('victory-versailles', 'victory', 870000, 'versailles', '거울의 방 대관식', '거울의 방에서 왕관이 씌워져요', { legendary: true, set: 'versailles' }),
+  s2('effect-versailles', 'effect', 875000, 'versailles', '베르사유 효과', '금빛 백합 문장이 앉고 장미 · 마카롱 · 부채가 흩날려요', { legendary: true, set: 'versailles', tags: ROSE }),
   s2('charm-champagne', 'charm', 880000, null, '샴페인', '누르면 거품이 보글보글', { toy: 'champagne' }),
   s2('table-golden-rose', 'table', 890000, 'golden-rose', '황금 장미의 방', '검은 벨벳과 금빛 장미의 방', { legendary: true, set: 'golden-rose', tags: ROSE }),
   s2('back-golden-rose', 'cardBack', 905000, 'golden-rose', '황금 장미 카드', '금박 테 안의 장미 다마스크', { legendary: true, set: 'golden-rose', tags: ROSE }),
   s2('face-golden-rose', 'cardFace', 920000, 'golden-rose', '황금 장미 앞면', '금박 무늬와 금테, 에이스는 황금 장미', { legendary: true, set: 'golden-rose', tags: ROSE }),
   s2('charm-crown', 'charm', 935000, null, '보석 왕관', '누르면 빙그르르', { toy: 'crown' }),
   s2('back-million-roses', 'cardBack', 950000, 'million-roses', '백만 송이 장미 카드', '촛불 켠 아치 사이 붉은 장미 문장', { legendary: true, mythic: true, set: 'million-roses', tags: ROSE }),
+  s2('face-million-roses', 'cardFace', 960000, 'million-roses', '백만 송이 장미 앞면', '붉은 장미 화환을 두른 테', { legendary: true, mythic: true, set: 'million-roses', tags: ROSE }),
   s2('victory-million-roses', 'victory', 975000, 'million-roses', '백만 송이 장미 피날레', '장미 들판 위로 꽃다발이 피어나요', { legendary: true, mythic: true, set: 'million-roses', tags: ROSE }),
+  s2('effect-million-roses', 'effect', 985000, 'million-roses', '백만 송이 장미 효과', '장미 꽃다발이 앉고 붉은 꽃잎이 쏟아져요', { legendary: true, mythic: true, set: 'million-roses', tags: ROSE }),
   s2('table-million-roses', 'table', 1000000, 'million-roses', '백만 송이 장미', '끝없는 붉은 장미 바다 한가운데', { legendary: true, mythic: true, set: 'million-roses', tags: ROSE }),
 
   // ── 시즌 2 — 상자 전용(AI 대전 보상 상자에서만)
@@ -323,17 +356,18 @@ export const COSMETIC_SETS = Object.freeze([
   { id: 'rose-gardens', name: '장미 정원', itemIds: ['table-rose-garden-1', 'table-rose-garden-2', 'table-rose-garden-3', 'table-rose-garden-4', 'table-rose-garden-5', 'table-rose-garden-6', 'table-rose-night'] },
   { id: 'seasons', name: '꽃의 계절', itemIds: ['table-giverny', 'table-sunflower', 'table-hydrangea', 'table-peony', 'table-wisteria'] },
   { id: 'masterpiece', name: '명화 속 꽃', itemIds: ['back-vangogh-almond', 'back-japanese-cherry', 'back-vangogh-irises', 'back-monet-waterlilies', 'back-japanese-peony', 'back-morris-rose', 'back-morris-strawberry', 'back-vangogh-roses', 'back-mucha-rose'] },
-  { id: 'winter-garden', name: '왕실 겨울 정원', itemIds: ['table-winter-garden', 'back-winter-garden', 'face-winter-garden'] },
-  { id: 'moon-tiara', name: '달빛 티아라', itemIds: ['back-moon-tiara', 'face-moon-tiara'] },
-  { id: 'pearl-shell', name: '진주 조개', itemIds: ['back-pearl-shell', 'face-pearl-shell'] },
-  { id: 'montblanc', name: '흑임자 몽블랑', itemIds: ['back-montblanc', 'face-montblanc'] },
-  { id: 'millefeuille', name: '밀푀유 파티스리', itemIds: ['table-millefeuille', 'back-millefeuille', 'face-millefeuille'] },
-  { id: 'dubai', name: '두바이 쫀득쿠키', itemIds: ['table-dubai', 'back-dubai', 'face-dubai', 'effect-dubai'] },
-  { id: 'amethyst', name: '자수정', itemIds: ['table-amethyst', 'back-amethyst', 'face-amethyst', 'effect-amethyst'] },
-  { id: 'ruby-crown', name: '루비 왕관', itemIds: ['table-ruby-crown', 'back-ruby-crown', 'face-ruby-crown', 'effect-ruby-crown'] },
-  { id: 'versailles', name: '베르사유', itemIds: ['table-versailles', 'victory-versailles'] },
+  { id: 'winter-garden', name: '왕실 겨울 정원', itemIds: ['table-winter-garden', 'effect-winter-garden', 'back-winter-garden', 'face-winter-garden', 'victory-winter-garden'] },
+  { id: 'moon-tiara', name: '달빛 티아라', itemIds: ['back-moon-tiara', 'face-moon-tiara', 'effect-moon-tiara'] },
+  { id: 'pearl-shell', name: '진주 조개', itemIds: ['back-pearl-shell', 'face-pearl-shell', 'effect-pearl-shell'] },
+  { id: 'montblanc', name: '흑임자 몽블랑', itemIds: ['back-montblanc', 'face-montblanc', 'effect-montblanc'] },
+  { id: 'millefeuille', name: '밀푀유 파티스리', itemIds: ['table-millefeuille', 'back-millefeuille', 'effect-millefeuille', 'face-millefeuille', 'victory-millefeuille'] },
+  { id: 'dubai', name: '두바이 쫀득쿠키', itemIds: ['table-dubai', 'back-dubai', 'face-dubai', 'effect-dubai', 'victory-dubai'] },
+  { id: 'amethyst', name: '자수정', itemIds: ['table-amethyst', 'back-amethyst', 'face-amethyst', 'effect-amethyst', 'victory-amethyst'] },
+  { id: 'ruby-crown', name: '루비 왕관', itemIds: ['table-ruby-crown', 'back-ruby-crown', 'face-ruby-crown', 'effect-ruby-crown', 'victory-ruby-crown'] },
+  { id: 'versailles', name: '베르사유', itemIds: ['table-versailles', 'back-versailles', 'face-versailles', 'victory-versailles', 'effect-versailles'] },
   { id: 'golden-rose', name: '황금 장미', itemIds: ['table-golden-rose', 'back-golden-rose', 'face-golden-rose'] },
-  { id: 'million-roses', name: '백만 송이 장미', itemIds: ['table-million-roses', 'back-million-roses', 'victory-million-roses'] },
+  { id: 'million-roses', name: '백만 송이 장미', itemIds: ['table-million-roses', 'back-million-roses', 'face-million-roses', 'victory-million-roses', 'effect-million-roses'] },
+  { id: 'christmas', name: '크리스마스', itemIds: ['table-christmas', 'back-christmas', 'face-christmas', 'effect-christmas', 'victory-christmas'] },
   { id: 'box-teddy', name: '상자 — 곰 인형', itemIds: ['charm-box-teddy-bow', 'charm-box-teddy-sweater', 'charm-box-teddy-angel', 'charm-box-teddy-rose', 'charm-box-teddy-family', 'effect-box-teddy', 'victory-box-teddy'] },
   { id: 'box-patisserie', name: '상자 — 파티스리', itemIds: ['charm-box-halva', 'charm-box-kulich', 'charm-box-macaron-tower', 'charm-box-parfait', 'charm-box-jelly-cake', 'charm-box-upside-down', 'charm-box-wedding-cake', 'effect-box-macarons', 'table-box-patisserie', 'victory-box-wedding', 'back-box-pistachio', 'face-box-pistachio'] },
   { id: 'box-garden', name: '상자 — 꽃 정원', itemIds: ['charm-box-carnation', 'charm-box-poppy', 'charm-box-pansy', 'charm-box-camomile', 'charm-box-lilac', 'charm-box-violet', 'charm-box-water-lily', 'charm-box-campanula', 'charm-box-tulips', 'charm-box-galle-vase', 'effect-box-flowers'] },
@@ -370,7 +404,7 @@ function asNumber(value) {
 
 export function isUnlocked(entry, peakPoints = 0, passTier = 0, boxItems = []) {
   if (!entry) return false;
-  if (entry.box) return Array.isArray(boxItems) && boxItems.includes(entry.id);
+  if (entry.box || entry.gift) return Array.isArray(boxItems) && boxItems.includes(entry.id);
   if (entry.pass) return asNumber(passTier) >= entry.pass;
   return entry.threshold <= Math.max(0, asNumber(peakPoints));
 }
@@ -387,6 +421,9 @@ export function unlockedCosmetics(peakPoints, passTier = 0, boxItems = []) {
 // 상자에서만 나오는 아이템
 export const BOX_ITEMS = Object.freeze(COSMETICS.filter((entry) => entry.box));
 export const isBoxItemId = (id) => Boolean(cosmeticById(id)?.box);
+export const FIRST_GAME_GIFT = Object.freeze(COSMETICS.filter((entry) => entry.gift === 's2-first-game'));
+// 가진 아이템 목록(boxItems)에 들 수 있는 것 — 상자에서 나온 것과 시즌 2 첫 판 선물
+export const isOwnedItemId = (id) => { const entry = cosmeticById(id); return Boolean(entry?.box || entry?.gift); };
 
 // 점수로 새로 풀린 것(시즌 패스 보상은 newlyUnlockedByPass)
 export function newlyUnlockedCosmetics(previousPeak, nextPeak) {

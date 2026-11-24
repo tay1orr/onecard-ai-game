@@ -26,7 +26,7 @@ export function showResult({ host, won, delta = 0, bonus = false, profile, xpGai
     h('p.res-total', {}, `지금 ${formatNumber(profile.points)}점 ${stars(playerStarsForPoints(profile.points))}`),
     h('div.res-xp', {}, h('div.xp-top', {}, xpLabel, h('b', {}, `+${formatNumber(xpGained)} 경험치`)), h('div.xp-bar', {}, xpFill)),
     unlocked.length ? h('div.res-unlocks', {}, h('p.res-label', {}, unlocked.length > 1 ? `새 아이템 ${unlocked.length}개` : '새 아이템'),
-      h('div.unlock-row', {}, ...unlocked.slice(0, 4).map((item) => h('div.unlock-card', {}, itemPreview(item), h('small', {}, item.name))))) : null,
+      h('div.unlock-row', {}, ...unlocked.slice(0, 5).map((item) => h('div.unlock-card', {}, itemPreview(item), h('small', {}, item.name))))) : null,
     missions.length ? h('div.res-missions', {}, h('p.res-label', {}, `미션 완료 +${formatNumber(missionPoints)}점`), h('p.res-mission-names', {}, missions.map((mission) => mission.title).join(', '))) : null,
     stats.time != null ? h('p.res-stats', {}, `걸린 시간 ${formatTime(stats.time)}, 낸 카드 ${stats.moves || 0}장`) : null,
     extra,

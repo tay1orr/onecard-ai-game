@@ -50,7 +50,7 @@ export function itemPreview(item) {
   }
   if (item.slot === 'effect') {
     const effect = lookOf('effect', item.look);
-    const keys = effect.sprites.length ? effect.sprites.slice(0, 2) : [];
+    const keys = (effect.sprites.length ? effect.sprites : effect.petals || []).slice(0, 2);
     const el = h('div.pv.pv-burst', {}, ...keys.map((key, index) => h(`img.b${index}`, { src: cut(key, 's'), alt: '', loading: 'lazy' })));
     if (effect.band) el.style.setProperty('--pv-band', url(scene(effect.band, 's')));
     if (effect.band) el.classList.add('has-band');

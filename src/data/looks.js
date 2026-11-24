@@ -59,6 +59,7 @@ export const MAPS = {
   'ruby-crown': painted('gpt-map-17', '#ff5d73'),
   amethyst: painted('gpt-map-18', '#b9a2ff'),
   dubai: painted('gpt-map-19', '#c2d27a'),
+  christmas: painted('gpt-map-20', '#e0b45c'),
 };
 
 // ── 카드 뒷면: 흰 테(종이 결) 안에 그림. 시즌 1 그림은 테 없이 꽉 채운다.
@@ -122,6 +123,8 @@ export const BACKS = {
   'ruby-crown': s1Back('gpt-back-11'),
   amethyst: s1Back('gpt-back-12'),
   dubai: s1Back('gpt-back-13'),
+  versailles: s1Back('gpt-back-14'),
+  christmas: s1Back('gpt-back-15'),
 };
 
 // ── 카드 앞면: 종이 결 · 잉크 색 · 그림카드 묶음 · 에이스 그림 · 테
@@ -164,6 +167,9 @@ export const FACES = {
   'ruby-crown': gptFace('09', { tint: '#faf3ea', ink: '#2a1410', red: '#a3121f', accent: '#c9a043' }),
   amethyst: gptFace('10', { tint: '#f1edf8', ink: '#231a3a', red: '#a3203f', accent: '#8f7ad6' }),
   dubai: gptFace('11', { tint: '#fbf1e0', ink: '#2e1f12', red: '#a8322a', accent: '#8a9a3a' }),
+  'million-roses': gptFace('12', { tint: '#fdf5e8', ink: '#2a1416', red: '#a3121f', accent: '#c2364a' }),
+  versailles: gptFace('13', { tint: '#fef9ef', ink: '#2a2230', red: '#b0284a', accent: '#c9a043' }),
+  christmas: gptFace('14', { tint: '#f6e5cf', ink: '#1f2a1c', red: '#a3121f', accent: '#c9a043' }),
 };
 
 // ── 카드 효과(fx.js burst) — 한 판에 수십 번 나오므로 작고 짧게, 낸 카드는 가리지 않게(11-24 선생님 「단조롭지 않고도 너무 신경 쓰이지 않게」)
@@ -204,6 +210,15 @@ export const EFFECTS = {
   dubai: E({ sprites: ['fx-dubai-2', 'fx-dubai-1'], moves: ['settle', 'fan', 'rise'], petals: ['fx-dubai-3', 'fx-dubai-4', 'fx-dubai-5', 'fx-dubai-6'], tone: '#c2d27a' }),
   'ruby-crown': E({ sprites: ['fx-jewel-2', 'fx-jewel-1'], moves: ['settle', 'ring', 'fan'], petals: ['fx-jewel-4', 'fx-jewel-5', 'fx-jewel-6'], tone: '#ff5d73' }),
   amethyst: E({ sprites: ['fx-jewel-3', 'fx-jewel-4'], moves: ['ring', 'settle', 'fan'], petals: ['fx-jewel-5', 'fx-jewel-6'], tone: '#b9a2ff' }),
+  // 선생님 GPT 효과 둘째 묶음(11-24 저녁 효과11~18) — 세트마다 효과가 없던 곳 + 크리스마스(시즌 2 첫 판 선물)
+  'winter-garden': E({ sprites: ['fx-winter-1', 'fx-winter-2'], moves: ['settle', 'breeze', 'ring'], petals: ['fx-winter-3', 'fx-winter-4', 'fx-winter-5', 'fx-winter-6'], tone: '#dfeaf5' }),
+  millefeuille: E({ sprites: ['fx-millefeuille-1', 'fx-millefeuille-2'], moves: ['settle', 'fan', 'rise'], petals: ['fx-millefeuille-3', 'fx-millefeuille-4', 'fx-millefeuille-5', 'fx-millefeuille-6'], tone: '#f2b05e' }),
+  versailles: E({ sprites: ['fx-versailles-2', 'fx-versailles-1', 'fx-versailles-3'], moves: ['settle', 'ring', 'fan'], petals: ['fx-versailles-4', 'fx-versailles-5', 'fx-versailles-6'], tone: '#f3cf7a' }),
+  'million-roses': E({ sprites: ['fx-million-1', 'fx-million-2'], moves: ['breeze', 'settle', 'ring'], petals: ['fx-million-3', 'fx-million-4', 'fx-million-5', 'fx-million-6'], tone: '#ff5d73' }),
+  'moon-tiara': E({ sprites: ['fx-moon-1', 'fx-moon-2'], moves: ['ring', 'settle', 'rise'], petals: ['fx-moon-3', 'fx-moon-4', 'fx-moon-5', 'fx-moon-6'], tone: '#c9d6ff' }),
+  'pearl-shell': E({ sprites: ['fx-pearl-1', 'fx-pearl-3'], moves: ['rise', 'settle', 'fan'], petals: ['fx-pearl-2', 'fx-pearl-4', 'fx-pearl-5', 'fx-pearl-6'], tone: '#ffd1dc' }),
+  montblanc: E({ sprites: ['fx-montblanc-1', 'fx-montblanc-2'], moves: ['settle', 'fan', 'rise'], petals: ['fx-montblanc-3', 'fx-montblanc-4', 'fx-montblanc-5', 'fx-montblanc-6'], tone: '#c9a98a' }),
+  christmas: E({ sprites: ['fx-christmas-2', 'fx-christmas-1', 'fx-christmas-5'], moves: ['settle', 'fan', 'rise'], petals: ['fx-christmas-3', 'fx-christmas-4', 'fx-christmas-6', 'fx-winter-2'], tone: '#e0b45c' }),
 };
 
 // ── 승리 연출(src/ui/victory.js): 탁자 → 우는 상대 → 뛰어오르는 내 캐릭터 → 장면. 아이템은 장면과 붙는 방식을 정한다(11-24 「오브젝트 하나 떨구고 배경 · 글씨만이 다가 아님」)
@@ -248,6 +263,13 @@ export const VICTORIES = {
   'box-wedding': V({ backdrop: { scene: 'patisserie' }, transition: 'petals', hero: 'wedding-cake', heroSize: 1.15, anchor: 'beside', ambient: 'petals', petals: PINK_PETALS, sweep: ['fx-pink-1', 'fx-pink-3', 'fx-white-1', 'fx-heart-5'], accent: '#ffd1dc' }),
   'box-teddy': V({ transition: 'confetti', hero: 'teddy-family', heroSize: 1.15, anchor: 'beside', sprites: ['teddy-red-bow', 'teddy-angel', 'teddy-sweater'], ambient: 'cannons', accent: '#e8b48a' }),
   obsidian: V({ backdrop: { scene: 'night-city' }, transition: 'flash', hero: 'diamond', heroSize: 0.9, anchor: 'beside', ambient: 'sparkles', accent: '#c9d3e6' }),
+  // 선생님 GPT 승리 장면 배경(11-24 저녁 배경01~06) — 그 세트 맵과 같은 장소를 탁자 없이 눈높이로. 소품 · 흩날리는 조각은 GPT 효과 조각
+  'winter-garden': V({ backdrop: { paint: 'gpt-scene-01' }, transition: 'petals', hero: 'fx-winter-1', heroSize: 1.05, anchor: 'feet', sprites: ['fx-winter-4', 'fx-white-1'], ambient: 'petals', petals: ['fx-winter-2', 'fx-winter-3', 'fx-winter-6'], accent: '#cfe0f2' }),
+  millefeuille: V({ backdrop: { paint: 'gpt-scene-02' }, transition: 'petals', hero: 'fx-millefeuille-1', heroSize: 1.1, anchor: 'beside', sprites: ['fx-millefeuille-2', 'fx-millefeuille-3'], ambient: 'petals', petals: ['fx-millefeuille-2', 'fx-millefeuille-5', 'fx-millefeuille-6'], accent: '#f2b05e' }),
+  'ruby-crown': V({ backdrop: { paint: 'gpt-scene-03' }, transition: 'flash', hero: 'fx-jewel-1', anchor: 'head', ambient: 'petals', petals: ['fx-jewel-2', 'fx-jewel-4', 'fx-jewel-6'], accent: '#ff5d73' }),
+  amethyst: V({ backdrop: { paint: 'gpt-scene-04' }, transition: 'pan', hero: 'fx-jewel-3', anchor: 'sky', sprites: ['fx-jewel-4', 'fx-jewel-3'], ambient: 'sparkles', accent: '#b9a2ff' }),
+  dubai: V({ backdrop: { paint: 'gpt-scene-05' }, transition: 'pan', hero: 'fx-dubai-2', anchor: 'feet', sprites: ['fx-dubai-1', 'fx-dubai-3'], ambient: 'petals', petals: ['fx-dubai-4', 'fx-dubai-5', 'fx-dubai-6'], accent: '#c2d27a' }),
+  christmas: V({ backdrop: { paint: 'gpt-scene-06' }, transition: 'confetti', hero: 'fx-christmas-2', anchor: 'beside', sprites: ['fx-christmas-1', 'fx-christmas-5'], ambient: 'petals', petals: ['fx-winter-2', 'fx-christmas-6', 'fx-christmas-3'], accent: '#e0b45c' }),
 };
 
 // ── 장난감(탁자 위 실물) — 끌어 던지고 누르면 움직이며 소리 · 대사

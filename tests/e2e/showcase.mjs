@@ -29,6 +29,10 @@ const PRESETS = [
   { name: 'dubai', points: 735000, equipped: { table: 'table-dubai', cardBack: 'back-dubai', cardFace: 'face-dubai', effect: 'effect-petal-wind', victory: 'victory-sunflower', avatar: 'avatar-mangom', charms: ['charm-macarons', 'charm-teapot', 'charm-pearls'] } },
   { name: 'amethyst', points: 795000, equipped: { table: 'table-amethyst', cardBack: 'back-amethyst', cardFace: 'face-amethyst', effect: 'effect-white-rose', victory: 'victory-lavender', avatar: 'avatar-sailormoon', charms: ['charm-pearls', 'charm-heart-lantern', 'charm-lilac'] } },
   { name: 'ruby-crown', points: 845000, equipped: { table: 'table-ruby-crown', cardBack: 'back-ruby-crown', cardFace: 'face-ruby-crown', effect: 'effect-single-rose', victory: 'victory-curtain-call', avatar: 'avatar-choonsik', charms: ['charm-candelabra', 'charm-champagne', 'charm-pearls'] } },
+  // 11-24 저녁 둘째 묶음 — 크리스마스(시즌 2 첫 판 선물) · 베르사유 · 백만 송이 장미 카드 · 효과, 새 내 캐릭터
+  { name: 'christmas', points: 335000, owned: ['table-christmas', 'back-christmas', 'face-christmas', 'effect-christmas', 'victory-christmas'], equipped: { table: 'table-christmas', cardBack: 'back-christmas', cardFace: 'face-christmas', effect: 'effect-christmas', victory: 'victory-christmas', avatar: 'avatar-korilakkuma', charms: ['charm-music-box', 'charm-rose-teacup-set', 'charm-rose-dome'] } },
+  { name: 'versailles-cards', points: 1000000, equipped: { table: 'table-versailles', cardBack: 'back-versailles', cardFace: 'face-versailles', effect: 'effect-versailles', victory: 'victory-versailles', avatar: 'avatar-little-prince', charms: ['charm-candelabra', 'charm-champagne', 'charm-crown'] } },
+  { name: 'million-roses', points: 1000000, equipped: { table: 'table-million-roses', cardBack: 'back-million-roses', cardFace: 'face-million-roses', effect: 'effect-million-roses', victory: 'victory-million-roses', avatar: 'avatar-bellygom', charms: ['charm-crown', 'charm-black-rose', 'charm-white-rose'] } },
   { name: 'student', points: 0, equipped: null },
   { name: 'dessert', points: 20000, equipped: { table: 'table-dessert-cafe', cardBack: 'back-strawberry-milk', cardFace: 'face-dessert-cafe', effect: 'effect-cloud-pop', victory: 'victory-confetti-cannons', avatar: 'avatar-cinnamoroll', charms: ['charm-cafe-bear', 'charm-classic', 'charm-classic'] } },
   { name: 'picnic', points: 20000, equipped: { table: 'table-night-picnic', cardBack: 'back-antique-atlas', cardFace: 'face-antique-manuscript', effect: 'effect-aurora', victory: 'victory-dual-fireworks', avatar: 'avatar-choonsik', charms: ['charm-classic', 'charm-star-cat', 'charm-classic'] } },
@@ -46,6 +50,7 @@ try {
       : { viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1, locale: 'ko-KR' });
     const profile = { points: preset.points, peakPoints: preset.points, wins: Math.round(preset.points / 450), games: Math.round(preset.points / 350), seasonXp: 0 };
     if (preset.equipped) profile.equipped = preset.equipped;
+    if (preset.owned) profile.boxItems = preset.owned;
     await context.addInitScript(({ profile: seeded, gift }) => {
       if (sessionStorage.getItem('seeded')) return;
       sessionStorage.setItem('seeded', '1');
