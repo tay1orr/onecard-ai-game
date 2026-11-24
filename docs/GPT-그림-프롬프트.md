@@ -63,6 +63,31 @@ Sailor Moon (Usagi Tsukino) from the 1992 anime "Sailor Moon", classic early-90s
 
 ---
 
+## 1순위 — 내 캐릭터 6 (정사각형, 배경 투명)
+
+상대 캐릭터와 따로인 「나만 쓰는 캐릭터」입니다. 상대 캐릭터처럼 참고 그림이 없는 새 대화창에서 만들어 주세요. 파일 이름은 `나1.png` ~ `나6.png` 입니다.
+넣으면 로비 오른쪽 위 내 점수 칩 → 「내 프로필」에서 처음부터 고를 수 있습니다. 바꾸고 싶은 캐릭터가 있으면 말씀만 해 주세요.
+
+### 나1 — 마이멜로디
+My Melody, the white rabbit with a pink hood and a little flower from Sanrio, holding a small pink rose with both paws, sweet gentle smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 나2 — 쿠로미
+Kuromi from Sanrio, black jester hood with a pink skull, mischievous wink, holding a playing card up near her face. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 나3 — 시나모롤
+Cinnamoroll, the white puppy with long floppy ears, blue eyes and a curly cinnamon-roll tail from Sanrio, happily hugging a cinnamon roll. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 나4 — 폼폼푸린
+Pompompurin, the golden-yellow puppy with a small brown beret from Sanrio, sitting next to a custard pudding with caramel on top, content smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 나5 — 망그러진 곰
+Mangeuroojin Gom (the "broken bear"), the popular Korean character — a soft brown teddy bear with a slightly droopy, imperfect, endearing look, holding a single red rose, shy smile. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+### 나6 — 잔망루피
+Zanmang Loopy, the pink beaver character from "Pororo the Little Penguin", with her famous half-lidded mischievous expression, holding a heart-shaped balloon. Character portrait for a card game player: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
+
+---
+
 ## 1순위 — 판 10 (가로 3:2)
 
 판은 모두 같은 틀입니다. 가운데 타원 탁자 면은 **완전히 비어 있어야** 합니다(카드 · 물건 없음).

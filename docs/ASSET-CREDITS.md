@@ -388,6 +388,12 @@
 | paper-white | Paper001 | ambientCG | CC0 1.0 | https://ambientcg.com/view?id=Paper001 |
 | paper-cream | Paper002 | ambientCG | CC0 1.0 | https://ambientcg.com/view?id=Paper002 |
 
+### 선생님이 만든 그림(GPT 이미지 생성) (1)
+
+| 키 | 제목 | 만든 이 · 소장 | 조건 | 출처 |
+|---|---|---|---|---|
+| gpt | 장미 정원 · 베르사유 · 황금 장미 · 백만 송이 판, 황금 장미 카드 뒷면 · 앞면 테, 캐릭터(gpt그림 → scripts/build-gpt.mjs) | 이 게임 전용(선생님 제작) | 이 게임 전용 |  |
+
 ### 시즌 1 그림(그대로 되살림) (1)
 
 | 키 | 제목 | 만든 이 · 소장 | 조건 | 출처 |

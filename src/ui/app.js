@@ -12,6 +12,7 @@ import { openCollection } from './collection.js';
 import { openPass } from './pass.js';
 import { playOpening } from './opening.js';
 import { openSettings, openRules, openMissions, openCredits, openAccount } from './panels.js';
+import { openProfile } from './profile.js';
 import { loadPlayerProfile } from '../core/rating.js';
 import { hasAuthCallbackInUrl, hasStoredSession } from '../net/supabase.js';
 import { warm, cut } from '../data/assets.js';
@@ -77,6 +78,7 @@ export function createApp(root) {
       onMissions: () => openMissions(),
       onSettings: () => openSettingsPanel(),
       onAccount: () => openAccountPanel(),
+      onProfile: () => openProfile({ host: overlayHost, onClose: () => showLobby(), onChanged: () => requestSync(2500), onAccount: () => openAccountPanel() }),
       onToggleSound: () => settings.set({ sound: !settings.get().sound }),
     });
     // 최고 점수로 이미 열린 시즌 2 새 아이템이 있으면 한 번 보여 준다

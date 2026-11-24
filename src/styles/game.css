@@ -223,7 +223,9 @@
 .vs-text { display: flex; flex-direction: column; min-width: 0; }
 .vs-title { color: #d7deeb; font-size: 14px; font-weight: 700; }
 .vs-name { font-size: clamp(26px, 3.4vw, 50px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; }
-.vs-stars { color: var(--gold); letter-spacing: 2px; }
+.vs-stars { display: inline-block; min-height: 1.3em; color: var(--gold); letter-spacing: 2px; transform-origin: 100% 50%; }
+.vs-level { min-height: 1.3em; margin-top: 2px; color: #c9d2e2; font-size: 13px; font-weight: 600; }
+.vs-rival.is-elite .vs-stars { color: #ffd77a; }
 .vs-mark { position: relative; font: 900 clamp(56px, 8vw, 132px)/0.8 var(--font-display); color: var(--gold); text-shadow: 6px 6px 0 #05070d; opacity: 0; }
 .vs-reward { position: relative; font: 800 22px/1 var(--font-ui); color: var(--chalk); }
 .vs-reward.is-small { font-size: 16px; color: var(--mute); }

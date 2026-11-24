@@ -37,10 +37,12 @@ export async function showVersus({ host, me, rival, reward, bonus, eventName }) 
   const rivalName = h('strong.vs-name', {}, '');
   const rivalTitle = h('small.vs-title', {}, '');
   const rivalStars = h('span.vs-stars', {}, '');
-  const rivalSide = h('div.vs-side.vs-rival', {}, h('div.vs-plate', {}, rivalImg), h('div.vs-text', {}, rivalTitle, rivalName, rivalStars));
+  const rivalLevel = h('small.vs-level', {}, '');
+  const rivalPlate = h('div.vs-plate', {}, rivalImg);
+  const rivalSide = h('div.vs-side.vs-rival', {}, rivalPlate, h('div.vs-text', {}, rivalTitle, rivalName, rivalStars, rivalLevel));
   const meSide = h('div.vs-side.vs-me', { vars: { '--side': me.color || '#f2b544' } },
     h('div.vs-plate', {}, h('img.vs-portrait', { src: cut(me.portrait), alt: '' })),
-    h('div.vs-text', {}, h('small.vs-title', {}, `${formatNumber(me.points)}점`), h('strong.vs-name', {}, '나'), h('span.vs-stars', {}, stars(me.stars))));
+    h('div.vs-text', {}, h('small.vs-title', {}, `${formatNumber(me.points)}점`), h('strong.vs-name', {}, me.name || '나'), h('span.vs-stars', {}, stars(me.stars))));
   const vsMark = h('b.vs-mark', {}, 'VS');
   const rewardLine = h('div.vs-reward', {}, '');
   const bonusBadge = bonus ? h('div.vs-bonus', {}, h('b', {}, '보너스판'), h('small', {}, '이기면 점수 2배')) : null;
@@ -54,29 +56,71 @@ export async function showVersus({ host, me, rival, reward, bonus, eventName }) 
   gsap.fromTo(meSide, { xPercent: -120 }, { xPercent: 0, duration: 0.45, ease: 'power3.out' });
   gsap.fromTo(rivalSide, { xPercent: 120 }, { xPercent: 0, duration: 0.45, ease: 'power3.out' });
 
-  // 룰렛 — 캐릭터 여덟이 돌다가 점점 느려지며 멈춘다. 난이도(별)는 따로 정해져 멈춘 뒤에 보인다
+  // 화면을 누르면 끝으로 건너뛴다(하루에 여러 판 하는 사람이 기다리지 않게)
+  let skipped = reduced;
+  overlay.addEventListener('pointerdown', () => { skipped = true; }, { once: true });
+  const pause = (ms) => (skipped ? Promise.resolve() : wait(ms));
+
+  // 첫 박자 「누구?」 — 캐릭터 여덟이 빠르게 돌다가 점점 느려지며 멈춘다(약 2.4초). 난이도(별)는 아직 안 보인다
+  status.textContent = '상대를 고르고 있어요';
   const pool = CHARACTERS;
-  const sequence = reduced || pool.length < 2 ? [] : Array.from({ length: 11 }, (_, index) => pool[(index * 2 + Math.floor(Math.random() * pool.length)) % pool.length]);
+  const sequence = [];
+  if (pool.length > 1) {
+    let previous = null;
+    for (let index = 0; index < 17; index += 1) {
+      const choices = pool.filter((candidate) => candidate.id !== previous && candidate.id !== rival.id);
+      const candidate = choices[Math.floor(Math.random() * choices.length)] || pool[0];
+      sequence.push(candidate);
+      previous = candidate.id;
+    }
+  }
   sequence.push(rival);
   for (let index = 0; index < sequence.length; index += 1) {
+    if (skipped) break;
     const candidate = sequence[index];
     rivalImg.src = cut(candidate.portrait);
     rivalName.textContent = candidate.name;
     rivalTitle.textContent = candidate.title;
-    rivalStars.textContent = '';
     rivalSide.style.setProperty('--side', candidate.color);
-    play('tick', { volume: 0.5, rate: 0.9 + index * 0.03 });
-    gsap.fromTo(rivalImg, { scale: 0.88 }, { scale: 1, duration: 0.12 });
     const progress = index / Math.max(1, sequence.length - 1);
-    await wait(40 + Math.round(progress ** 2.6 * 190));
+    play('tick', { volume: 0.45, rate: 1.25 - progress * 0.45 });
+    gsap.fromTo(rivalImg, { y: -14, scale: 0.9, opacity: 0.6 }, { y: 0, scale: 1, opacity: 1, duration: 0.1 + progress * 0.12, ease: 'power2.out' });
+    await pause(45 + Math.round(progress ** 2.4 * 300));
   }
-  rivalStars.textContent = stars(rival.stars);
+  // 멈춤 — 고른 캐릭터를 확정한다
+  rivalImg.src = cut(rival.portrait);
+  rivalName.textContent = rival.name;
+  rivalTitle.textContent = rival.title;
+  rivalSide.style.setProperty('--side', rival.color);
   status.textContent = `${rival.title} ${josa(rival.name, '과/와')} 붙어요`;
-  rewardLine.textContent = `이기면 +${formatNumber(reward)}점`;
   play('bong');
   if (!reduced) {
+    gsap.fromTo(rivalPlate, { boxShadow: `0 0 0 0 ${rival.color}` }, { boxShadow: `0 0 0 26px transparent`, duration: 0.7, ease: 'power2.out' });
+    gsap.fromTo(rivalImg, { scale: 1.28 }, { scale: 1, duration: 0.55, ease: 'elastic.out(1.4, .4)' });
+  }
+  await pause(450);
+
+  // 둘째 박자 「얼마나 센가?」 — 별이 하나씩 켜지고, 그 난이도가 어떻게 두는지 한 줄
+  for (let count = 1; count <= rival.stars; count += 1) {
+    if (skipped) break;
+    rivalStars.textContent = stars(count);
+    play('tick', { volume: 0.55, rate: 1 + count * 0.09 });
+    gsap.fromTo(rivalStars, { scale: 1.35 }, { scale: 1, duration: 0.18, ease: 'power2.out' });
+    await pause(rival.stars >= 6 ? 130 : 110);
+  }
+  rivalStars.textContent = stars(rival.stars);
+  rivalLevel.textContent = rival.blurb || '';
+  rivalSide.classList.toggle('is-elite', rival.stars >= 6);
+  if (!skipped) gsap.fromTo(rivalLevel, { y: 8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: 'power2.out' });
+  if (rival.stars >= 6 && !skipped) {
+    play('bonus', { volume: 0.5 });
+    gsap.fromTo(rivalStars, { textShadow: '0 0 0 rgba(255,210,120,0)' }, { textShadow: '0 0 18px rgba(255,210,120,.95)', duration: 0.3, yoyo: true, repeat: 1 });
+  }
+  await pause(320);
+  rewardLine.textContent = `이기면 +${formatNumber(reward)}점`;
+  play('stack', { volume: 0.7 });
+  if (!reduced) {
     gsap.fromTo(vsMark, { scale: 3, opacity: 0, rotation: -20 }, { scale: 1, opacity: 1, rotation: -8, duration: 0.4, ease: 'back.out(2.6)' });
-    gsap.fromTo(rivalImg, { scale: 1.25 }, { scale: 1, duration: 0.5, ease: 'elastic.out(1.4, .4)' });
     gsap.to(stage, { x: 6, duration: 0.05, yoyo: true, repeat: 5 });
   } else gsap.set(vsMark, { opacity: 1 });
   gsap.fromTo(rewardLine, { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, delay: 0.2 });
@@ -89,7 +133,7 @@ export async function showVersus({ host, me, rival, reward, bonus, eventName }) 
 }
 
 // 주사위로 선공 — 같은 눈이면 다시
-export function runDice({ overlay, rival }) {
+export function runDice({ overlay, rival, meName = '나' }) {
   return new Promise((resolve) => {
     const myDie = makeDie('#f2b544');
     const rivalDie = makeDie(rival.color);
@@ -98,7 +142,7 @@ export function runDice({ overlay, rival }) {
     const note = h('p.dice-note', { role: 'status', 'aria-live': 'polite' }, '주사위를 굴려 먼저 낼 사람을 정해요');
     const button = h('button.btn.primary.dice-btn', { type: 'button' }, '주사위 굴리기');
     const panel = h('div.dice-panel', {},
-      h('div.dice-row', {}, h('div.dice-col', {}, myDie, h('small', {}, '나'), myValue), h('div.dice-col', {}, rivalDie, h('small', {}, rival.name), rivalValue)),
+      h('div.dice-row', {}, h('div.dice-col', {}, myDie, h('small', {}, meName), myValue), h('div.dice-col', {}, rivalDie, h('small', {}, rival.name), rivalValue)),
       note, button);
     overlay.querySelector('.vs-status')?.replaceWith(panel);
     overlay.querySelector('.vs-reward')?.classList.add('is-small');
@@ -127,7 +171,7 @@ export function runDice({ overlay, rival }) {
         return;
       }
       const first = mine > theirs ? 0 : 1;
-      note.textContent = first === 0 ? `${mine} 대 ${theirs}, 내가 먼저 내요` : `${mine} 대 ${theirs}, ${rival.name}가 먼저 내요`;
+      note.textContent = first === 0 ? `${mine} 대 ${theirs}, 내가 먼저 내요` : `${mine} 대 ${theirs}, ${josa(rival.name, '이/가')} 먼저 내요`;
       play('confirm');
       gsap.fromTo(first === 0 ? myDie : rivalDie, { scale: 1 }, { scale: 1.18, duration: 0.18, yoyo: true, repeat: 1 });
       await wait(settings.reduced() ? 200 : 750);

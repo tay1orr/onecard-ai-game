@@ -56,7 +56,7 @@ try {
   await page.waitForSelector('.versus', { timeout: 8000 });
   await sleep(600);
   await shot('04-versus');
-  await page.waitForSelector('.dice-btn', { timeout: 10000 });
+  await page.waitForSelector('.dice-btn', { timeout: 20000 });
   await sleep(300);
   for (let attempt = 0; attempt < 6; attempt += 1) {
     await page.click('.dice-btn');

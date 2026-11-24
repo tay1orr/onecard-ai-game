@@ -21,7 +21,7 @@ const ICON = {
 
 function soundIcon() { return settings.get().sound ? ICON.sound : ICON.mute; }
 
-export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCollection, onPass, onMissions, onSettings, onAccount, onToggleSound }) {
+export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCollection, onPass, onMissions, onSettings, onAccount, onProfile, onToggleSound }) {
   const progress = ratingProgress(profile.points);
   const weights = matchmakingWeights(profile.points);
   const pass = tierProgress(profile.seasonXp);
@@ -61,7 +61,7 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
     h('header.lobby-top', {},
       h('div.logo', { 'aria-label': 'ONE! 시즌 2' }, h('b.logo-word', {}, 'ONE!'), h('span.logo-season', {}, h('small', {}, 'SEASON'), h('b', {}, '2'))),
       h('div.top-right', {},
-        h('button.profile-chip', { type: 'button', onClick: () => onAccount?.(), 'aria-label': `내 기록 ${formatNumber(profile.points)}점, ${statusLabel}` },
+        h('button.profile-chip', { type: 'button', onClick: () => onProfile?.(), 'aria-label': `내 프로필 열기, ${formatNumber(profile.points)}점, ${statusLabel}` },
           h('img', { src: cut(avatar.portrait), alt: '' }),
           h('span.chip-text', {}, h('b', {}, `${formatNumber(profile.points)}점`), h('small', {}, `${stars(progress.stars)} ${statusLabel}`))),
         h('button.icon-btn.sound-btn', { type: 'button', 'aria-label': '소리 켜기 끄기', html: soundIcon(), onClick: (event) => { onToggleSound?.(); event.currentTarget.innerHTML = soundIcon(); } }),

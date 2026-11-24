@@ -5,6 +5,7 @@
 // 점수 사다리는 100만 점까지 — 30만~40만 5천 점 · 40만~60만 1만 점 · 60만~100만 1만 5천 점마다. 점수 펌핑은 보상 상자(reward-box.js)가 맡는다.
 import { TOYS } from '../data/looks.js';
 import { PLATE_NAMES } from '../data/plate-names.js';
+import { hasGptArt } from '../data/gpt-art.js';
 
 export { TOYS };
 
@@ -136,6 +137,11 @@ export const COSMETICS = Object.freeze([
   s2('avatar-hamster', 'avatar', 1500, null, '햄스터', '볼이 빵빵한 햄스터', { portrait: 'hamster' }),
   s2('avatar-frog', 'avatar', 5000, null, '청개구리', '눈이 동그란 청개구리', { portrait: 'frog' }),
   s2('avatar-chick', 'avatar', 9000, null, '병아리', '삐약삐약 병아리', { portrait: 'chick' }),
+  // 내 캐릭터 여섯 — 상대 캐릭터와 따로(11-24 선생님). 선생님이 GPT 로 만든 그림(gpt그림/나1~나6)이 들어온 것만 처음부터 고를 수 있다
+  ...[
+    [1, '마이멜로디', '분홍 두건을 쓴 하얀 토끼'], [2, '쿠로미', '해골 두건을 쓴 장난꾸러기'], [3, '시나모롤', '귀가 긴 하얀 강아지'],
+    [4, '폼폼푸린', '갈색 베레모를 쓴 푸딩 강아지'], [5, '망그러진 곰', '어딘가 망그러진 갈색 곰'], [6, '잔망루피', '눈을 반쯤 감은 분홍 비버'],
+  ].filter(([number]) => hasGptArt(`me-${number}`)).map(([number, name, description]) => s2(`avatar-me-${number}`, 'avatar', 0, null, name, description, { portrait: `me-${number}` })),
 
   // ── 시즌 2 — 시즌 패스 보상
   pass('avatar-fox', 'avatar', 1, null, '붉은여우', '시즌 2 패스 1단계', { portrait: 'fox' }),

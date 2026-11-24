@@ -1,6 +1,6 @@
 // GPT 로 만든 그림 넣기 — node scripts/build-gpt.mjs
 // 선생님이 gpt그림/ 에 넣은 그림을 게임 크기로 줄여 public/assets/s2/r 에 넣고, src/data/gpt-art.js 에 있는 그림 목록을 적는다.
-// 파일 이름은 앞 번호만 본다: 상대1~8(상대 캐릭터) · 판01~14(맵) · 뒷면01~04(카드 뒷면) · 앞면01~02(카드 앞면 테). 프롬프트는 docs/GPT-그림-프롬프트.md
+// 파일 이름은 앞 번호만 본다: 상대1~8(상대 캐릭터) · 나1~6(내 캐릭터) · 판01~14(맵) · 뒷면01~04(카드 뒷면) · 앞면01~02(카드 앞면 테). 프롬프트는 docs/GPT-그림-프롬프트.md
 // 같은 번호 파일이 여럿이면 가장 최근 것을 쓴다. 상대 그림은 배경이 투명하지 않으면 가장자리 단색 배경을 지운다.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,14 +10,14 @@ import sharp from 'sharp';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(root, 'gpt그림');
 const OUT = path.join(root, 'public/assets/s2/r');
-const KINDS = { 상대: 'rival', 판: 'map', 뒷면: 'back', 앞면: 'face' };
-const LIMIT = { rival: 8, map: 14, back: 4, face: 2 };
+const KINDS = { 상대: 'rival', 나: 'me', 판: 'map', 뒷면: 'back', 앞면: 'face' };
+const LIMIT = { rival: 8, me: 6, map: 14, back: 4, face: 2 };
 
 fs.mkdirSync(SRC, { recursive: true });
 const files = fs.readdirSync(SRC, { withFileTypes: true })
   .filter((entry) => entry.isFile() && /\.(png|jpe?g|webp)$/i.test(entry.name))
   .map((entry) => {
-    const match = entry.name.match(/^(상대|판|뒷면|앞면)\s*0*(\d+)/);
+    const match = entry.name.match(/^(상대|나|판|뒷면|앞면)\s*0*(\d+)/);
     if (!match) return null;
     const kind = KINDS[match[1]];
     const number = Number(match[2]);
@@ -89,7 +89,7 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
     await sharp(entry.file).resize(150, 225, { fit: 'cover' }).webp({ quality: 80 }).toFile(path.join(OUT, 'paint', `${key}-s.webp`));
     made.push(`${entry.kind}-${pad(entry.number)}`);
   } else {
-    const key = `rival-${entry.number}`;
+    const key = `${entry.kind === 'me' ? 'me' : 'rival'}-${entry.number}`;
     const png = await cutOut(entry.file);
     const trimmed = await sharp(png).trim({ threshold: 1 }).png().toBuffer();
     await sharp(trimmed).resize(640, 640, { fit: 'inside' }).webp({ quality: 86, alphaQuality: 90 }).toFile(path.join(OUT, 'cut', `${key}.webp`));
@@ -102,4 +102,4 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
 const list = [...new Set(made)].sort();
 fs.writeFileSync(path.join(root, 'src/data/gpt-art.js'), `// GPT 로 만든 그림 목록 — scripts/build-gpt.mjs 가 gpt그림/ 을 줄여 public 에 넣고 이 파일을 다시 쓴다(손으로 고치지 않음)\nexport const GPT_ART = Object.freeze(${JSON.stringify(list)});\nexport const hasGptArt = (key) => GPT_ART.includes(key);\n`);
 console.log(`GPT 그림 ${list.length}장: ${list.join(', ') || '없음'}`);
-if (skipped.length) console.log(`이름이 맞지 않아 건너뜀: ${skipped.join(', ')} (앞에 상대1 · 판01 · 뒷면01 · 앞면01 처럼 번호를 붙여 주세요)`);
+if (skipped.length) console.log(`이름이 맞지 않아 건너뜀: ${skipped.join(', ')} (앞에 상대1 · 나1 · 판01 · 뒷면01 · 앞면01 처럼 번호를 붙여 주세요)`);
