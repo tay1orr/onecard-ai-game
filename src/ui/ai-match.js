@@ -10,7 +10,7 @@ import { rollRewardBoxes, veteranBonus } from '../core/reward-box.js';
 import { applyMissionEvents, missionEventsForCard, mergeUnlockedItems } from '../core/missions.js';
 import { bonusChanceWithEvent, isOpeningEventActive, OPENING_EVENT } from '../core/season.js';
 import { cosmeticById } from '../core/cosmetics.js';
-import { rivalByKey, pickLine } from '../data/characters.js';
+import { makeRival, pickLine } from '../data/characters.js';
 import { h, wait, formatNumber, josa } from './dom.js';
 import { openRewardBoxes } from './reward-boxes.js';
 import { createTable } from './table.js';
@@ -32,7 +32,7 @@ const SPECIAL = new Set(['2', 'A', 'J', '7', 'JOKER']);
 export async function startAiMatch({ host, onExit, onFinished, openRules }) {
   let profile = loadPlayerProfile();
   const opponent = selectAiOpponent(profile.points, Math.random, profile.recentAiStars);
-  const rival = rivalByKey(opponent.key);
+  const rival = makeRival(opponent); // 난이도(별)와 캐릭터를 따로 무작위로
   const bonus = Math.random() < bonusChanceWithEvent(bonusMatchChance(profile.points));
   profile = rememberAiOpponent(profile, rival.stars);
   const xpAtStart = profile.seasonXp;

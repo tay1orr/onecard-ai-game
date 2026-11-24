@@ -2,8 +2,7 @@
 import gsap from 'gsap';
 import { h, stars, formatNumber, wait, josa } from './dom.js';
 import { cut } from '../data/assets.js';
-import { RIVALS } from '../data/characters.js';
-import { matchmakingWeights } from '../core/rating.js';
+import { CHARACTERS } from '../data/characters.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
 
@@ -55,10 +54,8 @@ export async function showVersus({ host, me, rival, reward, bonus, eventName }) 
   gsap.fromTo(meSide, { xPercent: -120 }, { xPercent: 0, duration: 0.45, ease: 'power3.out' });
   gsap.fromTo(rivalSide, { xPercent: 120 }, { xPercent: 0, duration: 0.45, ease: 'power3.out' });
 
-  // 룰렛 — 점점 느려지다 멈춘다
-  // 이 점수에서 만날 수 있는 상대만 돌린다
-  const weights = matchmakingWeights(me.points || 0);
-  const pool = RIVALS.filter((candidate) => weights[candidate.stars - 1] > 0);
+  // 룰렛 — 캐릭터 여덟이 돌다가 점점 느려지며 멈춘다. 난이도(별)는 따로 정해져 멈춘 뒤에 보인다
+  const pool = CHARACTERS;
   const sequence = reduced || pool.length < 2 ? [] : Array.from({ length: 11 }, (_, index) => pool[(index * 2 + Math.floor(Math.random() * pool.length)) % pool.length]);
   sequence.push(rival);
   for (let index = 0; index < sequence.length; index += 1) {
@@ -66,13 +63,14 @@ export async function showVersus({ host, me, rival, reward, bonus, eventName }) 
     rivalImg.src = cut(candidate.portrait);
     rivalName.textContent = candidate.name;
     rivalTitle.textContent = candidate.title;
-    rivalStars.textContent = stars(candidate.stars);
+    rivalStars.textContent = '';
     rivalSide.style.setProperty('--side', candidate.color);
     play('tick', { volume: 0.5, rate: 0.9 + index * 0.03 });
     gsap.fromTo(rivalImg, { scale: 0.88 }, { scale: 1, duration: 0.12 });
     const progress = index / Math.max(1, sequence.length - 1);
     await wait(40 + Math.round(progress ** 2.6 * 190));
   }
+  rivalStars.textContent = stars(rival.stars);
   status.textContent = `${rival.title} ${josa(rival.name, '과/와')} 붙어요`;
   rewardLine.textContent = `이기면 +${formatNumber(reward)}점`;
   play('bong');

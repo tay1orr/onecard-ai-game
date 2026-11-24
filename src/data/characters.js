@@ -268,10 +268,32 @@ const CHARACTER_RIVALS = Object.freeze([
   },
 ]);
 
-export const RIVALS = Object.freeze(ANIMAL_RIVALS.map((animal, index) => (hasGptArt(`rival-${index + 1}`) ? CHARACTER_RIVALS[index] : animal)));
+// 캐릭터 여덟 — 그림이 들어온 자리는 캐릭터, 아직 없는 자리는 동물. 별 · 플레이 방식 설명은 캐릭터가 아니라 난이도가 정한다
+const toPersona = ({ key, stars, blurb, elite, ...persona }) => Object.freeze({ id: persona.portrait, ...persona });
+export const CHARACTERS = Object.freeze(ANIMAL_RIVALS.map((animal, index) => toPersona(hasGptArt(`rival-${index + 1}`) ? CHARACTER_RIVALS[index] : animal)));
 
-export function rivalByKey(key) {
-  return RIVALS.find((rival) => rival.key === key) || RIVALS[2];
+// 캐릭터는 여덟 중 무작위 — 바로 전 판 캐릭터만 피한다
+let lastPersonaId = null;
+export function pickPersona(random = Math.random, avoid = lastPersonaId) {
+  const pool = CHARACTERS.filter((persona) => persona.id !== avoid);
+  const persona = pool[Math.floor(random() * pool.length)] || CHARACTERS[0];
+  lastPersonaId = persona.id;
+  return persona;
+}
+
+// 로비 무대에 세울 캐릭터 몇 — 겹치지 않게 섞어서
+export function shufflePersonas(count, random = Math.random) {
+  const list = [...CHARACTERS];
+  for (let index = list.length - 1; index > 0; index -= 1) {
+    const other = Math.floor(random() * (index + 1));
+    [list[index], list[other]] = [list[other], list[index]];
+  }
+  return list.slice(0, Math.max(0, count));
+}
+
+// 상대 = 캐릭터(누구) + 난이도(별, rating.js 의 AI_OPPONENTS 한 줄). key 는 난이도(AI 세기 · 반응이 쓴다)
+export function makeRival(level, persona = pickPersona()) {
+  return Object.freeze({ ...persona, key: level.key, stars: level.stars, elite: level.stars >= 6, blurb: level.status });
 }
 
 export function pickLine(rival, situation, random = Math.random) {

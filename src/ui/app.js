@@ -15,7 +15,7 @@ import { openSettings, openRules, openMissions, openCredits, openAccount } from 
 import { loadPlayerProfile } from '../core/rating.js';
 import { hasAuthCallbackInUrl, hasStoredSession } from '../net/supabase.js';
 import { warm, cut } from '../data/assets.js';
-import { RIVALS } from '../data/characters.js';
+import { CHARACTERS } from '../data/characters.js';
 import { applyEquipped } from './look-apply.js';
 import { showSeasonGift } from './season-gift.js';
 
@@ -30,7 +30,7 @@ export function createApp(root) {
   let accountModule = null;
 
   document.addEventListener('pointerdown', () => { unlockAudio(); preloadSounds(); }, { once: true });
-  warm(RIVALS.map((rival) => cut(rival.portrait)));
+  warm(CHARACTERS.map((rival) => cut(rival.portrait)));
 
   async function loadAccount() {
     if (!accountModule) accountModule = await import('../net/account.js');

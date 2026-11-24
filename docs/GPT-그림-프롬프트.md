@@ -37,28 +37,28 @@
 배경 투명이 안 되면 「plain pure white background」 로 바꿔 주세요. 흰 배경은 제가 지웁니다.
 GPT 가 캐릭터를 거절하면, 공식 그림(배경이 단색인 것)을 받아 같은 이름으로 넣어 주셔도 됩니다.
 
-### 상대1 — 춘식이 (★1)
+### 상대1 — 춘식이
 Choonsik (춘식이), the chubby cream-colored cat from Kakao Friends, hugging a roasted sweet potato, sleepy relaxed half-closed eyes and a content smile. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
 
-### 상대2 — 치이카와 (★2)
+### 상대2 — 치이카와
 Chiikawa, the small white bear-like creature from the manga "Chiikawa" by Nagano, holding one tiny playing card with both paws, nervous but determined, eyes a little teary. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
 
-### 상대3 — 하치와레 (★3)
+### 상대3 — 하치와레
 Hachiware, the white cat with the blue-black split-color head from the manga "Chiikawa", cheerful and optimistic, raising one paw with a playing card, bright open smile. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
 
-### 상대4 — 우사기 (★4)
+### 상대4 — 우사기
 Usagi, the yellow rabbit from the manga "Chiikawa", wild excited expression with mouth wide open as if shouting "Ura!", ears straight up, holding a playing card high in one hand. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
 
-### 상대5 — 짱구 (★5)
+### 상대5 — 짱구
 Shinnosuke Nohara (Shin-chan) from "Crayon Shin-chan", classic 1990s anime look, red shirt and yellow shorts, mischievous grin, holding a fan of playing cards close to his face like he is hiding his hand. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
 
-### 상대6 — 카드캡터 체리 (★6)
+### 상대6 — 카드캡터 체리
 Sakura Kinomoto from the 1998 anime "Cardcaptor Sakura", classic late-90s cel anime style, wearing her pink and white battle costume, holding a glowing magic card in front of her with a confident smile, a few sparkles. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
 
-### 상대7 — 랏코 (★7)
+### 상대7 — 랏코
 Rakko, the sea otter from the manga "Chiikawa", the top-ranked hunter, calm and cool confident expression, wearing his hunter cape, arms crossed, one playing card held between two fingers. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design and official art style, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
 
-### 상대8 — 세일러문 (★8)
+### 상대8 — 세일러문
 Sailor Moon (Usagi Tsukino) from the 1992 anime "Sailor Moon", classic early-90s cel animation style, her famous pose with one gloved hand forward, holding a single long-stemmed red rose, soft pink sparkles and a few rose petals. Character portrait for a card game opponent: upper body, centered, facing the viewer, the character fills about 80% of the frame. Faithful to the original character design, clean crisp outlines, soft shading. Transparent background (PNG). No text, no frame. Square 1:1.
 
 ---

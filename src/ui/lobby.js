@@ -4,7 +4,7 @@ import { h, formatNumber, stars } from './dom.js';
 import { cut } from '../data/assets.js';
 import { lookOf } from '../data/looks.js';
 import { mapVars } from './look-apply.js';
-import { RIVALS } from '../data/characters.js';
+import { shufflePersonas } from '../data/characters.js';
 import { loadMissionDashboard } from '../core/missions.js';
 import { tierProgress, isOpeningEventActive, openingEventDaysLeft, OPENING_EVENT, SEASON, PASS_REWARDS } from '../core/season.js';
 import { cosmeticById, nextCosmeticUnlock } from '../core/cosmetics.js';
@@ -32,14 +32,13 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
   const avatar = cosmeticById(profile.equipped.avatar) || cosmeticById('avatar-rabbit');
   const eventOn = isOpeningEventActive();
 
-  // 이 점수에서 만날 수 있는 상대만 무대에 세운다(30만 점대면 ★5~★8)
-  const meetable = RIVALS.filter((rival) => (weights[rival.stars - 1] || 0) > 0);
-  const COUNT_WORD = ['', '한', '두', '세', '네', '다섯', '여섯', '일곱', '여덟'];
-  const rivals = meetable.map((rival, index) => {
-    const chance = weights[rival.stars - 1] || 0;
+  // 캐릭터와 난이도는 따로 무작위 — 무대에는 캐릭터 넷을 섞어 세우고, 이 점수에서 만나는 난이도 확률은 따로 한 줄로(30만 점대면 ★5~★8)
+  const odds = weights.map((chance, index) => ({ stars: index + 1, chance })).filter((level) => level.chance > 0);
+  const lineup = shufflePersonas(4);
+  const rivals = lineup.map((rival, index) => {
     return h(`button.stage-rival.r${index}`, {
-      type: 'button', vars: { '--rival': rival.color, '--bob-delay': `${(index * 0.37) % 1.4}s`, '--lineup': meetable.length, '--lift': `${Math.round((1 - Math.abs((meetable.length > 1 ? (2 * index) / (meetable.length - 1) : 1) - 1)) * 16)}%` },
-      'aria-label': `${rival.title} ${rival.name}, ${rival.stars}성, 만날 확률 ${chance}%`,
+      type: 'button', vars: { '--rival': rival.color, '--bob-delay': `${(index * 0.37) % 1.4}s`, '--lineup': lineup.length, '--lift': `${Math.round((1 - Math.abs((lineup.length > 1 ? (2 * index) / (lineup.length - 1) : 1) - 1)) * 16)}%` },
+      'aria-label': `${rival.title} ${rival.name}`,
       onClick: (event) => {
         play('select');
         const target = event.currentTarget.querySelector('img');
@@ -48,8 +47,7 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
     },
     h('span.rival-spot'),
     h('img.rival-art', { src: cut(rival.portrait), alt: '', draggable: 'false' }),
-    h('span.rival-plate', {}, h('small', {}, rival.title), h('b', {}, rival.name)),
-    h('span.rival-meta', {}, h('i', {}, stars(rival.stars)), h('em', {}, `만날 확률 ${chance}%`)));
+    h('span.rival-plate', {}, h('small', {}, rival.title), h('b', {}, rival.name)));
   });
 
   const missionRows = missions.daily.missions.map((mission) => h(`li.mission-row${mission.completed ? '.is-done' : ''}`, {},
@@ -73,8 +71,9 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
         h('div.stage-scene', { 'aria-hidden': 'true' }),
         h('div.stage-felt', { 'aria-hidden': 'true' }),
         h('div.stage-copy', {},
-          h('h1.stage-title', {}, `${COUNT_WORD[meetable.length] || meetable.length} 상대가 기다려요`),
-          h('p.stage-sub', {}, `${formatNumber(profile.points)}점이면 이 확률로 만나요`),
+          h('h1.stage-title', {}, '오늘은 누구와 붙을까요'),
+          h('p.stage-sub', {}, '캐릭터와 난이도는 판마다 따로 정해져요'),
+          h('p.stage-odds', { 'aria-label': `${formatNumber(profile.points)}점에서 만나는 난이도` }, h('small', {}, '만나는 난이도'), ...odds.map((level) => h('span', {}, h('i', {}, `★${level.stars}`), ` ${level.chance}%`))),
           eventOn ? h('p.event-ribbon', {}, h('b', {}, OPENING_EVENT.name), h('span', {}, `${openingEventDaysLeft()}일 남음, 경험치 2배에 보너스판이 더 자주 나와요`)) : null),
         h('div.stage-lineup', {}, ...rivals)),
       h('aside.lobby-actions', {},
