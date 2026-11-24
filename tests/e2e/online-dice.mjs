@@ -81,9 +81,11 @@ function startGame(room, first) {
   Object.assign(room, { status: 'playing', current_seat: first, round_no: room.round_no + 1, active_suit: top.suit, attack_count: 0, free_play: false, top_card: top, host_count: 5, guest_count: 5, winner_seat: null, dice_tie: false, bonus_multiplier: 1, host_ready: false, guest_ready: false });
 }
 
+// 방 코드 — 진짜 서버(onecard_random_code)와 같은 글자. 앱은 헷갈리는 I · O · 0 · 1 을 받지 않아, 이 글자가 섞이면 손님이 못 들어간다(11-25 시험이 네 판에 한 번꼴로 멈췄다)
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const RPC = {
   onecard_create_room(uid, { p_nickname }) {
-    const room = { id: crypto.randomUUID(), code: `K${Math.random().toString(36).slice(2, 7).toUpperCase().replace(/[^A-Z2-9]/g, 'P')}`.slice(0, 6), status: 'waiting', host_id: uid, guest_id: null, host_nickname: p_nickname, guest_nickname: null, host_ready: false, guest_ready: false, host_die: null, guest_die: null, dice_tie: false, host_wins: 0, guest_wins: 0, host_rating: 0, guest_rating: 0, host_card_back: 'back-classic', guest_card_back: 'back-classic', host_count: 0, guest_count: 0, current_seat: null, active_suit: null, attack_count: 0, free_play: false, top_card: null, winner_seat: null, bonus_multiplier: 1, round_no: 0, version: 1 };
+    const room = { id: crypto.randomUUID(), code: Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join(''), status: 'waiting', host_id: uid, guest_id: null, host_nickname: p_nickname, guest_nickname: null, host_ready: false, guest_ready: false, host_die: null, guest_die: null, dice_tie: false, host_wins: 0, guest_wins: 0, host_rating: 0, guest_rating: 0, host_card_back: 'back-classic', guest_card_back: 'back-classic', host_count: 0, guest_count: 0, current_seat: null, active_suit: null, attack_count: 0, free_play: false, top_card: null, winner_seat: null, bonus_multiplier: 1, round_no: 0, version: 1 };
     rooms.set(room.id, room);
     addEvent(room, 0, 'room_created');
     return viewOf(room, uid);
