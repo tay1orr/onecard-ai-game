@@ -2,7 +2,7 @@
 import gsap from 'gsap';
 import { h } from './dom.js';
 import { cut } from '../data/assets.js';
-import { CHARACTERS } from '../data/characters.js';
+import { shufflePersonas } from '../data/characters.js';
 import { cardBack, cardFace } from './cards.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
@@ -10,9 +10,10 @@ import { settings } from './settings.js';
 export function playOpening({ host, themeVars = {} }) {
   return new Promise((resolve) => {
     const card = h('div.flip-card.op-card', {}, cardBack(), cardFace({ id: 'op-2', suit: 'spades', rank: '2' }));
-    const rivals = CHARACTERS.map((rival, index) => h(`img.op-rival.o${index}`, { src: cut(rival.portrait), alt: '' }));
+    // 상대 열다섯 가운데 여덟만 부채꼴로(다 세우면 겹친다)
+    const rivals = shufflePersonas(8).map((rival, index) => h(`img.op-rival.o${index}`, { src: cut(rival.portrait), alt: '' }));
     const logo = h('div.op-logo', {}, h('b.logo-word', {}, 'ONE!'), h('span.logo-season', {}, h('small', {}, 'SEASON'), h('b', {}, '2')));
-    const copy = h('p.op-copy', {}, '장미 정원 맵과 명화 카드, 새 상대 셋이 기다려요');
+    const copy = h('p.op-copy', {}, '장미 정원 맵과 새 카드, 캐릭터 상대들이 기다려요');
     const start = h('button.btn.primary.op-start', { type: 'button' }, '시작하기');
     const skip = h('button.op-skip', { type: 'button' }, '건너뛰기');
     const overlay = h('div.opening', { 'aria-label': '시즌 2 시작' }, h('div.op-bg'), h('div.op-slab.a'), h('div.op-slab.b'), card, ...rivals, logo, copy, start, skip);

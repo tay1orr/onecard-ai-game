@@ -54,6 +54,11 @@ export const MAPS = {
   'golden-rose': gptMap('09', surface('surf-dark-bloom', '#ffd67a', { bright: 1.08 })),
   'box-patisserie': surface('surf-macarons', '#ff9db0', { bright: 0.9 }),
   obsidian: gptMap('14', M({ scene: 'night-city', bright: 0.48, blur: 3, light: 'spot', top: ['onyx-black', null, 'normal', 520], rim: ['marble-black', null, 'normal', 360], props: [['diamond', 92, 80, 12, 0]], accent: '#c9d3e6' })),
+  // 선생님 GPT 그림(11-24) — 판 · 뒷면 · 앞면이 한 벌
+  millefeuille: painted('gpt-map-15', '#f2b05e'),
+  'ruby-crown': painted('gpt-map-17', '#ff5d73'),
+  amethyst: painted('gpt-map-18', '#b9a2ff'),
+  dubai: painted('gpt-map-19', '#c2d27a'),
 };
 
 // ── 카드 뒷면: 흰 테(종이 결) 안에 그림. 시즌 1 그림은 테 없이 꽉 채운다.
@@ -105,6 +110,18 @@ export const BACKS = {
   'hubble-rose': B({ art: 'hubble-rose', border: '#07080f', paper: null }),
   'golden-rose': hasGptArt('back-01') ? s1Back('gpt-back-01') : B({ paint: 'rose-ballroom-back', border: 'none', fit: 'fill', foil: true, filter: 'grayscale(1) sepia(1) saturate(3.2) hue-rotate(-6deg) brightness(1.08) contrast(1.18)' }),
   obsidian: B({ tex: 'onyx-black', base: '#0d0d10', emblem: 'ONE!', frame: '#c9d3e6', border: '#0d0d10', paper: null, foil: true }),
+  // 선생님 GPT 그림(11-24) — 시즌 1 그림 뒷면처럼 테 없이 꽉 채운다
+  'million-roses': s1Back('gpt-back-02'),
+  'winter-garden': s1Back('gpt-back-03'),
+  'pink-rose': s1Back('gpt-back-04'),
+  pistachio: s1Back('gpt-back-05'),
+  montblanc: s1Back('gpt-back-06'),
+  'moon-tiara': s1Back('gpt-back-07'),
+  'pearl-shell': s1Back('gpt-back-08'),
+  millefeuille: s1Back('gpt-back-09'),
+  'ruby-crown': s1Back('gpt-back-11'),
+  amethyst: s1Back('gpt-back-12'),
+  dubai: s1Back('gpt-back-13'),
 };
 
 // ── 카드 앞면: 종이 결 · 잉크 색 · 그림카드 묶음 · 에이스 그림 · 테
@@ -116,6 +133,7 @@ const F = (o) => ({
 });
 // 에이스 그림은 따로 줄 때만(사각형 스캔 에이스는 붙여 넣은 티가 나서 큰 무늬로)
 const set3 = (name, o = {}) => F({ court: name, perSuit: false, ...o });
+const gptFace = (number, o = {}) => F({ frame: `paint:gpt-face-${number}`, ...o });
 
 export const FACES = {
   classic: F({}),
@@ -138,6 +156,16 @@ export const FACES = {
   'golden-rose': F({ paper: 'paper-white', tint: '#fcf8ef', ink: '#1f1a12', red: '#a5212e', frame: hasGptArt('face-01') ? 'paint:gpt-face-01' : 'gold', ace: { hearts: 'cut:rose-gold', diamonds: 'cut:rose-gold' }, courtBlend: 'multiply', accent: '#c9a043' }),
   redoute: F({ paper: 'paper-white', tint: '#fbf6ec', ink: '#2b241a', red: '#a3223a', court: { K: 'redoute/K', Q: 'redoute/Q', J: 'redoute/J' }, perSuit: false, ace: { hearts: 'cut:rose-red', diamonds: 'cut:rose-pink' }, courtBlend: 'multiply', frame: 'thin', accent: '#a3223a' }),
   obsidian: F({ paper: 'onyx-black', tint: '#101012', ink: '#dfe5f0', red: '#e0566d', courtFx: 'invert(1) grayscale(1) brightness(.92)', courtBlend: 'screen', pips: 'silver', frame: 'thin', accent: '#c9d3e6' }),
+  // 선생님 GPT 앞면 테(11-24) — 종이 · 테가 그림에 들어 있어 잉크 · 빨강만 종이 색에 맞춘다
+  'winter-garden': gptFace('02', { tint: '#ffffff', ink: '#1d2433', red: '#b3263a', accent: '#9fb3c8' }),
+  pistachio: gptFace('03', { tint: '#f8f0dc', ink: '#2c2a17', red: '#a8322a', accent: '#8fa84a' }),
+  montblanc: gptFace('04', { tint: '#f6eee2', ink: '#2a1f1c', red: '#a3283a', accent: '#b87a5a' }),
+  'moon-tiara': gptFace('05', { tint: '#f1eef8', ink: '#232848', red: '#b02a5a', accent: '#9aa6d6' }),
+  'pearl-shell': gptFace('06', { tint: '#fbecea', ink: '#3a2630', red: '#c2365a', accent: '#e8a0b0' }),
+  millefeuille: gptFace('07', { tint: '#fbf1d6', ink: '#33240f', red: '#c2410c', accent: '#e8a23a' }),
+  'ruby-crown': gptFace('09', { tint: '#faf3ea', ink: '#2a1410', red: '#a3121f', accent: '#c9a043' }),
+  amethyst: gptFace('10', { tint: '#f1edf8', ink: '#231a3a', red: '#a3203f', accent: '#8f7ad6' }),
+  dubai: gptFace('11', { tint: '#fbf1e0', ink: '#2e1f12', red: '#a8322a', accent: '#8a9a3a' }),
 };
 
 // ── 카드 효과: 낼 때 실물 몇 개(많이 흩뿌리지 않음 — 크게 몇 개만)

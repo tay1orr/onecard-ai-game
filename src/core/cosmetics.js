@@ -2,10 +2,9 @@
 // 시즌 1 아이템 87개는 ID · 칸 · 해금 점수를 그대로 두고(기록 이어 가기) 모습만 실제 에셋으로 다시 만든다.
 // 시즌 1에서 그린 그림이 있던 아이템(장미 무도회 · 리얼 로즈가든 · 장미 오르골 · 왕실 꽃정원 분수 …)은 그 그림을 그대로 쓴다.
 // 해금: 역대 최고 점수(threshold) · 시즌 패스 단계(pass) · 보상 상자(box — 상자에서만 나옴). 모습은 src/data/looks.js 의 look 값.
-// 점수 사다리는 100만 점까지 — 30만~40만 5천 점 · 40만~60만 1만 점 · 60만~100만 1만 5천 점마다. 점수 펌핑은 보상 상자(reward-box.js)가 맡는다.
+// 점수 사다리는 100만 점까지 — 30만~40만 5천 점 · 40만~60만 5천~1만 점 · 60만~100만 1만 점마다(끝 셋은 2만~2만 5천). 점수 펌핑은 보상 상자(reward-box.js)가 맡는다.
 import { TOYS } from '../data/looks.js';
 import { PLATE_NAMES } from '../data/plate-names.js';
-import { hasGptArt } from '../data/gpt-art.js';
 
 export { TOYS };
 
@@ -66,7 +65,7 @@ export const COSMETICS = Object.freeze([
   item('table-deep-aquarium', 'table', 9000, 'aquarium', '푸른 조개 테이블', '하늘빛 바탕 위 조개껍데기와 산호'),
   item('face-stone-tablet', 'cardFace', 9200, 'stone-temple', '태양신 석판', '사암 결 카드에 모아이 · 항아리 · 석상 사진', { set: 'ancient-temple' }),
   item('back-jade-rune', 'cardBack', 9600, 'stone-temple', '옥빛 봉인문', '박물관에 있는 옛 옥 조각', { set: 'ancient-temple' }),
-  item('table-rose-conservatory', 'table', 9800, 'rose-conservatory', '장미 온실', '분홍 · 빨강 장미가 액자처럼 두른 돌판', { set: 'rose-conservatory', tags: ROSE }),
+  item('table-rose-conservatory', 'table', 9800, 'rose-conservatory', '장미 온실', '장미 화분이 가득한 유리 온실의 초록 펠트 탁자', { set: 'rose-conservatory', tags: ROSE }),
   item('face-rose-tea', 'cardFace', 10000, 'rose-conservatory', '장미 티파티', '튤립 · 백합 · 장미 식물화 그림카드', { set: 'rose-conservatory', tags: ROSE }),
   item('back-rose-arbor', 'cardBack', 10300, 'rose-arbor', '비밀 장미 아치', '윌리엄 모리스 「격자」 — 격자를 타고 오르는 장미', { set: 'rose-conservatory', tags: ROSE }),
   item('effect-rose-petal-storm', 'effect', 10600, 'rose-conservatory', '장미 꽃잎 폭풍', '진짜 장미 꽃잎이 감돌다 흩어져요', { set: 'rose-conservatory', tags: ROSE }),
@@ -137,11 +136,12 @@ export const COSMETICS = Object.freeze([
   s2('avatar-hamster', 'avatar', 1500, null, '햄스터', '볼이 빵빵한 햄스터', { portrait: 'hamster' }),
   s2('avatar-frog', 'avatar', 5000, null, '청개구리', '눈이 동그란 청개구리', { portrait: 'frog' }),
   s2('avatar-chick', 'avatar', 9000, null, '병아리', '삐약삐약 병아리', { portrait: 'chick' }),
-  // 내 캐릭터 여섯 — 상대 캐릭터와 따로(11-24 선생님). 선생님이 GPT 로 만든 그림(gpt그림/나1~나6)이 들어온 것만 처음부터 고를 수 있다
+  // 내 캐릭터 일곱 — 상대 캐릭터와 따로(11-24 선생님). 선생님이 GPT 로 만든 그림 가운데 카드 대신 장미 · 디저트 · 풍선을 든 캐릭터(상대는 src/data/characters.js)
+  // 출처: 마이멜로디 · 시나모롤 · 폼폼푸린(산리오) · 망그러진 곰(유랑) · 잔망루피(아이코닉스 「뽀롱뽀롱 뽀로로」) · 세일러문(다케우치 나오코) · 춘식이(카카오프렌즈) — 수업 자료(저작권 교육 예외)
   ...[
-    [1, '마이멜로디', '분홍 두건을 쓴 하얀 토끼'], [2, '쿠로미', '해골 두건을 쓴 장난꾸러기'], [3, '시나모롤', '귀가 긴 하얀 강아지'],
-    [4, '폼폼푸린', '갈색 베레모를 쓴 푸딩 강아지'], [5, '망그러진 곰', '어딘가 망그러진 갈색 곰'], [6, '잔망루피', '눈을 반쯤 감은 분홍 비버'],
-  ].filter(([number]) => hasGptArt(`me-${number}`)).map(([number, name, description]) => s2(`avatar-me-${number}`, 'avatar', 0, null, name, description, { portrait: `me-${number}` })),
+    ['mymelody', '마이멜로디', '분홍 장미를 든 마이멜로디'], ['mangom', '망그러진 곰', '빨간 장미를 든 망그러진 곰'], ['sailormoon', '세일러문', '빨간 장미를 든 세일러문'],
+    ['cinnamoroll', '시나모롤', '시나몬롤을 안은 시나모롤'], ['pompompurin', '폼폼푸린', '푸딩을 든 폼폼푸린'], ['loopy', '잔망루피', '하트 풍선을 든 잔망루피'], ['choonsik', '춘식이', '군고구마를 든 춘식이'],
+  ].map(([key, name, description]) => s2(`avatar-${key}`, 'avatar', 0, null, name, description, { portrait: `char-${key}`, character: true })),
 
   // ── 시즌 2 — 시즌 패스 보상
   pass('avatar-fox', 'avatar', 1, null, '붉은여우', '시즌 2 패스 1단계', { portrait: 'fox' }),
@@ -207,52 +207,75 @@ export const COSMETICS = Object.freeze([
   s2('victory-rose-fireworks', 'victory', 380000, 'rose-fireworks', '장미 불꽃', '붉은 불꽃 사이로 장미 한 송이가 솟아요', { tags: ROSE }),
   s2('table-rose-garden-5', 'table', 390000, 'rose-garden-5', '호숫가 노란 장미', '노란 장미가 핀 호숫가 산책길', { set: 'rose-gardens', tags: ROSE }),
 
-  // ── 시즌 2 — 장미와 꽃 정원(40만~60만, 1만 점마다)
+  // ── 시즌 2 — 장미와 꽃 정원 · 선생님 GPT 카드(40만~60만, 5천~1만 점마다)
+  // 11-24 선생님이 GPT 로 만든 판 · 뒷면 · 앞면은 같은 주제끼리 한 벌(세트)로 묶어 40만~100만 사이에 나눠 둔다
   s2('charm-white-rose', 'charm', 400000, null, '하얀 장미', '순백의 장미 한 송이', { toy: 'rose-white', tags: ROSE }),
   s2('table-rose-garden-6', 'table', 405000, 'rose-garden-6', '붉은 장미 터널', '붉은 덩굴장미 터널 아래 탁자', { set: 'rose-gardens', tags: ROSE }),
+  s2('back-pink-rose', 'cardBack', 415000, 'pink-rose', '분홍 장미 카드', '금빛 덩굴 안에 핀 분홍 장미', { tags: ROSE }),
   s2('charm-rose-bouquet', 'charm', 420000, null, '장미 꽃다발', '누르면 꽃잎이 흩날려요', { toy: 'rose-bouquet', tags: ROSE }),
   s2('charm-pink-rose', 'charm', 430000, null, '분홍 장미', '갓 핀 분홍 장미 한 송이', { toy: 'rose-pink', tags: ROSE }),
+  s2('table-winter-garden', 'table', 435000, 'winter-garden', '왕실 겨울 정원', '흰 장미와 동백이 핀 유리 온실', { legendary: true, set: 'winter-garden', tags: ROSE }),
   s2('back-vangogh-roses', 'cardBack', 440000, 'vangogh-roses', '반 고흐 — 장미', '빈센트 반 고흐, 1890', { set: 'masterpiece', tags: ROSE }),
+  s2('back-winter-garden', 'cardBack', 445000, 'winter-garden', '하얀 장미 카드', '은빛 덩굴과 진주로 두른 하얀 장미', { legendary: true, set: 'winter-garden', tags: ROSE }),
   s2('table-rose-night', 'table', 450000, 'rose-night', '밤의 장미 정원', '등불과 달빛이 비추는 장미 정원', { set: 'rose-gardens', tags: ROSE }),
+  s2('face-winter-garden', 'cardFace', 455000, 'winter-garden', '하얀 장미 앞면', '하얀 장미와 진주 덩굴 테', { legendary: true, set: 'winter-garden', tags: ROSE }),
   s2('charm-rose-vase', 'charm', 460000, null, '장미 꽃병', '활짝 핀 장미 한 다발', { toy: 'rose-vase', tags: ROSE }),
+  s2('back-moon-tiara', 'cardBack', 475000, 'moon-tiara', '달빛 티아라 카드', '남색 벨벳 위 초승달 티아라와 월장석', { set: 'moon-tiara' }),
   s2('charm-yellow-roses', 'charm', 480000, null, '노란 장미 다발', '노란 장미 마흔 송이를 묶은 다발', { toy: 'rose-yellow', tags: ROSE }),
+  s2('face-moon-tiara', 'cardFace', 485000, 'moon-tiara', '달빛 티아라 앞면', '초승달과 진주를 단 은테', { set: 'moon-tiara' }),
   s2('back-mucha-rose', 'cardBack', 490000, 'mucha-rose', '무하 — 장미', '알폰스 무하 「꽃」 연작의 장미(1898)', { set: 'masterpiece', tags: ROSE }),
   s2('charm-vintage-bouquet', 'charm', 500000, null, '빈티지 꽃다발', '장미와 들꽃을 엮은 옛 꽃다발', { toy: 'bouquet-vintage', tags: ROSE }),
+  s2('back-pearl-shell', 'cardBack', 505000, 'pearl-shell', '진주 조개 카드', '분홍 조개껍데기와 오팔', { set: 'pearl-shell' }),
   s2('effect-lily-drop', 'effect', 510000, 'lily-drop', '백합 한 송이', '낸 카드 위에 분홍 백합이 내려앉아요', { tags: FLOWER }),
+  s2('face-pearl-shell', 'cardFace', 515000, 'pearl-shell', '진주 조개 앞면', '조개와 진주를 단 분홍 테', { set: 'pearl-shell' }),
   s2('charm-lily', 'charm', 520000, null, '스타게이저 백합', '분홍 점이 박힌 백합', { toy: 'lily', tags: FLOWER }),
   s2('victory-lily', 'victory', 530000, 'lily', '백합 온실 피날레', '유리 온실 가운데에서 백합이 피어나요', { tags: FLOWER }),
+  s2('back-montblanc', 'cardBack', 535000, 'montblanc', '흑임자 몽블랑 카드', '흑임자 몽블랑과 자수정', { set: 'montblanc', tags: DESSERT }),
   s2('charm-peony-vase', 'charm', 540000, null, '작약 꽃병', '흰 작약을 꽂은 둥근 꽃병', { toy: 'peony-vase', tags: FLOWER }),
+  s2('face-montblanc', 'cardFace', 545000, 'montblanc', '흑임자 몽블랑 앞면', '깨알을 얹은 구릿빛 테', { set: 'montblanc', tags: DESSERT }),
   s2('charm-tulips', 'charm', 550000, null, '튤립 다발', '분홍 · 흰 튤립 한 다발', { toy: 'tulip-bunch', tags: FLOWER }),
   s2('victory-tulip', 'victory', 560000, 'tulip', '튤립 들판 피날레', '튤립 들판 한가운데에서 꽃다발이 피어나요', { tags: FLOWER }),
   s2('charm-lotus', 'charm', 570000, null, '연꽃', '물 위에 핀 분홍 연꽃', { toy: 'lotus', tags: FLOWER }),
   s2('effect-lotus-float', 'effect', 580000, 'lotus-float', '연꽃 둥실', '연꽃과 수련이 둥실 떠올라요', { tags: FLOWER }),
   s2('victory-lotus', 'victory', 590000, 'lotus', '연꽃 연못 피날레', '연못 위로 연꽃이 활짝 피어나요', { tags: FLOWER }),
 
-  // ── 시즌 2 — 베르사유 · 황금 장미 · 백만 송이 장미(60만~100만)
-  s2('charm-lilac', 'charm', 605000, null, '라일락 가지', '보랏빛 라일락 한 가지', { toy: 'lilac-branch', tags: FLOWER }),
-  s2('victory-lavender', 'victory', 620000, 'lavender', '라벤더 언덕 피날레', '보랏빛 언덕 위로 라일락이 피어나요', { tags: FLOWER }),
-  s2('charm-cherry-branch', 'charm', 635000, null, '벚꽃 가지', '분홍 벚꽃 한 가지', { toy: 'cherry-branch', tags: FLOWER }),
-  s2('effect-cherry-breeze', 'effect', 650000, 'cherry-breeze', '벚꽃 바람', '벚꽃 가지가 바람을 타고 감돌아요', { tags: FLOWER }),
-  s2('charm-sunflower', 'charm', 665000, null, '해바라기', '활짝 핀 해바라기 한 송이', { toy: 'sunflower', tags: FLOWER }),
+  // ── 시즌 2 — 디저트 · 보석의 방 · 베르사유 · 황금 장미 · 백만 송이 장미(60만~100만, 1만 점마다)
+  s2('table-millefeuille', 'table', 600000, 'millefeuille', '밀푀유 파티스리', '오렌지 밀푀유가 놓인 파리 과자점의 탁자', { legendary: true, set: 'millefeuille', tags: DESSERT }),
+  s2('charm-lilac', 'charm', 610000, null, '라일락 가지', '보랏빛 라일락 한 가지', { toy: 'lilac-branch', tags: FLOWER }),
+  s2('back-millefeuille', 'cardBack', 620000, 'millefeuille', '오렌지 밀푀유 카드', '밀푀유와 오렌지 조각, 바닐라 꽃', { legendary: true, set: 'millefeuille', tags: DESSERT }),
+  s2('victory-lavender', 'victory', 630000, 'lavender', '라벤더 언덕 피날레', '보랏빛 언덕 위로 라일락이 피어나요', { tags: FLOWER }),
+  s2('face-millefeuille', 'cardFace', 640000, 'millefeuille', '오렌지 밀푀유 앞면', '오렌지 조각을 단 금테', { legendary: true, set: 'millefeuille', tags: DESSERT }),
+  s2('charm-cherry-branch', 'charm', 650000, null, '벚꽃 가지', '분홍 벚꽃 한 가지', { toy: 'cherry-branch', tags: FLOWER }),
+  s2('effect-cherry-breeze', 'effect', 660000, 'cherry-breeze', '벚꽃 바람', '벚꽃 가지가 바람을 타고 감돌아요', { tags: FLOWER }),
+  s2('charm-sunflower', 'charm', 670000, null, '해바라기', '활짝 핀 해바라기 한 송이', { toy: 'sunflower', tags: FLOWER }),
   s2('victory-sunflower', 'victory', 680000, 'sunflower', '해바라기 피날레', '해바라기 들판 위로 해바라기가 떠올라요', { tags: FLOWER }),
-  s2('charm-heart-lantern', 'charm', 695000, null, '하트 풍등', '누르면 하늘로 둥실 떠올라요', { toy: 'heart-lantern' }),
-  s2('charm-pearls', 'charm', 710000, null, '진주 목걸이', '누르면 진주알이 반짝여요', { toy: 'pearls' }),
-  s2('charm-teapot', 'charm', 725000, null, '금테 찻주전자', '누르면 찻물이 보글보글', { toy: 'teapot' }),
-  s2('effect-black-rose', 'effect', 740000, 'black-rose', '흑장미 한 송이', '연기 속에서 흑장미가 내려앉아요', { legendary: true, tags: ROSE }),
-  s2('charm-black-rose', 'charm', 755000, null, '흑장미', '신비로운 검붉은 장미', { legendary: true, toy: 'rose-black', tags: ROSE }),
-  s2('charm-candelabra', 'charm', 770000, null, '금빛 촛대', '누르면 촛불이 흔들려요', { toy: 'candelabra' }),
-  s2('charm-champagne', 'charm', 785000, null, '샴페인', '누르면 거품이 보글보글', { toy: 'champagne' }),
-  s2('table-winter-garden', 'table', 800000, 'winter-garden', '왕실 겨울 정원', '흰 장미와 동백이 핀 유리 온실', { legendary: true, tags: FLOWER }),
-  s2('table-versailles', 'table', 815000, 'versailles', '베르사유 거울의 방', '샹들리에와 금빛 거울의 방', { legendary: true, set: 'versailles' }),
-  s2('victory-versailles', 'victory', 830000, 'versailles', '거울의 방 대관식', '거울의 방에서 왕관이 씌워져요', { legendary: true, set: 'versailles' }),
-  s2('charm-crown', 'charm', 845000, null, '보석 왕관', '누르면 빙그르르', { toy: 'crown' }),
-  s2('table-golden-rose', 'table', 860000, 'golden-rose', '황금 장미의 방', '검은 벨벳과 금빛 장미의 방', { legendary: true, set: 'golden-rose', tags: ROSE }),
-  s2('back-golden-rose', 'cardBack', 875000, 'golden-rose', '황금 장미 카드', '금박 테 안의 장미 다마스크', { legendary: true, set: 'golden-rose', tags: ROSE }),
-  s2('face-golden-rose', 'cardFace', 890000, 'golden-rose', '황금 장미 앞면', '금박 무늬와 금테, 에이스는 황금 장미', { legendary: true, set: 'golden-rose', tags: ROSE }),
-  s2('effect-golden-rose', 'effect', 905000, 'golden-rose', '황금 장미 한 송이', '낸 카드 위에 황금 장미가 내려앉아요', { legendary: true, set: 'golden-rose', tags: ROSE }),
+  s2('charm-heart-lantern', 'charm', 690000, null, '하트 풍등', '누르면 하늘로 둥실 떠올라요', { toy: 'heart-lantern' }),
+  s2('table-dubai', 'table', 700000, 'dubai', '두바이 쫀득쿠키 카페', '피스타치오 쫀득쿠키와 초콜릿이 놓인 카페 탁자', { legendary: true, set: 'dubai', tags: DESSERT }),
+  s2('back-dubai', 'cardBack', 710000, 'dubai', '두바이 쫀득쿠키 카드', '카다이프를 채운 초콜릿 쿠키와 와플', { legendary: true, set: 'dubai', tags: DESSERT }),
+  s2('charm-pearls', 'charm', 720000, null, '진주 목걸이', '누르면 진주알이 반짝여요', { toy: 'pearls' }),
+  s2('face-dubai', 'cardFace', 730000, 'dubai', '두바이 쫀득쿠키 앞면', '와플 무늬와 피스타치오를 단 테', { legendary: true, set: 'dubai', tags: DESSERT }),
+  s2('charm-teapot', 'charm', 740000, null, '금테 찻주전자', '누르면 찻물이 보글보글', { toy: 'teapot' }),
+  s2('table-amethyst', 'table', 750000, 'amethyst', '자수정 무도회장', '크리스털 샹들리에 아래 자수정을 박은 탁자', { legendary: true, set: 'amethyst' }),
+  s2('effect-black-rose', 'effect', 760000, 'black-rose', '흑장미 한 송이', '연기 속에서 흑장미가 내려앉아요', { legendary: true, tags: ROSE }),
+  s2('back-amethyst', 'cardBack', 770000, 'amethyst', '자수정 카드', '다이아몬드 테 안의 커다란 자수정', { legendary: true, set: 'amethyst' }),
+  s2('charm-black-rose', 'charm', 780000, null, '흑장미', '신비로운 검붉은 장미', { legendary: true, toy: 'rose-black', tags: ROSE }),
+  s2('face-amethyst', 'cardFace', 790000, 'amethyst', '자수정 앞면', '자수정과 다이아몬드를 박은 은테', { legendary: true, set: 'amethyst' }),
+  s2('table-ruby-crown', 'table', 800000, 'ruby-crown', '루비 왕관의 방', '왕관과 루비 목걸이가 놓인 진홍 벨벳 방', { legendary: true, set: 'ruby-crown' }),
+  s2('charm-candelabra', 'charm', 810000, null, '금빛 촛대', '누르면 촛불이 흔들려요', { toy: 'candelabra' }),
+  s2('back-ruby-crown', 'cardBack', 820000, 'ruby-crown', '루비 왕관 카드', '금빛 왕관 아래 커다란 루비', { legendary: true, set: 'ruby-crown' }),
+  s2('charm-champagne', 'charm', 830000, null, '샴페인', '누르면 거품이 보글보글', { toy: 'champagne' }),
+  s2('face-ruby-crown', 'cardFace', 840000, 'ruby-crown', '루비 왕관 앞면', '루비와 진주를 박은 금테', { legendary: true, set: 'ruby-crown' }),
+  s2('table-versailles', 'table', 850000, 'versailles', '베르사유 거울의 방', '샹들리에와 금빛 거울의 방', { legendary: true, set: 'versailles' }),
+  s2('victory-versailles', 'victory', 860000, 'versailles', '거울의 방 대관식', '거울의 방에서 왕관이 씌워져요', { legendary: true, set: 'versailles' }),
+  s2('charm-crown', 'charm', 870000, null, '보석 왕관', '누르면 빙그르르', { toy: 'crown' }),
+  s2('table-golden-rose', 'table', 880000, 'golden-rose', '황금 장미의 방', '검은 벨벳과 금빛 장미의 방', { legendary: true, set: 'golden-rose', tags: ROSE }),
+  s2('back-golden-rose', 'cardBack', 890000, 'golden-rose', '황금 장미 카드', '금박 테 안의 장미 다마스크', { legendary: true, set: 'golden-rose', tags: ROSE }),
+  s2('face-golden-rose', 'cardFace', 900000, 'golden-rose', '황금 장미 앞면', '금박 무늬와 금테, 에이스는 황금 장미', { legendary: true, set: 'golden-rose', tags: ROSE }),
+  s2('effect-golden-rose', 'effect', 910000, 'golden-rose', '황금 장미 한 송이', '낸 카드 위에 황금 장미가 내려앉아요', { legendary: true, set: 'golden-rose', tags: ROSE }),
   s2('victory-golden-rose', 'victory', 920000, 'golden-rose', '황금 장미 피날레', '거울의 방에서 황금 장미가 솟아올라요', { legendary: true, set: 'golden-rose', tags: ROSE }),
-  s2('charm-golden-rose', 'charm', 940000, null, '황금 장미', '영원히 피어 있는 금빛 장미', { legendary: true, set: 'golden-rose', toy: 'rose-gold', tags: ROSE }),
-  s2('victory-million-roses', 'victory', 970000, 'million-roses', '백만 송이 장미 피날레', '장미 들판 위로 꽃다발이 피어나요', { legendary: true, mythic: true, set: 'million-roses', tags: ROSE }),
+  s2('charm-golden-rose', 'charm', 930000, null, '황금 장미', '영원히 피어 있는 금빛 장미', { legendary: true, set: 'golden-rose', toy: 'rose-gold', tags: ROSE }),
+  s2('back-million-roses', 'cardBack', 950000, 'million-roses', '백만 송이 장미 카드', '촛불 켠 아치 사이 붉은 장미 문장', { legendary: true, mythic: true, set: 'million-roses', tags: ROSE }),
+  s2('victory-million-roses', 'victory', 975000, 'million-roses', '백만 송이 장미 피날레', '장미 들판 위로 꽃다발이 피어나요', { legendary: true, mythic: true, set: 'million-roses', tags: ROSE }),
   s2('table-million-roses', 'table', 1000000, 'million-roses', '백만 송이 장미', '끝없는 붉은 장미 바다 한가운데', { legendary: true, mythic: true, set: 'million-roses', tags: ROSE }),
 
   // ── 시즌 2 — 상자 전용(AI 대전 보상 상자에서만)
@@ -291,6 +314,9 @@ export const COSMETICS = Object.freeze([
   box('table-box-patisserie', 'table', 'legend', 'box-patisserie', '마카롱 파티스리', '분홍 탁자 위에 흩어진 마카롱', { set: 'box-patisserie', tags: DESSERT, legendary: true }),
   box('victory-box-wedding', 'victory', 'legend', 'box-wedding', '웨딩 케이크 피날레', '진열장 앞에서 장미 웨딩 케이크가 솟아올라요', { set: 'box-patisserie', tags: [...DESSERT, 'rose'], legendary: true }),
   box('victory-box-teddy', 'victory', 'legend', 'box-teddy', '곰 인형 퍼레이드', '곰 가족 뒤로 곰 인형들이 날아올라요', { set: 'box-teddy', tags: CUTE, legendary: true }),
+  // 선생님 GPT 카드 24장 가운데 둘만 상자 전용(11-24 「상자 획득 아이템을 너무 많이 배치하지 말고」)
+  box('back-box-pistachio', 'cardBack', 'epic', 'pistachio', '피스타치오 파리브레스트 카드', '초록 벨벳 위 피스타치오 파리브레스트', { set: 'box-patisserie', tags: DESSERT }),
+  box('face-box-pistachio', 'cardFace', 'epic', 'pistachio', '피스타치오 앞면', '피스타치오 열매를 단 금테', { set: 'box-patisserie', tags: DESSERT }),
 ]);
 
 export const COSMETIC_SETS = Object.freeze([
@@ -311,11 +337,19 @@ export const COSMETIC_SETS = Object.freeze([
   { id: 'rose-gardens', name: '장미 정원', itemIds: ['table-rose-garden-1', 'table-rose-garden-2', 'table-rose-garden-3', 'table-rose-garden-4', 'table-rose-garden-5', 'table-rose-garden-6', 'table-rose-night'] },
   { id: 'seasons', name: '꽃의 계절', itemIds: ['table-giverny', 'table-sunflower', 'table-hydrangea', 'table-peony', 'table-wisteria'] },
   { id: 'masterpiece', name: '명화 속 꽃', itemIds: ['back-vangogh-almond', 'back-japanese-cherry', 'back-vangogh-irises', 'back-monet-waterlilies', 'back-japanese-peony', 'back-morris-rose', 'back-morris-strawberry', 'back-vangogh-roses', 'back-mucha-rose'] },
+  { id: 'winter-garden', name: '왕실 겨울 정원', itemIds: ['table-winter-garden', 'back-winter-garden', 'face-winter-garden'] },
+  { id: 'moon-tiara', name: '달빛 티아라', itemIds: ['back-moon-tiara', 'face-moon-tiara'] },
+  { id: 'pearl-shell', name: '진주 조개', itemIds: ['back-pearl-shell', 'face-pearl-shell'] },
+  { id: 'montblanc', name: '흑임자 몽블랑', itemIds: ['back-montblanc', 'face-montblanc'] },
+  { id: 'millefeuille', name: '밀푀유 파티스리', itemIds: ['table-millefeuille', 'back-millefeuille', 'face-millefeuille'] },
+  { id: 'dubai', name: '두바이 쫀득쿠키', itemIds: ['table-dubai', 'back-dubai', 'face-dubai'] },
+  { id: 'amethyst', name: '자수정', itemIds: ['table-amethyst', 'back-amethyst', 'face-amethyst'] },
+  { id: 'ruby-crown', name: '루비 왕관', itemIds: ['table-ruby-crown', 'back-ruby-crown', 'face-ruby-crown'] },
   { id: 'versailles', name: '베르사유', itemIds: ['table-versailles', 'victory-versailles'] },
   { id: 'golden-rose', name: '황금 장미', itemIds: ['table-golden-rose', 'back-golden-rose', 'face-golden-rose', 'effect-golden-rose', 'victory-golden-rose', 'charm-golden-rose'] },
-  { id: 'million-roses', name: '백만 송이 장미', itemIds: ['table-million-roses', 'victory-million-roses'] },
+  { id: 'million-roses', name: '백만 송이 장미', itemIds: ['table-million-roses', 'back-million-roses', 'victory-million-roses'] },
   { id: 'box-teddy', name: '상자 — 곰 인형', itemIds: ['charm-box-teddy-bow', 'charm-box-teddy-sweater', 'charm-box-teddy-angel', 'charm-box-teddy-rose', 'charm-box-teddy-family', 'effect-box-teddy', 'victory-box-teddy'] },
-  { id: 'box-patisserie', name: '상자 — 파티스리', itemIds: ['charm-box-halva', 'charm-box-kulich', 'charm-box-macaron-tower', 'charm-box-parfait', 'charm-box-jelly-cake', 'charm-box-upside-down', 'charm-box-wedding-cake', 'effect-box-macarons', 'table-box-patisserie', 'victory-box-wedding'] },
+  { id: 'box-patisserie', name: '상자 — 파티스리', itemIds: ['charm-box-halva', 'charm-box-kulich', 'charm-box-macaron-tower', 'charm-box-parfait', 'charm-box-jelly-cake', 'charm-box-upside-down', 'charm-box-wedding-cake', 'effect-box-macarons', 'table-box-patisserie', 'victory-box-wedding', 'back-box-pistachio', 'face-box-pistachio'] },
   { id: 'box-garden', name: '상자 — 꽃 정원', itemIds: ['charm-box-carnation', 'charm-box-poppy', 'charm-box-pansy', 'charm-box-camomile', 'charm-box-lilac', 'charm-box-violet', 'charm-box-water-lily', 'charm-box-campanula', 'charm-box-tulips', 'charm-box-galle-vase', 'effect-box-flowers'] },
 ]);
 

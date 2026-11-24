@@ -1,7 +1,8 @@
 // GPT 로 만든 그림 넣기 — node scripts/build-gpt.mjs
 // 선생님이 gpt그림/ 에 넣은 그림을 게임 크기로 줄여 public/assets/s2/r 에 넣고, src/data/gpt-art.js 에 있는 그림 목록을 적는다.
-// 파일 이름은 앞 번호만 본다: 상대1~8(상대 캐릭터) · 나1~6(내 캐릭터) · 판01~14(맵) · 뒷면01~04(카드 뒷면) · 앞면01~02(카드 앞면 테). 프롬프트는 docs/GPT-그림-프롬프트.md
-// 같은 번호 파일이 여럿이면 가장 최근 것을 쓴다. 상대 그림은 배경이 투명하지 않으면 가장자리 단색 배경을 지운다.
+// 파일 이름은 앞 번호만 본다: 상대N · 나N(캐릭터) · 판NN(맵) · 뒷면NN(카드 뒷면) · 앞면NN(카드 앞면 테). 프롬프트는 docs/GPT-그림-프롬프트.md
+// 같은 번호 파일이 여럿이면 가장 최근 것을 쓴다. 캐릭터 그림은 배경이 투명하지 않으면 가장자리 단색 배경을 지운다.
+// 캐릭터는 파일 이름(상대 · 나)이 아니라 그림을 보고 누구인지 아래 표에 적는다. 상대로 쓸지 내 캐릭터로 쓸지는 src/data/characters.js · src/core/cosmetics.js 가 정한다.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,7 +12,12 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(root, 'gpt그림');
 const OUT = path.join(root, 'public/assets/s2/r');
 const KINDS = { 상대: 'rival', 나: 'me', 판: 'map', 뒷면: 'back', 앞면: 'face' };
-const LIMIT = { rival: 8, me: 6, map: 14, back: 4, face: 2 };
+// 그림 속 캐릭터(11-24 선생님이 넣은 22장을 하나씩 보고 적음) → cut/char-<이름>.webp
+const CHARACTER_FILES = {
+  상대1: 'choonsik', 상대2: 'chiikawa', 상대3: 'hachiware', 상대4: 'usagi', 상대5: 'shinchan', 상대6: 'sakura', 상대7: 'rakko', 상대8: 'sailormoon',
+  상대9: 'pochacco', 상대10: 'hangyodon', 상대11: 'hachuping', 상대12: 'keroro', 상대13: 'hellokitty', 상대14: 'rose-princess', 상대15: 'conan', 상대16: 'kid',
+  나1: 'mymelody', 나2: 'kuromi', 나3: 'cinnamoroll', 나4: 'pompompurin', 나5: 'mangom', 나6: 'loopy',
+};
 
 fs.mkdirSync(SRC, { recursive: true });
 const files = fs.readdirSync(SRC, { withFileTypes: true })
@@ -21,9 +27,9 @@ const files = fs.readdirSync(SRC, { withFileTypes: true })
     if (!match) return null;
     const kind = KINDS[match[1]];
     const number = Number(match[2]);
-    if (!number || number > LIMIT[kind]) return null;
+    if (!number) return null;
     const full = path.join(SRC, entry.name);
-    return { kind, number, file: full, time: fs.statSync(full).mtimeMs, name: entry.name };
+    return { kind, number, label: `${match[1]}${number}`, file: full, time: fs.statSync(full).mtimeMs, name: entry.name };
   })
   .filter(Boolean);
 const latest = new Map();
@@ -89,7 +95,9 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
     await sharp(entry.file).resize(150, 225, { fit: 'cover' }).webp({ quality: 80 }).toFile(path.join(OUT, 'paint', `${key}-s.webp`));
     made.push(`${entry.kind}-${pad(entry.number)}`);
   } else {
-    const key = `${entry.kind === 'me' ? 'me' : 'rival'}-${entry.number}`;
+    const who = CHARACTER_FILES[entry.label];
+    if (!who) console.log(`누구인지 표에 없음: ${entry.name} → char-new-${entry.kind}-${entry.number} 로 넣음(scripts/build-gpt.mjs 의 CHARACTER_FILES 에 적어 주세요)`);
+    const key = `char-${who || `new-${entry.kind}-${entry.number}`}`;
     const png = await cutOut(entry.file);
     const trimmed = await sharp(png).trim({ threshold: 1 }).png().toBuffer();
     await sharp(trimmed).resize(640, 640, { fit: 'inside' }).webp({ quality: 86, alphaQuality: 90 }).toFile(path.join(OUT, 'cut', `${key}.webp`));
@@ -99,7 +107,11 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
   console.log(`넣음 ${entry.name} → ${made.at(-1)}`);
 }
 
-const list = [...new Set(made)].sort();
+// 목록은 public 에 실제로 있는 그림으로 — 원본 폴더(gpt그림/, 저장소에 안 올림)가 없는 PC 에서 돌려도 넣어 둔 그림이 빠지지 않게
+const list = [
+  ...fs.readdirSync(path.join(OUT, 'paint')).map((name) => name.match(/^gpt-((?:map|back|face)-\d+)\.webp$/)?.[1]),
+  ...fs.readdirSync(path.join(OUT, 'cut')).map((name) => name.match(/^(char-[a-z0-9-]+?)\.webp$/)?.[1]).filter((key) => key && !key.endsWith('-s')),
+].filter(Boolean).sort();
 fs.writeFileSync(path.join(root, 'src/data/gpt-art.js'), `// GPT 로 만든 그림 목록 — scripts/build-gpt.mjs 가 gpt그림/ 을 줄여 public 에 넣고 이 파일을 다시 쓴다(손으로 고치지 않음)\nexport const GPT_ART = Object.freeze(${JSON.stringify(list)});\nexport const hasGptArt = (key) => GPT_ART.includes(key);\n`);
 console.log(`GPT 그림 ${list.length}장: ${list.join(', ') || '없음'}`);
 if (skipped.length) console.log(`이름이 맞지 않아 건너뜀: ${skipped.join(', ')} (앞에 상대1 · 나1 · 판01 · 뒷면01 · 앞면01 처럼 번호를 붙여 주세요)`);

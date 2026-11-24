@@ -1,162 +1,12 @@
-// AI 상대 — ★1~★5 는 시즌 1부터의 상대, ★6~★8 은 높은 점수(5만 점 이상) 상대. 대사는 상황마다 몇 개씩
-// 동물 상대(실제 동물 사진 누끼)는 캐릭터 그림이 아직 없는 자리에 나온다(아래 CHARACTER_RIVALS)
-import { hasGptArt } from './gpt-art.js';
-
-const ANIMAL_RIVALS = Object.freeze([
+// AI 상대 캐릭터 — 누구인지(이름 · 그림 · 대사)만 정한다. 별 · AI 세기 · 설명은 난이도(rating.js 의 AI_OPPONENTS)가 따로 정한다(makeRival)
+// 그림은 선생님이 GPT 로 만든 것(gpt그림/ → scripts/build-gpt.mjs → cut/char-<이름>).
+// 11-24 선생님 「그림 제목에 영향받지 말고 알아서 판단해서 캐릭터 배치」 — 카드를 든 열다섯은 상대로, 장미 · 디저트 · 풍선을 든 일곱은 내 캐릭터(cosmetics.js)로 나눴다
+// 출처: 치이카와 · 하치와레 · 우사기 · 랏코(나가노 「치이카와」) · 짱구(우스이 요시토 「크레용 신짱」) · 체리(CLAMP 「카드캡터 사쿠라」)
+//       코난 · 괴도 키드(아오야마 고쇼 「명탐정 코난」) · 케로로(요시자키 미네 「개구리 중사 케로로」) · 하츄핑(SAMG 「캐치! 티니핑」)
+//       쿠로미 · 헬로키티 · 포차코 · 한교동(산리오) · 장미 공주(90년대 순정 만화풍 공주 그림 — 어느 작품인지 확인하지 못해 이름을 붙임) — 수업 자료(저작권 교육 예외)
+const RIVALS = [
   {
-    key: 'star1', stars: 1, name: '루미', title: '느긋한', portrait: 'sloth', color: '#9cc9a6', deep: '#21483a',
-    blurb: '마음 가는 카드를 천천히 고르는 나무늘보',
-    lines: {
-      intro: ['천천히 해도 괜찮아요', '오늘은 느긋하게 한 판'],
-      think: ['음…', '어디 보자', '하암…'],
-      attack: ['살짝 받아 볼래요?', '미안해요, 공격이에요'],
-      hit: ['아이고, 많이 받았네', '괜찮아요, 천천히…'],
-      playerAttack: ['어머, 공격이네요', '살살 해 줘요'],
-      joker: ['조커라니!', '깜짝이야'],
-      onecard: ['저 한 장 남았어요', '어, 이기는 건가?'],
-      playerOnecard: ['벌써 한 장이요?', '빠르다…'],
-      win: ['헤헤, 운이 좋았어요', '느긋한 게 이겼네요'],
-      lose: ['잘했어요! 다음엔 저도', '역시 빠르시네요'],
-    },
-  },
-  {
-    key: 'star2', stars: 2, name: '미오', title: '재빠른', portrait: 'cat', color: '#f4a93b', deep: '#5a3608',
-    blurb: '무늬와 공격 카드를 재빨리 살피는 고양이',
-    lines: {
-      intro: ['빨리빨리! 시작하자', '내가 더 빠를걸'],
-      think: ['요거!', '흠흠', '이거다!'],
-      attack: ['받아라 냥!', '공격 간다!'],
-      hit: ['으앗, 너무 많아!', '냥… 억울해'],
-      playerAttack: ['칫, 막아 볼까', '그걸 내?'],
-      joker: ['조커?! 반칙이야', '앗, 조커다!'],
-      onecard: ['한 장 남았다냥!', '이제 끝이다냥'],
-      playerOnecard: ['안 돼, 막아야 해', '벌써?!'],
-      win: ['내가 제일 빨라!', '헤헤 이겼다'],
-      lose: ['다시 해! 한 판 더!', '이번엔 봐준 거야'],
-    },
-  },
-  {
-    key: 'star3', stars: 3, name: '네오', title: '영리한', portrait: 'owl', color: '#7c93ff', deep: '#1e2a66',
-    blurb: '좋은 수를 계산하는 부엉이',
-    lines: {
-      intro: ['좋은 승부를 기대할게', '확률은 내 편이야'],
-      think: ['계산 중…', '이 수가 좋겠군'],
-      attack: ['예상했지?', '계산된 공격이야'],
-      hit: ['계산 밖이었어', '흠, 다시 세어 보자'],
-      playerAttack: ['흥미로운 수네', '그렇게 나오는군'],
-      joker: ['조커는 계산에 없었는데', '좋은 한 수야'],
-      onecard: ['마지막 한 장이야', '체크메이트가 보이네'],
-      playerOnecard: ['이런, 서둘러야겠군', '한 장이라니'],
-      win: ['논리적인 결과야', '좋은 판이었어'],
-      lose: ['훌륭해, 배웠어', '다음엔 내가 맞힐 거야'],
-    },
-  },
-  {
-    key: 'star4', stars: 4, name: '아스트라', title: '냉철한', portrait: 'wolf', color: '#6fd6e8', deep: '#0f4752',
-    blurb: '최선과 차선의 흐름을 읽는 늑대',
-    lines: {
-      intro: ['봐주지 않아', '흐름은 내가 읽는다'],
-      think: ['…', '최선은 이거'],
-      attack: ['버텨 봐', '이제 시작이야'],
-      hit: ['…괜찮아', '이 정도는 예상했어'],
-      playerAttack: ['나쁘지 않군', '제법이야'],
-      joker: ['조커… 대단한데', '좋아, 받아 주지'],
-      onecard: ['끝이 보이네', '마지막이다'],
-      playerOnecard: ['막는다', '여기서 끝낼 수 없어'],
-      win: ['당연한 결과', '다음에 또 와'],
-      lose: ['…인정할게', '실력이 늘었네'],
-    },
-  },
-  {
-    key: 'star5', stars: 5, name: '오르비스', title: '무결한', portrait: 'dragon', color: '#e35a6a', deep: '#5a1520',
-    blurb: '공개된 정보로 다음 수를 읽는 용',
-    lines: {
-      intro: ['도전자인가', '나를 이길 수 있을까'],
-      think: ['모든 수가 보인다', '흥미롭군'],
-      attack: ['이것이 힘의 차이', '불꽃이다'],
-      hit: ['…이럴 수가', '흠집이 났군'],
-      playerAttack: ['감히', '건방지군'],
-      joker: ['조커를 쓰다니!', '대담하구나'],
-      onecard: ['마지막 한 장', '끝이다'],
-      playerOnecard: ['멈춰라', '그럴 수는 없지'],
-      win: ['무결한 승리', '아직 멀었다'],
-      lose: ['내가… 졌다고?', '인정하지. 강하구나'],
-    },
-  },
-  {
-    key: 'star6', stars: 6, name: '세레나', title: '우아한', portrait: 'swan', color: '#dfe8f2', deep: '#2b3a52', elite: true,
-    blurb: '지나간 카드를 하나도 잊지 않는 백조',
-    lines: {
-      intro: ['우아하게 겨뤄 봐요', '오늘 나온 카드는 다 기억할게요'],
-      think: ['아까 그 카드가 나왔으니…', '남은 건 이것뿐이네요', '조용히, 정확하게'],
-      attack: ['실례할게요', '피할 카드가 없을 텐데요'],
-      hit: ['어머, 예상보다 많네요', '깃털이 조금 흐트러졌어요'],
-      playerAttack: ['좋은 타이밍이에요', '기억해 둘게요'],
-      joker: ['조커가 남아 있었군요', '이건 계산에 넣었어야 했는데'],
-      onecard: ['마지막 한 장이에요', '이제 물 위로 올라갈 때'],
-      playerOnecard: ['그 한 장, 무늬가 뭘까요', '서두르지 않을게요'],
-      win: ['우아한 마무리였어요', '다음에도 기억할게요'],
-      lose: ['훌륭해요, 정말로', '오늘은 제가 졌네요'],
-    },
-  },
-  {
-    key: 'star7', stars: 7, name: '녹턴', title: '그림자', portrait: 'black-panther', color: '#9a7cff', deep: '#1a1230', elite: true,
-    blurb: '나올 카드를 수백 번 그려 보고 고르는 흑표범',
-    lines: {
-      intro: ['…시작하지', '어둠 속에서 다 보여'],
-      think: ['수백 갈래 중에 하나', '…', '이 길이 가장 길어'],
-      attack: ['도망칠 곳은 없어', '조용히, 깊게'],
-      hit: ['…흠', '그림자가 길어졌군'],
-      playerAttack: ['날카롭군', '그 수는 봤어'],
-      joker: ['조커… 좋아', '빛이 번쩍이는군'],
-      onecard: ['마지막 걸음', '끝이 가까워'],
-      playerOnecard: ['막는다', '그 한 장을 읽는다'],
-      win: ['밤은 내 편이야', '다시 와, 어둠 속으로'],
-      lose: ['…강하군', '빛이 이겼어'],
-    },
-  },
-  {
-    key: 'star8', stars: 8, name: '로제아', title: '장미 정원의', portrait: 'peacock', color: '#ff6f8a', deep: '#3a0f1e', elite: true,
-    blurb: '장미 정원의 주인 — 가장 깊이 읽는 공작',
-    lines: {
-      intro: ['내 장미 정원에 온 걸 환영해요', '꽃이 지기 전에 끝내 볼까요'],
-      think: ['가시는 숨겨 두는 거예요', '어느 꽃을 피울까', '한 수 더 깊이'],
-      attack: ['가시에 찔렸네요', '장미에는 가시가 있죠'],
-      hit: ['꽃잎이 떨어졌어요', '괜찮아요, 다시 피면 돼요'],
-      playerAttack: ['대담하네요', '정원사가 놀라겠어요'],
-      joker: ['조커라니, 장미보다 화려하네요', '눈부신 한 수예요'],
-      onecard: ['마지막 꽃봉오리', '이제 활짝 필 차례'],
-      playerOnecard: ['그 꽃은 피우게 둘 수 없어요', '정원 문을 닫을게요'],
-      win: ['내 정원은 오늘도 만개', '백만 송이 중 한 송이를 드릴게요'],
-      lose: ['당신이 정원의 새 주인이에요', '이렇게 아름다운 패배는 처음이에요'],
-    },
-  },
-]);
-
-// 캐릭터 상대(11-24 선생님 「동물들 말고 90년대 애니 캐릭터나 지금 이슈되는 치이카와 · 춘식이 같은」)
-// 그림은 선생님이 GPT 로 만들어 gpt그림/상대N 으로 넣는다 → scripts/build-gpt.mjs 가 cut/rival-N 을 만들고 GPT_ART 에 적는다.
-// 그림이 들어온 자리만 캐릭터로 바뀌고, 아직 없는 자리는 위의 동물 상대가 그대로 나온다.
-// 출처: 춘식이(카카오프렌즈) · 치이카와 · 하치와레 · 우사기 · 랏코(나가노 「치이카와」) · 짱구(「크레용 신짱」) · 체리(CLAMP 「카드캡터 사쿠라」) · 세일러문(다케우치 나오코 「미소녀 전사 세일러문」) — 수업 자료(저작권 교육 예외)
-const CHARACTER_RIVALS = Object.freeze([
-  {
-    key: 'star1', stars: 1, name: '춘식이', title: '느긋한', portrait: 'rival-1', color: '#f3d9a4', deep: '#5a4520',
-    blurb: '고구마를 먹으며 마음 가는 카드를 내는 춘식이',
-    lines: {
-      intro: ['고구마 먹으면서 해도 돼?', '오늘은 천천히 한 판'],
-      think: ['음냐…', '어떤 걸 낼까~', '하암…'],
-      attack: ['고구마 대신 이거 받아', '미안, 공격이야'],
-      hit: ['으앙, 많이 받았다', '괜찮아… 고구마 있으니까'],
-      playerAttack: ['헉, 공격이다', '살살 해 줘~'],
-      joker: ['조커라니!', '깜짝이야'],
-      onecard: ['나 한 장 남았어!', '어, 이기는 거야?'],
-      playerOnecard: ['벌써 한 장?', '빠르다…'],
-      win: ['헤헤, 이겼다', '고구마 먹으러 가야지'],
-      lose: ['잘한다! 다음엔 나도', '고구마 먹고 다시 할래'],
-    },
-  },
-  {
-    key: 'star2', stars: 2, name: '치이카와', title: '열심히 하는', portrait: 'rival-2', color: '#f7e3e6', deep: '#5a3a44',
-    blurb: '겁이 많지만 무늬와 공격 카드를 열심히 살피는 치이카와',
+    name: '치이카와', title: '열심히 하는', portrait: 'char-chiikawa', color: '#f7e3e6', deep: '#5a3a44',
     lines: {
       intro: ['우와…!', '할 수 있어…!'],
       think: ['으음…', '이거…?', '흐에…'],
@@ -171,8 +21,7 @@ const CHARACTER_RIVALS = Object.freeze([
     },
   },
   {
-    key: 'star3', stars: 3, name: '하치와레', title: '낙천적인', portrait: 'rival-3', color: '#9ec3ff', deep: '#1f3560',
-    blurb: '「어떻게든 될 거야!」 좋은 수를 찾아내는 하치와레',
+    name: '하치와레', title: '낙천적인', portrait: 'char-hachiware', color: '#9ec3ff', deep: '#1f3560',
     lines: {
       intro: ['같이 재밌게 하자!', '어떻게든 될 거야!'],
       think: ['음, 이게 좋겠다!', '어디 보자~', '괜찮아 괜찮아'],
@@ -187,8 +36,7 @@ const CHARACTER_RIVALS = Object.freeze([
     },
   },
   {
-    key: 'star4', stars: 4, name: '우사기', title: '종잡을 수 없는', portrait: 'rival-4', color: '#ffe27a', deep: '#5a4808',
-    blurb: '「우라!」 최선과 차선을 오가는 우사기',
+    name: '우사기', title: '종잡을 수 없는', portrait: 'char-usagi', color: '#ffe27a', deep: '#5a4808',
     lines: {
       intro: ['우라!', '야하!'],
       think: ['하아?', '후루룻…', '우라…'],
@@ -203,40 +51,7 @@ const CHARACTER_RIVALS = Object.freeze([
     },
   },
   {
-    key: 'star5', stars: 5, name: '짱구', title: '장난꾸러기', portrait: 'rival-5', color: '#ff6b5a', deep: '#5a1a12',
-    blurb: '공개된 카드로 다음 수를 읽는 장난꾸러기 짱구',
-    lines: {
-      intro: ['안녕~ 짱구예요!', '오늘도 이겨 볼까~'],
-      think: ['음~ 이거 할까?', '흐흐흐', '엄마한텐 비밀~'],
-      attack: ['액션 빔~!', '받아라, 짱구 공격!'],
-      hit: ['으악, 너무해~', '엄마한테 이를 거야~'],
-      playerAttack: ['어라라?', '헤헤, 제법인데~'],
-      joker: ['조커다~!', '와, 조커!'],
-      onecard: ['한 장 남았지롱~', '이제 끝이야~'],
-      playerOnecard: ['어라, 벌써?', '막아야지~'],
-      win: ['이겼다~ 부리부리~', '역시 나야~'],
-      lose: ['에이~ 졌다', '다시 해~ 한 판 더~'],
-    },
-  },
-  {
-    key: 'star6', stars: 6, name: '체리', title: '카드캡터', portrait: 'rival-6', color: '#ff9ccf', deep: '#5a1a3a', elite: true,
-    blurb: '지나간 카드를 하나도 잊지 않는 카드캡터 체리',
-    lines: {
-      intro: ['잘 부탁해!', '절대 괜찮을 거야!'],
-      think: ['아까 그 카드가 나왔으니까…', '어떤 카드가 좋을까', '집중, 집중!'],
-      attack: ['카드여, 힘을 빌려줘!', '봉인 해제!'],
-      hit: ['호에에~!', '괜찮아, 아직이야!'],
-      playerAttack: ['호에!', '대단해!'],
-      joker: ['조커 카드…!', '이건 예상 못 했어!'],
-      onecard: ['마지막 카드야!', '절대 괜찮을 거야!'],
-      playerOnecard: ['서둘러야 해!', '아직 끝나지 않았어!'],
-      win: ['해냈다! 절대 괜찮다고 했지?', '모든 카드가 도와줬어!'],
-      lose: ['호에에… 졌다', '다음엔 꼭 이길 거야!'],
-    },
-  },
-  {
-    key: 'star7', stars: 7, name: '랏코', title: '토벌 1위', portrait: 'rival-7', color: '#c9a27e', deep: '#3a2a1e', elite: true,
-    blurb: '나올 카드를 수백 번 그려 보고 고르는 최강 토벌가 랏코',
+    name: '랏코', title: '토벌 1위', portrait: 'char-rakko', color: '#c9a27e', deep: '#3a2a1e',
     lines: {
       intro: ['…시작하지', '토벌 1위의 실력을 보여 주지'],
       think: ['…', '이 길이 맞아', '흐름을 읽는다'],
@@ -251,28 +66,176 @@ const CHARACTER_RIVALS = Object.freeze([
     },
   },
   {
-    key: 'star8', stars: 8, name: '세일러문', title: '장미 정원의', portrait: 'rival-8', color: '#ffd36f', deep: '#23235e', elite: true,
-    blurb: '장미를 든 마지막 상대 — 가장 깊이 읽는 세일러문',
+    name: '짱구', title: '장난꾸러기', portrait: 'char-shinchan', color: '#ff6b5a', deep: '#5a1a12',
     lines: {
-      intro: ['사랑과 정의의 이름으로!', '장미 정원에 온 걸 환영해'],
-      think: ['어떤 카드로 할까…', '턱시도 가면님이 보고 있어', '집중해야 해!'],
-      attack: ['정의의 이름으로!', '문 티아라 액션!'],
-      hit: ['으앙, 너무 많아!', '포기하지 않아!'],
-      playerAttack: ['꺄악!', '제법인걸!'],
-      joker: ['조커라니!', '이건 반칙이야~!'],
-      onecard: ['마지막 한 장!', '달의 힘을 믿어!'],
-      playerOnecard: ['안 돼, 막아야 해!', '아직 끝나지 않았어!'],
-      win: ['사랑과 정의의 승리야!', '장미처럼 아름다운 승부였어'],
-      lose: ['훌쩍… 졌어', '다음엔 지지 않을 거야!'],
+      intro: ['안녕~ 짱구예요!', '오늘도 이겨 볼까~'],
+      think: ['음~ 이거 할까?', '흐흐흐', '엄마한텐 비밀~'],
+      attack: ['액션 빔~!', '받아라, 짱구 공격!'],
+      hit: ['으악, 너무해~', '엄마한테 이를 거야~'],
+      playerAttack: ['어라라?', '헤헤, 제법인데~'],
+      joker: ['조커다~!', '와, 조커!'],
+      onecard: ['한 장 남았지롱~', '이제 끝이야~'],
+      playerOnecard: ['어라, 벌써?', '막아야지~'],
+      win: ['이겼다~ 부리부리~', '역시 나야~'],
+      lose: ['에이~ 졌다', '다시 해~ 한 판 더~'],
     },
   },
-]);
+  {
+    name: '체리', title: '카드캡터', portrait: 'char-sakura', color: '#ff9ccf', deep: '#5a1a3a',
+    lines: {
+      intro: ['잘 부탁해!', '절대 괜찮을 거야!'],
+      think: ['아까 그 카드가 나왔으니까…', '어떤 카드가 좋을까', '집중, 집중!'],
+      attack: ['카드여, 힘을 빌려줘!', '봉인 해제!'],
+      hit: ['호에에~!', '괜찮아, 아직이야!'],
+      playerAttack: ['호에!', '대단해!'],
+      joker: ['조커 카드…!', '이건 예상 못 했어!'],
+      onecard: ['마지막 카드야!', '절대 괜찮을 거야!'],
+      playerOnecard: ['서둘러야 해!', '아직 끝나지 않았어!'],
+      win: ['해냈다! 절대 괜찮다고 했지?', '모든 카드가 도와줬어!'],
+      lose: ['호에에… 졌다', '다음엔 꼭 이길 거야!'],
+    },
+  },
+  {
+    name: '코난', title: '명탐정', portrait: 'char-conan', color: '#4f7fe0', deep: '#14254f',
+    lines: {
+      intro: ['진실은 언제나 하나!', '추리를 시작해 볼까'],
+      think: ['잠깐, 아까 그 카드…', '흠…', '단서는 다 나와 있어'],
+      attack: ['범인은 바로 너야!', '이 카드로 증명하지'],
+      hit: ['아차, 놓쳤다', '이건 계산 밖이야'],
+      playerAttack: ['그렇게 나올 줄 알았어', '제법인데?'],
+      joker: ['조커라니, 트릭이군', '예상 밖이야!'],
+      onecard: ['마지막 한 장, 추리 끝!', '이제 진실이 드러날 거야'],
+      playerOnecard: ['그 한 장, 무늬가 뭘까', '막아야 해!'],
+      win: ['진실은 언제나 하나!', '사건 해결!'],
+      lose: ['내 추리가 틀렸다니…', '다음엔 꼭 밝혀낼 거야'],
+    },
+  },
+  {
+    name: '키드', title: '괴도', portrait: 'char-kid', color: '#dfe8f2', deep: '#1e2f5a',
+    lines: {
+      intro: ['쇼타임이다!', '오늘 밤, 이 판을 훔치러 왔지'],
+      think: ['예고장대로…', '후훗', '마술의 비밀은 말할 수 없지'],
+      attack: ['마술 같은 한 수!', '눈 깜짝할 사이에'],
+      hit: ['이런, 들켰나', '마술이 살짝 빗나갔군'],
+      playerAttack: ['훌륭한 트릭이군', '제법이야, 탐정님'],
+      joker: ['조커라니, 나다운 카드군', '멋진 마술이야!'],
+      onecard: ['마지막 한 장, 쇼의 피날레다', '예고한 대로지'],
+      playerOnecard: ['그 한 장, 훔쳐 가겠어', '아직 쇼는 안 끝났어'],
+      win: ['예고대로 훔쳐 갔다!', '오늘 밤 쇼는 여기까지'],
+      lose: ['오늘은 내가 졌군', '다음 예고장을 기다려'],
+    },
+  },
+  {
+    name: '케로로', title: '지구 침략 중인', portrait: 'char-keroro', color: '#7cc957', deep: '#1f4a14',
+    lines: {
+      intro: ['케로케로~ 침략 개시다!', '이 판을 이기면 지구는 내 것이다!'],
+      think: ['케로…', '작전을 세우는 중이다', '흠, 건프라 생각 중'],
+      attack: ['돌격이다, 케로!', '받아라, 케로로 공격!'],
+      hit: ['케로오오?!', '작전 실패다…'],
+      playerAttack: ['케, 케로?!', '제법이군, 지구인!'],
+      joker: ['조커라니, 반칙이다 케로!', '케로케로?!'],
+      onecard: ['한 장 남았다, 케로!', '침략 직전이다!'],
+      playerOnecard: ['막아라, 케로!', '비상사태다!'],
+      win: ['케로케로~ 침략 성공!', '역시 이 몸이다, 케로!'],
+      lose: ['케로… 작전 실패다', '다음엔 꼭 침략한다!'],
+    },
+  },
+  {
+    name: '하츄핑', title: '사랑의', portrait: 'char-hachuping', color: '#ff7eb6', deep: '#5a1a3a',
+    lines: {
+      intro: ['사랑의 하츄핑이야!', '하츄~ 같이 놀자!'],
+      think: ['어떤 카드에 사랑을 담을까?', '하츄…', '음~ 이거!'],
+      attack: ['사랑의 공격!', '하츄~ 받아!'],
+      hit: ['히잉, 너무 많아', '그래도 괜찮아!'],
+      playerAttack: ['꺄, 깜짝이야!', '대단해!'],
+      joker: ['조커라니, 반짝반짝!', '우와~'],
+      onecard: ['한 장 남았어, 하츄!', '마지막 카드에 사랑을!'],
+      playerOnecard: ['안 돼~', '서둘러야 해!'],
+      win: ['사랑이 이겼어!', '하츄~ 신난다!'],
+      lose: ['너도 정말 잘한다!', '다음엔 꼭 이길 거야!'],
+    },
+  },
+  {
+    name: '쿠로미', title: '시크한', portrait: 'char-kuromi', color: '#a38bd0', deep: '#24163a',
+    lines: {
+      intro: ['흥, 한판 붙자!', '마이멜로디보다 내가 더 잘해'],
+      think: ['흐음…', '어떻게 골려 줄까', '이거다!'],
+      attack: ['받아라, 쿠로미 공격!', '히히, 걸렸다!'],
+      hit: ['으으, 분해!', '이건 마이멜로디 탓이야!'],
+      playerAttack: ['뭐야, 제법인데?', '흥!'],
+      joker: ['조커?! 반칙이야!', '으악!'],
+      onecard: ['한 장 남았다, 히히', '이제 끝이야!'],
+      playerOnecard: ['안 돼, 막을 거야!', '흥, 아직이야!'],
+      win: ['역시 쿠로미 님이야!', '히히, 이겼다!'],
+      lose: ['흥, 오늘만 봐준 거야', '분해! 한 판 더!'],
+    },
+  },
+  {
+    name: '헬로키티', title: '다정한', portrait: 'char-hellokitty', color: '#e8394a', deep: '#5a1018',
+    lines: {
+      intro: ['안녕! 같이 놀자', '친구랑 하는 카드놀이 좋아'],
+      think: ['어떤 카드가 좋을까?', '음~', '사과 파이 생각 중'],
+      attack: ['미안, 공격이야!', '살짝 받아 줄래?'],
+      hit: ['어머, 많이 받았네', '괜찮아, 아직이야'],
+      playerAttack: ['어머나!', '잘하는데?'],
+      joker: ['조커다!', '깜짝 놀랐어'],
+      onecard: ['한 장 남았어!', '거의 다 왔어'],
+      playerOnecard: ['벌써 한 장이야?', '서둘러야겠다'],
+      win: ['이겼다! 사과 파이 먹자', '같이 해서 즐거웠어'],
+      lose: ['정말 잘했어!', '다음에 또 놀자'],
+    },
+  },
+  {
+    name: '포차코', title: '공놀이 좋아하는', portrait: 'char-pochacco', color: '#ff6b6b', deep: '#5a1a1a',
+    lines: {
+      intro: ['같이 뛰어놀자!', '공놀이도 카드놀이도 좋아!'],
+      think: ['음… 이거!', '킁킁, 좋은 카드 냄새', '어디 보자~'],
+      attack: ['슛~!', '받아라, 멍!'],
+      hit: ['깨갱…', '아직 힘 남았어!'],
+      playerAttack: ['왈! 깜짝이야', '멋진 패스인데?'],
+      joker: ['우와, 조커다!', '멍멍?!'],
+      onecard: ['한 장 남았다, 멍!', '골인 직전이야!'],
+      playerOnecard: ['앗, 막아야 해!', '수비, 수비!'],
+      win: ['골인~! 이겼다!', '바나나 아이스크림 먹으러 가자!'],
+      lose: ['좋은 경기였어!', '다음엔 더 빨리 뛸 거야!'],
+    },
+  },
+  {
+    name: '한교동', title: '웃기고 싶은', portrait: 'char-hangyodon', color: '#4fb8b0', deep: '#123f3c',
+    lines: {
+      intro: ['뻐끔뻐끔, 한판 할까?', '오늘은 내가 영웅이 될 거야'],
+      think: ['뻐끔…', '물속처럼 조용히…', '음, 이거다'],
+      attack: ['물대포 발사!', '받아라, 한교동 공격!'],
+      hit: ['뻐끔… 많다', '눈물이 바다만큼…'],
+      playerAttack: ['어푸어푸!', '헉, 파도가 친다'],
+      joker: ['조커?! 비늘이 다 섰어', '뻐끔?!'],
+      onecard: ['한 장 남았어, 뻐끔', '영웅의 시간이다!'],
+      playerOnecard: ['앗, 그물을 쳐야 해!', '막아야 해!'],
+      win: ['나도 영웅이 됐다!', '웃었지? 내가 이겼어!'],
+      lose: ['뻐끔… 졌다', '그래도 재밌었지?'],
+    },
+  },
+  {
+    name: '장미 공주', title: '무도회의', portrait: 'char-rose-princess', color: '#f7a8c4', deep: '#5a2140',
+    lines: {
+      intro: ['장미 무도회에 온 걸 환영해요', '오늘은 카드로 춤춰 볼까요'],
+      think: ['어느 장미를 고를까…', '음…', '우아하게, 정확하게'],
+      attack: ['장미에는 가시가 있죠', '실례할게요'],
+      hit: ['드레스가 구겨졌어요', '꽃잎이 떨어졌네요'],
+      playerAttack: ['대담하시네요', '어머!'],
+      joker: ['조커라니, 장미보다 화려해요', '눈부신 한 수예요'],
+      onecard: ['마지막 한 장이에요', '이제 활짝 필 차례'],
+      playerOnecard: ['그 꽃은 피우게 둘 수 없어요', '무도회는 아직 안 끝났어요'],
+      win: ['오늘 무도회의 주인공은 저예요', '장미처럼 아름다운 승부였어요'],
+      lose: ['당신이 오늘의 주인공이에요', '이렇게 아름다운 패배는 처음이에요'],
+    },
+  },
+];
 
-// 캐릭터 여덟 — 그림이 들어온 자리는 캐릭터, 아직 없는 자리는 동물. 별 · 플레이 방식 설명은 캐릭터가 아니라 난이도가 정한다
-const toPersona = ({ key, stars, blurb, elite, ...persona }) => Object.freeze({ id: persona.portrait, ...persona });
-export const CHARACTERS = Object.freeze(ANIMAL_RIVALS.map((animal, index) => toPersona(hasGptArt(`rival-${index + 1}`) ? CHARACTER_RIVALS[index] : animal)));
+// 캐릭터 열다섯 — 별 · 플레이 방식 설명은 캐릭터가 아니라 난이도가 정한다
+export const CHARACTERS = Object.freeze(RIVALS.map((persona) => Object.freeze({ id: persona.portrait, ...persona })));
 
-// 캐릭터는 여덟 중 무작위 — 바로 전 판 캐릭터만 피한다
+// 캐릭터는 열다섯 중 무작위 — 바로 전 판 캐릭터만 피한다
 let lastPersonaId = null;
 export function pickPersona(random = Math.random, avoid = lastPersonaId) {
   const pool = CHARACTERS.filter((persona) => persona.id !== avoid);

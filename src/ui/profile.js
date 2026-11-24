@@ -25,7 +25,7 @@ export function openProfile({ host, onClose, onChanged, onAccount }) {
   const unlocked = (item) => isUnlocked(item, profile.peakPoints, passTier, profile.boxItems);
   // 열린 것 먼저, 그다음 열리는 차례대로
   const avatars = COSMETICS.filter((item) => item.slot === 'avatar')
-    .sort((a, b) => Number(unlocked(b)) - Number(unlocked(a)) || (a.pass ? 1e9 + a.pass : a.threshold) - (b.pass ? 1e9 + b.pass : b.threshold));
+    .sort((a, b) => Number(unlocked(b)) - Number(unlocked(a)) || Number(Boolean(b.character)) - Number(Boolean(a.character)) || (a.pass ? 1e9 + a.pass : a.threshold) - (b.pass ? 1e9 + b.pass : b.threshold));
   const myName = () => normalizeNickname(settings.get().nickname) || '나';
 
   // 왼쪽 — 내 캐릭터 무대

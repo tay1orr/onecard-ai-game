@@ -177,14 +177,29 @@ check(MATCH_BANDS.every((band) => band.weights.length === 8 && band.weights.redu
 check(matchmakingWeights(330000).slice(5).every((weight) => weight > 0), '33만 점이면 ★6 · ★7 · ★8 을 모두 만날 수 있어야 함');
 check(matchmakingWeights(10000).slice(5).every((weight) => weight === 0), '1만 점에서는 ★6~★8 이 나오지 않아야 함(학생 점수대 그대로)');
 check(playerStarsForPoints(330000) === 7 && playerStarsForPoints(400000) === 8, '33만 점은 ★7, 40만 점부터 ★8');
-check(AI_OPPONENTS.length === 8 && CHARACTERS.length === 8 && new Set(CHARACTERS.map((persona) => persona.id)).size === 8, '난이도 ★1~★8 여덟 단계, 캐릭터 여덟');
+check(AI_OPPONENTS.length === 8 && CHARACTERS.length === 15 && new Set(CHARACTERS.map((persona) => persona.id)).size === 15, '난이도 ★1~★8 여덟 단계, 상대 캐릭터 열다섯');
+check(!CHARACTERS.some((persona) => COSMETICS.some((item) => item.portrait === persona.portrait)), '상대 캐릭터와 내 캐릭터는 겹치지 않아야 함');
+check(COSMETICS.filter((item) => item.character).length === 7 && COSMETICS.filter((item) => item.character).every((item) => item.slot === 'avatar' && item.threshold === 0), '내 캐릭터 일곱은 처음부터 고를 수 있어야 함');
+// 선생님 GPT 그림(11-24) — 넣은 그림은 모두 아이템 · 캐릭터로 쓰이고, 그 가운데 상자 전용은 둘뿐
+const { GPT_ART } = await import('../src/data/gpt-art.js');
+const LOOKS_BY_SLOT = { table: MAPS, cardBack: BACKS, cardFace: FACES };
+const gptKeyOf = (slot, look) => ({ table: look?.painted, cardBack: look?.paint, cardFace: look?.frame?.replace?.(/^paint:/, '') }[slot] || '').replace(/^gpt-/, '');
+const gptUsed = new Set([
+  ...CHARACTERS.map((persona) => persona.portrait),
+  ...COSMETICS.map((item) => item.portrait),
+  ...COSMETICS.filter((item) => LOOKS_BY_SLOT[item.slot]).map((item) => gptKeyOf(item.slot, LOOKS_BY_SLOT[item.slot][item.look])),
+]);
+const unusedGpt = GPT_ART.filter((key) => !gptUsed.has(key));
+check(GPT_ART.length === 62 && unusedGpt.length === 0, `선생님 GPT 그림 62장은 모두 써야 함(안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
+const gptBox = COSMETICS.filter((item) => item.box && LOOKS_BY_SLOT[item.slot] && GPT_ART.includes(gptKeyOf(item.slot, LOOKS_BY_SLOT[item.slot][item.look])));
+check(gptBox.length === 2, `GPT 그림 아이템 가운데 상자 전용은 둘뿐(지금 ${gptBox.map((item) => item.id).join(', ')})`);
 check(CHARACTERS.every((persona) => persona.stars === undefined && persona.key === undefined && persona.name && persona.portrait && persona.lines?.win?.length), '캐릭터에는 별 · 난이도가 붙어 있지 않아야 함(따로 뽑음)');
 const seededPick = (seed) => () => { seed = (seed * 48271) % 2147483647; return (seed - 1) / 2147483646; };
 const ranked = makeRival(AI_OPPONENTS[6], CHARACTERS[0]);
 check(ranked.key === 'star7' && ranked.stars === 7 && ranked.elite && ranked.name === CHARACTERS[0].name && ranked.blurb === AI_OPPONENTS[6].status, '상대 = 캐릭터(이름 · 그림 · 대사) + 난이도(별 · AI 세기 · 설명)');
 const pickRandom = seededPick(11);
 const facesAtStar8 = new Set(Array.from({ length: 200 }, () => makeRival(AI_OPPONENTS[7], pickPersona(pickRandom)).name));
-check(facesAtStar8.size === 8, `★8 에서도 캐릭터 여덟이 모두 나와야 함(지금 ${facesAtStar8.size})`);
+check(facesAtStar8.size === CHARACTERS.length, `★8 에서도 캐릭터 열다섯이 모두 나와야 함(지금 ${facesAtStar8.size})`);
 const pairsSeen = new Set(Array.from({ length: 400 }, (_, index) => { const rival = makeRival(AI_OPPONENTS[index % 8], pickPersona(pickRandom)); return `${rival.name}:${rival.stars}`; }));
 check(pairsSeen.size > 40, `캐릭터와 별이 짝지어지지 않고 섞여야 함(400판에 짝 ${pairsSeen.size}가지)`);
 let previous = pickPersona(pickRandom).id;
