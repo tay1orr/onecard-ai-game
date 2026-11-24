@@ -1,5 +1,5 @@
 // 꾸미기 하나하나 보기 — 모든 아이템을 연 프로필로 보관함을 열고, 아이템마다 큰 미리보기를 찍는다(빌드 뒤)
-// node tests/e2e/audit.mjs [--mobile] [--slot=table,cardBack] [--replay]
+// node tests/e2e/audit.mjs [--mobile] [--slot=table,cardBack] [--only=아이템id,아이템id] [--replay]
 // 찍은 그림: tests/e2e/_shots/audit/<칸>/<순번>-<id>.png → node tests/e2e/audit-sheet.mjs 로 모아 보기
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -12,6 +12,7 @@ const outDir = path.join(root, 'tests/e2e/_shots/audit');
 const mobile = process.argv.includes('--mobile');
 const replay = process.argv.includes('--replay');
 const slots = (process.argv.find((arg) => arg.startsWith('--slot=')) || '').slice(7).split(',').filter(Boolean);
+const only = (process.argv.find((arg) => arg.startsWith('--only=')) || '').slice(7).split(',').filter(Boolean);
 const PORT = 4186;
 const BASE = `http://127.0.0.1:${PORT}/`;
 const CHROME = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -19,7 +20,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const problems = [];
 
 const { COSMETICS, COSMETIC_SLOTS } = await import(path.join(root, 'src/core/cosmetics.js').replace(/\\/g, '/').replace(/^([A-Z]):/, 'file:///$1:'));
-const wanted = COSMETIC_SLOTS.map((slot) => slot.key).filter((key) => !slots.length || slots.includes(key));
+const wanted = COSMETIC_SLOTS.map((slot) => slot.key).filter((key) => (!slots.length || slots.includes(key)) && (!only.length || COSMETICS.some((item) => item.slot === key && only.includes(item.id))));
 
 const server = spawn(process.execPath, [path.join(root, 'node_modules/vite/bin/vite.js'), 'preview', '--port', String(PORT), '--strictPort', '--host', '127.0.0.1'], { cwd: root, stdio: 'ignore', windowsHide: true });
 let browser;
@@ -54,7 +55,7 @@ try {
     fs.mkdirSync(dir, { recursive: true });
     await page.click(`.locker .tab[data-tab="${slot}"]`);
     await sleep(500);
-    const ids = await page.$$eval('.locker .item-tile[data-id]', (tiles) => tiles.map((tile) => tile.dataset.id));
+    const ids = (await page.$$eval('.locker .item-tile[data-id]', (tiles) => tiles.map((tile) => tile.dataset.id))).filter((id) => !only.length || only.includes(id));
     // 칸 목록(작은 그림) 전체
     await page.evaluate(() => document.querySelectorAll('.locker .item-tile img').forEach((img) => { img.loading = 'eager'; }));
     await page.waitForFunction(() => [...document.querySelectorAll('.locker .item-tile img')].every((img) => img.complete), null, { timeout: 15000 }).catch(() => problems.push(`${slot} 목록 그림이 다 안 들어옴`));

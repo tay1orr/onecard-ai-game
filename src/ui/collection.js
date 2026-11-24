@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { h, formatNumber } from './dom.js';
 import {
   COSMETICS, COSMETIC_SLOTS, COSMETIC_SETS, CHARM_SLOT_COUNT, charmToyConfig, cosmeticById, cosmeticSetForItem, cosmeticSetProgress,
-  equippedCharmIds, isUnlocked, nextCosmeticUnlock,
+  equippedCharmIds, isUnlocked, nextCosmeticUnlock, DEFAULT_EQUIPPED,
 } from '../core/cosmetics.js';
 
 import { loadPlayerProfile, savePlayerProfile } from '../core/rating.js';
@@ -92,7 +92,7 @@ export function openCollection({ host, onClose, onChanged }) {
   function renderPreview() {
     const equipped = previewEquipped();
     applyEquipped(preview, equipped, { propsEl: previewProps });
-    previewAvatar.src = cut((cosmeticById(equipped.avatar) || cosmeticById('avatar-rabbit')).portrait);
+    previewAvatar.src = cut((cosmeticById(equipped.avatar) || cosmeticById(DEFAULT_EQUIPPED.avatar)).portrait);
     // 자리마다 그 자리에 실제로 나오는 장난감 하나씩(기본 친구들은 푸딩 · 별 · 장미)
     previewToys.replaceChildren(...equippedCharmIds(equipped).map((id, slot) => {
       const toy = charmToyConfig(id, slot);
@@ -180,7 +180,8 @@ export function openCollection({ host, onClose, onChanged }) {
     if (selected.slot === 'effect') fx.burst(lookOf('effect', selected.look), at, { sizeScale: 0.8 });
     else if (selected.slot === 'victory') {
       clearShowing();
-      const shown = fx.victory({ look: lookOf('victory', selected.look), avatarEl: previewAvatar, title: '승리', sub: selected.name });
+      const avatar = cosmeticById(previewEquipped().avatar) || cosmeticById(DEFAULT_EQUIPPED.avatar);
+      const shown = fx.victory({ look: lookOf('victory', selected.look), me: { portrait: avatar.portrait, el: previewAvatar }, title: '승리', sub: selected.name });
       showing = shown;
       shown.timeline.then(() => setTimeout(() => { if (showing === shown) clearShowing(); }, 900));
     } else if (selected.slot === 'charm') {

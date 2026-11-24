@@ -1319,13 +1319,6 @@ export const CREDIT_GROUPS = [
     "source": "https://pngimg.com/image/13256"
    },
    {
-    "key": "lightning",
-    "title": "model of a slender blue lightning strike with dim side branches",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/28030"
-   },
-   {
     "key": "confetti",
     "title": "Explosion of shiny magenta, pink and dark red foil confetti pieces",
     "creator": "",
@@ -1620,13 +1613,6 @@ export const CREDIT_GROUPS = [
     "source": "https://pngimg.com/image/51089"
    },
    {
-    "key": "globe",
-    "title": "Old desk globe on a black stand",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/22733"
-   },
-   {
     "key": "telescope",
     "title": "Brass telescope with finder on a mahogany tripod with brass fittings",
     "creator": "",
@@ -1648,69 +1634,6 @@ export const CREDIT_GROUPS = [
     "source": "https://pngimg.com/image/96539"
    },
    {
-    "key": "dog",
-    "title": "Dog",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/50354"
-   },
-   {
-    "key": "bear",
-    "title": "honeyed bear",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/1184"
-   },
-   {
-    "key": "hamster",
-    "title": "Inquisitive Hamster",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/114612"
-   },
-   {
-    "key": "frog",
-    "title": "Frog 1801x1354",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/35730"
-   },
-   {
-    "key": "chick",
-    "title": "Chick plush lemon front facing",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/116284"
-   },
-   {
-    "key": "fox",
-    "title": "Fox animal picture with transparent background",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/23141"
-   },
-   {
-    "key": "penguin",
-    "title": "Imperator Penguin bird transparent",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/4627"
-   },
-   {
-    "key": "tiger",
-    "title": "Tiger animal 1920x1200",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/23227"
-   },
-   {
-    "key": "panda",
-    "title": "panda walking all fours three quarter angle",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/20720"
-   },
-   {
     "key": "white-horse",
     "title": "White Horse animal transparent",
     "creator": "",
@@ -1718,60 +1641,11 @@ export const CREDIT_GROUPS = [
     "source": "https://pngimg.com/image/2560"
    },
    {
-    "key": "koala",
-    "title": "koala sitting on ground paws tucked in front",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/114246"
-   },
-   {
-    "key": "sloth",
-    "title": "Shaggy sloth sitting on the ground with long arms resting",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/71181"
-   },
-   {
     "key": "cat",
     "title": "Fluffy Cat",
     "creator": "",
     "license": "CC BY-NC 4.0",
     "source": "https://pngimg.com/image/50548"
-   },
-   {
-    "key": "owl",
-    "title": "a gray eagle owl with yellow eyes standing upright",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/26772"
-   },
-   {
-    "key": "wolf",
-    "title": "Wolf",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/23210"
-   },
-   {
-    "key": "dragon",
-    "title": "Dark green lizard sitting with head raised",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/23787"
-   },
-   {
-    "key": "swan",
-    "title": "white swan floating compact posture neck tucked facing left",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/20185"
-   },
-   {
-    "key": "peacock",
-    "title": "Peacock showing tail fan in green and blue",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/25828"
    }
   ]
  },
@@ -2043,20 +1917,6 @@ export const CREDIT_GROUPS = [
     "creator": "",
     "license": "CC BY-NC 4.0",
     "source": "https://pngimg.com/image/4963"
-   },
-   {
-    "key": "leopard",
-    "title": "앉은 표범(흑표범으로 어둡게) (pngimg leopard_PNG14833)",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/14833"
-   },
-   {
-    "key": "black-panther",
-    "title": "흑표범(멜라닌 표범) — pngimg 표범 사진(leopard_PNG14833)을 어둡게",
-    "creator": "",
-    "license": "CC BY-NC 4.0",
-    "source": "https://pngimg.com/image/14833"
    },
    {
     "key": "rose-gold",

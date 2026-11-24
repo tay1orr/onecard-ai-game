@@ -5,7 +5,7 @@
 import gsap from 'gsap';
 import { h, formatNumber, stars } from './dom.js';
 import { cut } from '../data/assets.js';
-import { COSMETICS, cosmeticById, isUnlocked } from '../core/cosmetics.js';
+import { COSMETICS, cosmeticById, isUnlocked, DEFAULT_EQUIPPED } from '../core/cosmetics.js';
 import { loadPlayerProfile, savePlayerProfile, playerStarsForPoints } from '../core/rating.js';
 import { tierForXp } from '../core/season.js';
 import { normalizeNickname } from '../net/multiplayer-helpers.js';
@@ -67,7 +67,7 @@ export function openProfile({ host, onClose, onChanged, onAccount }) {
   }
 
   function refreshHero(animate = true) {
-    const item = cosmeticById(profile.equipped.avatar) || cosmeticById('avatar-rabbit');
+    const item = cosmeticById(profile.equipped.avatar) || cosmeticById(DEFAULT_EQUIPPED.avatar);
     heroImg.src = cut(item.portrait);
     heroLabel.textContent = item.name;
     heroName.textContent = myName();

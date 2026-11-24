@@ -81,7 +81,7 @@ Object.entries(EFFECTS).forEach(([key, effect]) => {
 });
 Object.entries(VICTORIES).forEach(([key, victory]) => {
   needCut(victory.hero, `승리 ${key}`);
-  (victory.sprites || []).forEach((cut) => needCut(cut, `승리 ${key}`));
+  [...(victory.sprites || []), ...(victory.petals || []), ...(victory.sweep || [])].forEach((cut) => needCut(cut, `승리 ${key}`));
   (victory.fireworks || []).forEach((scene) => need(`r/scene/${scene}.webp`, `승리 ${key} 불꽃`));
   if (victory.backdrop?.scene) ['', '-s'].forEach((suffix) => need(`r/scene/${victory.backdrop.scene}${suffix}.webp`, `승리 ${key} 배경`));
   if (victory.backdrop?.paint) need(`r/paint/${victory.backdrop.paint}.webp`, `승리 ${key} 배경`);
@@ -89,7 +89,7 @@ Object.entries(VICTORIES).forEach(([key, victory]) => {
 Object.entries(TOYS).forEach(([key, toy]) => { needCut(toy.img, `장난감 ${key}`); (toy.burst || []).forEach((cut) => needCut(cut, `장난감 ${key} 소품`)); });
 CHARACTERS.forEach((rival) => needCut(rival.portrait, `상대 ${rival.name}`));
 COSMETICS.filter((item) => item.slot === 'avatar').forEach((item) => needCut(item.portrait, `캐릭터 ${item.name}`));
-['fire', 'smoke', 'gift-box', 'confetti', 'lightning', 'sword', 'dice', 'box-heart', 'box-white', 'box-black', 'gold-coins'].forEach((cut) => needCut(cut, '연출 · 로비'));
+['fire', 'smoke', 'gift-box', 'confetti', 'sword', 'dice', 'box-heart', 'box-white', 'box-black', 'gold-coins', 'gold-star', 'soap-bubble'].forEach((cut) => needCut(cut, '연출 · 로비 · 승리'));
 STICKERS.forEach((sticker) => need(`m/${sticker.motif}.webp`, `스티커 ${sticker.label}`));
 assert.deepEqual(missing, [], `없는 에셋 ${missing.length}개:\n  ${missing.slice(0, 40).join('\n  ')}`);
 count += 1;
@@ -126,13 +126,14 @@ check(xpForMatch({ won: true, stars: 3, now: new Date('2027-01-10T12:00:00') }) 
 check(xpForMatch({ won: false, now: new Date('2027-01-10T12:00:00') }) === 45, '패배 경험치 45');
 check(xpForMatch({ won: true, stars: 3, now: new Date('2026-11-25T12:00:00') }) === 320, '개막 축제 동안 경험치 2배');
 check(!isOpeningEventActive(new Date('2026-12-08T09:00:00')), '개막 축제는 12월 7일까지');
-check(!isUnlocked(cosmeticById('avatar-fox'), 999999, 0) && isUnlocked(cosmeticById('avatar-fox'), 0, 1), '패스 아이템은 점수가 아니라 단계로 열려야 함');
-check(normalizeEquipped({ ...DEFAULT_EQUIPPED, avatar: 'avatar-fox' }, 50000, 0).avatar === 'avatar-rabbit', '단계가 모자라면 패스 아이템을 장착하지 못해야 함');
+check(!isUnlocked(cosmeticById('avatar-pompompurin'), 999999, 0) && isUnlocked(cosmeticById('avatar-pompompurin'), 0, 1), '패스 아이템은 점수가 아니라 단계로 열려야 함');
+check(normalizeEquipped({ ...DEFAULT_EQUIPPED, avatar: 'avatar-pompompurin' }, 50000, 0).avatar === DEFAULT_EQUIPPED.avatar && DEFAULT_EQUIPPED.avatar === 'avatar-choonsik', '단계가 모자라면 패스 아이템을 장착하지 못해야 함(기본은 춘식이)');
+check(PASS_REWARDS.filter((reward) => cosmeticById(reward.itemId)?.slot === 'avatar').length === 4 && PASS_REWARDS.every((reward) => !['charm-s2-die', 'effect-s2-thunder', 'effect-s2-spotlight', 'face-s2-league'].includes(reward.itemId)), '패스 캐릭터 넷 · 뺀 보상(주사위 · 번개 · 스포트라이트 · 금박 테)은 없어야 함');
 
 const passStorage = memoryStorage({ [PROFILE_KEY]: JSON.stringify({ points: 100, peakPoints: 100, wins: 1, games: 2, seasonXp: 290 }) });
 const passWin = recordMatchResult({ won: true, opponentStars: 1, mode: 'ai', matchId: 'pass-win' }, passStorage);
 check(passWin.xpGained >= 120 && passWin.tier >= 1, '이기면 경험치가 쌓여 단계가 올라야 함');
-check(passWin.unlockedItems.some((item) => item.id === 'avatar-fox'), '1단계 보상(여우)이 결과에 함께 나와야 함');
+check(passWin.unlockedItems.some((item) => item.id === 'avatar-pompompurin'), '1단계 보상(폼폼푸린)이 결과에 함께 나와야 함');
 check(loadPlayerProfile(passStorage).seasonXp === 290 + passWin.xpGained, '경험치가 저장돼야 함');
 
 // 5. 온라인 — 버전이 같으면 다시 받지 않고, 받는 중에 온 알림은 한 번 더 받는다
@@ -179,7 +180,9 @@ check(matchmakingWeights(10000).slice(5).every((weight) => weight === 0), '1만 
 check(playerStarsForPoints(330000) === 7 && playerStarsForPoints(400000) === 8, '33만 점은 ★7, 40만 점부터 ★8');
 check(AI_OPPONENTS.length === 8 && CHARACTERS.length === 15 && new Set(CHARACTERS.map((persona) => persona.id)).size === 15, '난이도 ★1~★8 여덟 단계, 상대 캐릭터 열다섯');
 check(!CHARACTERS.some((persona) => COSMETICS.some((item) => item.portrait === persona.portrait)), '상대 캐릭터와 내 캐릭터는 겹치지 않아야 함');
-check(COSMETICS.filter((item) => item.character).length === 7 && COSMETICS.filter((item) => item.character).every((item) => item.slot === 'avatar' && item.threshold === 0), '내 캐릭터 일곱은 처음부터 고를 수 있어야 함');
+const avatars = COSMETICS.filter((item) => item.slot === 'avatar');
+check(avatars.length === 7 && avatars.every((item) => item.character && item.portrait.startsWith('char-')), '내 캐릭터는 동물 없이 GPT 캐릭터 일곱뿐(11-24 동물 뺌)');
+check(avatars.filter((item) => item.threshold === 0).length === 3 && avatars.filter((item) => item.pass).length === 4, '셋은 처음부터, 넷은 시즌 패스');
 // 선생님 GPT 그림(11-24) — 넣은 그림은 모두 아이템 · 캐릭터로 쓰이고, 그 가운데 상자 전용은 둘뿐
 const { GPT_ART } = await import('../src/data/gpt-art.js');
 const LOOKS_BY_SLOT = { table: MAPS, cardBack: BACKS, cardFace: FACES };
@@ -193,6 +196,9 @@ const unusedGpt = GPT_ART.filter((key) => !gptUsed.has(key));
 check(GPT_ART.length === 62 && unusedGpt.length === 0, `선생님 GPT 그림 62장은 모두 써야 함(안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
 const gptBox = COSMETICS.filter((item) => item.box && LOOKS_BY_SLOT[item.slot] && GPT_ART.includes(gptKeyOf(item.slot, LOOKS_BY_SLOT[item.slot][item.look])));
 check(gptBox.length === 2, `GPT 그림 아이템 가운데 상자 전용은 둘뿐(지금 ${gptBox.map((item) => item.id).join(', ')})`);
+check(!['effect-golden-rose', 'victory-golden-rose', 'charm-golden-rose'].some((id) => cosmeticById(id)) && cosmeticById('table-golden-rose'), '황금 장미 효과 · 피날레 · 장난감은 빼고 맵은 남김(11-24)');
+check(Object.values(VICTORIES).every((look) => ['head', 'feet', 'beside', 'behind', 'sky', 'frame'].includes(look.anchor) && ['pan', 'petals', 'flash', 'confetti'].includes(look.transition)), '승리 연출은 모두 붙는 자리 · 넘어가는 방식이 정해져 있어야 함');
+check(new Set(Object.values(VICTORIES).map((look) => look.transition)).size === 4 && new Set(Object.values(VICTORIES).map((look) => look.anchor)).size === 6, '넘어가는 방식 넷 · 붙는 자리 여섯이 모두 쓰여야 함(단조롭지 않게)');
 check(CHARACTERS.every((persona) => persona.stars === undefined && persona.key === undefined && persona.name && persona.portrait && persona.lines?.win?.length), '캐릭터에는 별 · 난이도가 붙어 있지 않아야 함(따로 뽑음)');
 const seededPick = (seed) => () => { seed = (seed * 48271) % 2147483647; return (seed - 1) / 2147483646; };
 const ranked = makeRival(AI_OPPONENTS[6], CHARACTERS[0]);

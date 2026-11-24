@@ -32,7 +32,6 @@ export function toySound(toy) {
   if (toy.sound === 'music') playMusicBox();
   else if (toy.sound === 'fountain') playFountain();
   else if (toy.sound === 'whoosh') play('whoosh');
-  else if (toy.sound === 'die') play('die');
   else play(toy.sound || 'pluck', { rate: 0.9 + Math.random() * 0.3 });
 }
 

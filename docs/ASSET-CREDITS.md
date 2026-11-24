@@ -212,7 +212,7 @@
 | surf-peach | white labeled bottle on white textile and citrus fruits xrZw86L1jnM | Nadya Spetnitskaya | Unsplash License | https://unsplash.com/photos/white-labeled-bottle-on-white-textile-and-citrus-fruits-xrZw86L1jnM |
 | surf-sea-shells | 4455019 |  | Pexels License | https://www.pexels.com/photo/4455019/ |
 
-### 장난감 · 소품 · 캐릭터 누끼 사진 (82)
+### 장난감 · 소품 · 캐릭터 누끼 사진 (64)
 
 | 키 | 제목 | 만든 이 · 소장 | 조건 | 출처 |
 |---|---|---|---|---|
@@ -233,7 +233,6 @@
 | lotus | Magenta lotus flower with dark red base petals |  | CC BY-NC 4.0 | https://pngimg.com/image/69724 |
 | lily | Pink lily with dark spots and white edges over green leaves |  | CC BY-NC 4.0 | https://pngimg.com/image/70125 |
 | fire | Flame Fire large resolution 1560x2917 |  | CC BY-NC 4.0 | https://pngimg.com/image/13256 |
-| lightning | model of a slender blue lightning strike with dim side branches |  | CC BY-NC 4.0 | https://pngimg.com/image/28030 |
 | confetti | Explosion of shiny magenta, pink and dark red foil confetti pieces |  | CC BY-NC 4.0 | https://pngimg.com/image/87093 |
 | sword | Historic Court sword |  | CC BY-NC 4.0 | https://pngimg.com/image/113217 |
 | smoke | Smoke |  | CC BY-NC 4.0 | https://pngimg.com/image/55241 |
@@ -276,30 +275,13 @@
 | lantern | Pewter lantern with tall wire bail and warm glow in clear glass Lantern |  | CC BY-NC 4.0 | https://pngimg.com/image/108801 |
 | picnic-basket | Wicker picnic basket with a red and white checkered cloth cover and handles |  | CC BY-NC 4.0 | https://pngimg.com/image/118262 |
 | books-stack | Colorful Blue Book |  | CC BY-NC 4.0 | https://pngimg.com/image/51089 |
-| globe | Old desk globe on a black stand |  | CC BY-NC 4.0 | https://pngimg.com/image/22733 |
 | telescope | Brass telescope with finder on a mahogany tripod with brass fittings |  | CC BY-NC 4.0 | https://pngimg.com/image/66451 |
 | amphora | Greek amphora vase with black figures and an orange band |  | CC BY-NC 4.0 | https://pngimg.com/image/38283 |
 | rabbit | Rabbit large resolution 1946x2484 |  | CC BY-NC 4.0 | https://pngimg.com/image/96539 |
-| dog | Dog |  | CC BY-NC 4.0 | https://pngimg.com/image/50354 |
-| bear | honeyed bear |  | CC BY-NC 4.0 | https://pngimg.com/image/1184 |
-| hamster | Inquisitive Hamster |  | CC BY-NC 4.0 | https://pngimg.com/image/114612 |
-| frog | Frog 1801x1354 |  | CC BY-NC 4.0 | https://pngimg.com/image/35730 |
-| chick | Chick plush lemon front facing |  | CC BY-NC 4.0 | https://pngimg.com/image/116284 |
-| fox | Fox animal picture with transparent background |  | CC BY-NC 4.0 | https://pngimg.com/image/23141 |
-| penguin | Imperator Penguin bird transparent |  | CC BY-NC 4.0 | https://pngimg.com/image/4627 |
-| tiger | Tiger animal 1920x1200 |  | CC BY-NC 4.0 | https://pngimg.com/image/23227 |
-| panda | panda walking all fours three quarter angle |  | CC BY-NC 4.0 | https://pngimg.com/image/20720 |
 | white-horse | White Horse animal transparent |  | CC BY-NC 4.0 | https://pngimg.com/image/2560 |
-| koala | koala sitting on ground paws tucked in front |  | CC BY-NC 4.0 | https://pngimg.com/image/114246 |
-| sloth | Shaggy sloth sitting on the ground with long arms resting |  | CC BY-NC 4.0 | https://pngimg.com/image/71181 |
 | cat | Fluffy Cat |  | CC BY-NC 4.0 | https://pngimg.com/image/50548 |
-| owl | a gray eagle owl with yellow eyes standing upright |  | CC BY-NC 4.0 | https://pngimg.com/image/26772 |
-| wolf | Wolf |  | CC BY-NC 4.0 | https://pngimg.com/image/23210 |
-| dragon | Dark green lizard sitting with head raised |  | CC BY-NC 4.0 | https://pngimg.com/image/23787 |
-| swan | white swan floating compact posture neck tucked facing left |  | CC BY-NC 4.0 | https://pngimg.com/image/20185 |
-| peacock | Peacock showing tail fan in green and blue |  | CC BY-NC 4.0 | https://pngimg.com/image/25828 |
 
-### 상자 · 상자 전용 아이템(곰 인형 · 디저트 · 꽃) 누끼 사진 (43)
+### 상자 · 상자 전용 아이템(곰 인형 · 디저트 · 꽃) 누끼 사진 (41)
 
 | 키 | 제목 | 만든 이 · 소장 | 조건 | 출처 |
 |---|---|---|---|---|
@@ -341,8 +323,6 @@
 | venetian-mask | 베네치아 가면 (pngimg carnival_mask_PNG150) |  | CC BY-NC 4.0 | https://pngimg.com/image/150 |
 | sky-lantern | 하트 풍등 (pngimg sky_lantern_PNG57) |  | CC BY-NC 4.0 | https://pngimg.com/image/57 |
 | balloon-pink | 분홍 풍선 다발 (pngimg balloon_PNG4963) |  | CC BY-NC 4.0 | https://pngimg.com/image/4963 |
-| leopard | 앉은 표범(흑표범으로 어둡게) (pngimg leopard_PNG14833) |  | CC BY-NC 4.0 | https://pngimg.com/image/14833 |
-| black-panther | 흑표범(멜라닌 표범) — pngimg 표범 사진(leopard_PNG14833)을 어둡게 |  | CC BY-NC 4.0 | https://pngimg.com/image/14833 |
 | rose-gold | 황금 장미 — pngimg 장미 사진(rose_PNG66698)을 금빛으로 |  | CC BY-NC 4.0 | https://pngimg.com/image/66698 |
 | rose-dome | 유리 구슬 속 장미 — pngimg 장미(rose_PNG66698) + 비눗방울(110005) 사진 겹침 |  | CC BY-NC 4.0 | https://pngimg.com/image/66698 |
 | candelabra | Candelabrum (after 1846), gilt brass | The Metropolitan Museum of Art | CC0 1.0 (Met Open Access) | https://www.metmuseum.org/art/collection/search/658639 |

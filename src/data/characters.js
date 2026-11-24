@@ -264,8 +264,8 @@ export function pickLine(rival, situation, random = Math.random) {
   return lines.length ? lines[Math.floor(random() * lines.length)] : '';
 }
 
-// 온라인 상대는 닉네임으로 캐릭터를 정한다(두 브라우저에서 같게 보이도록)
-const ONLINE_LOOKS = ['fox', 'penguin', 'panda', 'koala', 'tiger', 'frog', 'hamster', 'bear', 'dog', 'chick'];
+// 온라인 상대는 닉네임으로 캐릭터를 정한다(두 브라우저에서 같게 보이도록) — 동물 대신 내 캐릭터 일곱 가운데 하나(11-24)
+const ONLINE_LOOKS = ['char-choonsik', 'char-mymelody', 'char-cinnamoroll', 'char-pompompurin', 'char-loopy', 'char-mangom', 'char-sailormoon'];
 const ONLINE_COLORS = ['#f4a93b', '#7c93ff', '#9cc9a6', '#6fd6e8', '#e35a6a', '#ff8fab', '#c9a45c', '#b39bff'];
 export function onlineLook(nickname = '') {
   let hash = 0;

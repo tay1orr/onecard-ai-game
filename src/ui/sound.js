@@ -15,7 +15,6 @@ const GROUPS = {
   handle: ['chips-handle'],
   dice: ['dice-shake'],
   throw: ['dice-throw', 'die-throw'],
-  die: ['die-throw'],
   click: ['click'], select: ['select'], confirm: ['confirm'], confirmBig: ['confirm-big'], error: ['error'],
   open: ['open'], close: ['close'], toggle: ['toggle'], drop: ['drop'], glass: ['glass'], pluck: ['pluck'],
   bong: ['bong'], tick: ['tick'], glitch: ['glitch'], whoosh: ['maximize'], swoop: ['minimize'], scratch: ['scratch'],

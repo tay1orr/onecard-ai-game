@@ -1,6 +1,6 @@
 // GPT 로 만든 그림 넣기 — node scripts/build-gpt.mjs
 // 선생님이 gpt그림/ 에 넣은 그림을 게임 크기로 줄여 public/assets/s2/r 에 넣고, src/data/gpt-art.js 에 있는 그림 목록을 적는다.
-// 파일 이름은 앞 번호만 본다: 상대N · 나N(캐릭터) · 판NN(맵) · 뒷면NN(카드 뒷면) · 앞면NN(카드 앞면 테). 프롬프트는 docs/GPT-그림-프롬프트.md
+// 파일 이름은 앞 번호만 본다: 상대N · 나N(캐릭터) · 울음NN(우는 상대) · 승리NN(기뻐하는 내 캐릭터) · 판NN(맵) · 뒷면NN(카드 뒷면) · 앞면NN(카드 앞면 테). 프롬프트는 docs/GPT-그림-프롬프트.md
 // 같은 번호 파일이 여럿이면 가장 최근 것을 쓴다. 캐릭터 그림은 배경이 투명하지 않으면 가장자리 단색 배경을 지운다.
 // 캐릭터는 파일 이름(상대 · 나)이 아니라 그림을 보고 누구인지 아래 표에 적는다. 상대로 쓸지 내 캐릭터로 쓸지는 src/data/characters.js · src/core/cosmetics.js 가 정한다.
 import fs from 'node:fs';
@@ -11,19 +11,23 @@ import sharp from 'sharp';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(root, 'gpt그림');
 const OUT = path.join(root, 'public/assets/s2/r');
-const KINDS = { 상대: 'rival', 나: 'me', 판: 'map', 뒷면: 'back', 앞면: 'face' };
+const KINDS = { 상대: 'rival', 나: 'me', 울음: 'cry', 승리: 'win', 판: 'map', 뒷면: 'back', 앞면: 'face' };
 // 그림 속 캐릭터(11-24 선생님이 넣은 22장을 하나씩 보고 적음) → cut/char-<이름>.webp
 const CHARACTER_FILES = {
   상대1: 'choonsik', 상대2: 'chiikawa', 상대3: 'hachiware', 상대4: 'usagi', 상대5: 'shinchan', 상대6: 'sakura', 상대7: 'rakko', 상대8: 'sailormoon',
   상대9: 'pochacco', 상대10: 'hangyodon', 상대11: 'hachuping', 상대12: 'keroro', 상대13: 'hellokitty', 상대14: 'rose-princess', 상대15: 'conan', 상대16: 'kid',
   나1: 'mymelody', 나2: 'kuromi', 나3: 'cinnamoroll', 나4: 'pompompurin', 나5: 'mangom', 나6: 'loopy',
+  // 승리 연출 표정(프롬프트 번호 그대로) — 우는 상대 → char-<이름>-cry, 기뻐하는 나 → char-<이름>-win
+  울음1: 'chiikawa-cry', 울음2: 'hachiware-cry', 울음3: 'usagi-cry', 울음4: 'rakko-cry', 울음5: 'shinchan-cry', 울음6: 'sakura-cry', 울음7: 'conan-cry', 울음8: 'kid-cry',
+  울음9: 'keroro-cry', 울음10: 'hachuping-cry', 울음11: 'kuromi-cry', 울음12: 'hellokitty-cry', 울음13: 'pochacco-cry', 울음14: 'hangyodon-cry', 울음15: 'rose-princess-cry',
+  승리1: 'mymelody-win', 승리2: 'mangom-win', 승리3: 'sailormoon-win', 승리4: 'cinnamoroll-win', 승리5: 'pompompurin-win', 승리6: 'loopy-win', 승리7: 'choonsik-win',
 };
 
 fs.mkdirSync(SRC, { recursive: true });
 const files = fs.readdirSync(SRC, { withFileTypes: true })
   .filter((entry) => entry.isFile() && /\.(png|jpe?g|webp)$/i.test(entry.name))
   .map((entry) => {
-    const match = entry.name.match(/^(상대|나|판|뒷면|앞면)\s*0*(\d+)/);
+    const match = entry.name.match(/^(상대|나|울음|승리|판|뒷면|앞면)\s*0*(\d+)/);
     if (!match) return null;
     const kind = KINDS[match[1]];
     const number = Number(match[2]);

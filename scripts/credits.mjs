@@ -26,7 +26,8 @@ const short = (value, max = 90) => (value.length > max ? `${value.slice(0, max -
 
 const groups = AREAS.map(([area, name]) => ({
   name,
-  items: read(area).filter((entry) => entry && entry.key && entry.file).map((entry) => ({
+  // 누끼는 지금 게임에 남아 있는 그림만(11-24 동물 캐릭터를 빼며 지운 그림은 출처에서도 뺀다)
+  items: read(area).filter((entry) => entry && entry.key && entry.file && (!area.startsWith('cutouts') || fs.existsSync(path.resolve('public/assets/s2/r/cut', `${entry.key}.webp`)))).map((entry) => ({
     key: entry.key,
     title: short(clean(entry.title)),
     creator: short(clean(entry.creator || entry.author || entry.institution || ''), 70),

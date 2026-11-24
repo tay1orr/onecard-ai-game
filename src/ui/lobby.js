@@ -7,7 +7,7 @@ import { mapVars } from './look-apply.js';
 import { shufflePersonas } from '../data/characters.js';
 import { loadMissionDashboard } from '../core/missions.js';
 import { tierProgress, isOpeningEventActive, openingEventDaysLeft, OPENING_EVENT, SEASON, PASS_REWARDS } from '../core/season.js';
-import { cosmeticById, nextCosmeticUnlock } from '../core/cosmetics.js';
+import { cosmeticById, nextCosmeticUnlock, DEFAULT_EQUIPPED } from '../core/cosmetics.js';
 import { matchmakingWeights, playerStarsForPoints, ratingProgress } from '../core/rating.js';
 import { itemPreview } from './item-preview.js';
 import { play } from './sound.js';
@@ -29,7 +29,7 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
   const nextPassItem = nextPass ? cosmeticById(nextPass.itemId) : null;
   const nextUnlock = nextCosmeticUnlock(profile.peakPoints);
   const missions = loadMissionDashboard();
-  const avatar = cosmeticById(profile.equipped.avatar) || cosmeticById('avatar-rabbit');
+  const avatar = cosmeticById(profile.equipped.avatar) || cosmeticById(DEFAULT_EQUIPPED.avatar);
   const eventOn = isOpeningEventActive();
 
   // 캐릭터와 난이도는 따로 무작위 — 무대에는 캐릭터 넷을 섞어 세우고, 이 점수에서 만나는 난이도 확률은 따로 한 줄로(30만 점대면 ★5~★8)

@@ -68,7 +68,7 @@ export function itemPreview(item) {
     return el;
   }
   if (item.slot === 'avatar') {
-    return h('div.pv.pv-avatar', {}, h('img', { src: cut(item.portrait || 'rabbit', 's'), alt: '', loading: 'lazy' }));
+    return h('div.pv.pv-avatar', {}, h('img', { src: cut(item.portrait || 'char-choonsik', 's'), alt: '', loading: 'lazy' }));
   }
   return h('div.pv');
 }

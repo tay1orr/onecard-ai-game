@@ -1,12 +1,12 @@
 // 친구와 대전 — 방 만들기 · 코드로 들어가기 · 대기실 · 주사위 · 게임판(AI 대전과 같은 판) · 재대결
 import gsap from 'gsap';
-import { h, formatNumber, stars, wait } from './dom.js';
+import { h, formatNumber, stars, wait, josa } from './dom.js';
 import { MultiplayerClient } from '../net/multiplayer.js';
 import { getSeatView, isMyTurn, normalizeRoomCode, validateNickname, validateRoomCode } from '../net/multiplayer-helpers.js';
 import { isSupabaseConfigured } from '../net/config.js';
 import { loadPlayerProfile, playerStarsForPoints, recordMatchResult } from '../core/rating.js';
 import { applyMissionEvents, missionEventsForCard } from '../core/missions.js';
-import { cosmeticById } from '../core/cosmetics.js';
+import { cosmeticById, DEFAULT_EQUIPPED } from '../core/cosmetics.js';
 import { onlineLook } from '../data/characters.js';
 import { cut } from '../data/assets.js';
 import { createTable } from './table.js';
@@ -49,7 +49,7 @@ function isPlayableOnline(card, view) {
 
 export function startOnline({ host, onExit, openRules }) {
   const profile = loadPlayerProfile();
-  const avatar = cosmeticById(profile.equipped.avatar) || cosmeticById('avatar-rabbit');
+  const avatar = cosmeticById(profile.equipped.avatar) || cosmeticById(DEFAULT_EQUIPPED.avatar);
   let applied = null;
   let table = null;
   let fx = null;
@@ -60,6 +60,7 @@ export function startOnline({ host, onExit, openRules }) {
   let lastEventId = null;
   let resultKey = '';
   let resultPanel = null;
+  let finale = null; // 승리 · 패배 장면 — 판을 걷을 때 계속 도는 움직임까지 걷는다
   let stickerPanel = null;
   let diceOverlay = null;
   let presence = { host: true, guest: true };
@@ -341,10 +342,18 @@ export function startOnline({ host, onExit, openRules }) {
     const after = loadPlayerProfile();
     if (!rating.duplicate) client.setRating(after.points).catch(() => {});
     const look = onlineLook(opponent?.nickname || '');
-    const scene = won
-      ? fx.victory({ look: table.looks.victory, avatarEl: table.meImg, title: '승리', sub: `${opponent?.nickname || '상대'}를 이겼어요` })
+    finale?.finish();
+    finale = won
+      ? fx.victory({
+        look: table.looks.victory,
+        me: { portrait: avatar.portrait, el: table.meImg },
+        rival: { portrait: look.portrait, el: table.rivalImg },
+        table: { root: table.root, pile: table.pile, rivalHand: table.rivalZone.querySelector('.rival-hand'), cards: null },
+        title: '승리',
+        sub: `${josa(opponent?.nickname || '상대', '을/를')} 이겼어요`,
+      })
       : fx.defeat({ rival: { name: opponent?.nickname || '상대', portrait: look.portrait }, portrait: table.rivalPortrait });
-    await scene.timeline;
+    await finale.timeline;
     resultPanel = showResult({
       host: table.root, won, delta: rating.delta || 0, bonus: (view.bonusMultiplier || 1) > 1, profile: after,
       xpGained: after.seasonXp - xpBefore, xpBefore, unlocked: rating.unlockedItems || [],
@@ -414,6 +423,8 @@ export function startOnline({ host, onExit, openRules }) {
 
   // ── 나가기
   function cleanupTable() {
+    finale?.finish();
+    finale = null;
     closeResult();
     toys?.destroy();
     table?.destroy();

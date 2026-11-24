@@ -37,6 +37,8 @@
 .v-dim, .d-dim { position: absolute; inset: 0; background: #070a12; }
 /* 승리 배경 — 맵 사진 · 시즌 1 그림이 화면 가득 천천히 다가온다 */
 .v-backdrop { position: absolute; inset: -4%; background-position: center; background-size: cover; background-repeat: no-repeat; }
+/* 카메라가 탁자에서 위로 올라갈 때 장면 그림 아래 이음매를 어둡게 녹인다(--seam 1 → 0) */
+.v-backdrop::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 24%; pointer-events: none; opacity: var(--seam, 0); background: linear-gradient(180deg, transparent, rgba(6, 8, 14, 0.92)); }
 .v-veil { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 40%, transparent 30%, rgba(5, 7, 12, 0.55) 100%), linear-gradient(180deg, transparent 55%, rgba(5, 7, 12, 0.7) 100%); }
 .v-firework { position: absolute; z-index: 2; object-fit: cover; mix-blend-mode: screen; pointer-events: none;
   -webkit-mask: radial-gradient(ellipse 50% 50% at 50% 50%, #000 40%, transparent 100%); mask: radial-gradient(ellipse 50% 50% at 50% 50%, #000 40%, transparent 100%); }
@@ -48,15 +50,53 @@
   background: repeating-conic-gradient(from 4deg, color-mix(in srgb, var(--v-accent) 30%, transparent) 0deg 5deg, transparent 5deg 22deg);
   -webkit-mask: radial-gradient(circle, #000 12%, transparent 66%); mask: radial-gradient(circle, #000 12%, transparent 66%); }
 .v-shadow { position: absolute; z-index: 2; border-radius: 50%; pointer-events: none; background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.25) 45%, transparent 72%); filter: blur(3px); }
-.v-hero { z-index: 3; }
 .v-shine { position: absolute; z-index: 4; pointer-events: none; mix-blend-mode: screen; opacity: 0;
   background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.8) 50%, transparent 62%) 130% 0 / 260% 100% no-repeat;
   -webkit-mask: var(--hero-mask) center / contain no-repeat; mask: var(--hero-mask) center / contain no-repeat; }
 .v-word { position: absolute; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; white-space: nowrap; }
 .v-word b { font: 800 clamp(46px, 5.4vw, 92px)/1 var(--font-ui); letter-spacing: 0.08em; color: #fff; text-shadow: 0 4px 26px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4); }
-.v-rule { display: block; width: clamp(120px, 16vw, 260px); height: 2px; background: linear-gradient(90deg, transparent, var(--v-accent), transparent); transform-origin: center; }
 .v-word small { font-size: clamp(14px, 1.4vw, 20px); font-weight: 700; letter-spacing: 0.04em; color: #eef1f6; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6); }
 .v-word.is-defeat b { font-size: clamp(44px, 5vw, 84px); color: #d7deeb; }
+/* 승리 연출(victory.js) — 1막 탁자 → 2막 우는 상대 → 3막 뛰어오르는 나 → 4막 장면. 층: 배경 → 어둠 → 빛살 → 뒤 소품 → 상대 → 나 → 앞 소품 → 띠 · 말풍선 → 가까운 꽃잎 */
+.v-figure { position: absolute; z-index: 5; pointer-events: none; will-change: transform; }
+.v-figure img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 18px 20px rgba(0, 0, 0, 0.42)); }
+.v-figure.is-rival { z-index: 4; }
+.v-figure.is-gloomy img { filter: saturate(0.62) brightness(0.9) drop-shadow(0 14px 18px rgba(0, 0, 0, 0.4)); }
+/* 낯빛이 질림 — 우는 그림이 없을 때 캐릭터 모양 그대로 위쪽이 파랗게 질린다(만화 표현) */
+.v-gloom { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply;
+  background: linear-gradient(180deg, rgba(104, 118, 200, 0.5) 0%, rgba(120, 132, 206, 0.3) 40%, rgba(130, 140, 200, 0.16) 100%);
+  -webkit-mask: var(--fig-mask) 50% 100% / contain no-repeat; mask: var(--fig-mask) 50% 100% / contain no-repeat; }
+.v-prop { position: absolute; pointer-events: none; will-change: transform; }
+.v-prop img { display: block; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.36)); }
+.v-prop.is-behind { z-index: 3; }
+.v-prop.is-back { z-index: 4; }
+.v-prop.is-front { z-index: 6; }
+.v-prop.is-glint { z-index: 7; }
+.v-prop.is-glint img { filter: drop-shadow(0 0 10px rgba(255, 236, 170, 0.9)); }
+.v-prop.is-near, .v-prop.is-near-soft, .v-prop.is-mid { z-index: 9; }
+.v-prop.is-near img { filter: blur(4px) drop-shadow(0 12px 14px rgba(0, 0, 0, 0.3)); }
+.flip-card.v-reveal { position: absolute; z-index: 2; }
+.v-focus { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse 58% 62% at 50% 46%, transparent 30%, rgba(4, 6, 12, 0.78) 100%); }
+.v-glare { position: absolute; z-index: 8; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, #fff 0%, color-mix(in srgb, var(--v-accent) 35%, #fff) 34%, color-mix(in srgb, var(--v-accent) 28%, transparent) 56%, transparent 70%); }
+/* 캐릭터 뒤 빛 — 복잡한 배경에서 캐릭터를 띄운다 */
+.v-aura { position: absolute; z-index: 3; border-radius: 50%; pointer-events: none; mix-blend-mode: screen;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, color-mix(in srgb, var(--v-accent) 34%, transparent) 34%, color-mix(in srgb, var(--v-accent) 10%, transparent) 54%, transparent 68%); }
+.v-pool { position: absolute; z-index: 3; border-radius: 50%; pointer-events: none; mix-blend-mode: screen;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--v-accent) 70%, #fff) 0%, color-mix(in srgb, var(--v-accent) 30%, transparent) 42%, transparent 70%); }
+.v-bubble { position: absolute; z-index: 8; max-width: min(360px, 64%); padding: 12px 18px 13px; border-radius: 20px; background: #fff; color: #1b2030; white-space: nowrap;
+  font-weight: 800; font-size: clamp(16px, calc(var(--stage-w) * 0.016), 24px); line-height: 1.3; box-shadow: 0 7px 0 rgba(0, 0, 0, 0.22), 0 16px 30px rgba(0, 0, 0, 0.28); }
+.v-bubble::after { content: ''; position: absolute; left: 16px; bottom: -12px; border: 12px solid transparent; border-top-color: #fff; border-bottom: 0; border-left-width: 3px; }
+/* 승리 띠 — 아이템 색 띠가 펼쳐지고 글자가 하나씩 떨어져 박힌다 */
+.v-title { position: absolute; z-index: 8; left: 50%; top: 5.5%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 12px; pointer-events: none; white-space: nowrap; }
+.v-title-word { position: relative; display: inline-flex; padding: 0.12em 0.6em 0.16em; font: 900 clamp(40px, calc(var(--stage-w) * 0.06), 100px)/1 var(--font-ui); letter-spacing: 0.04em; color: #161b2a; transform: rotate(-4deg); }
+.v-title-bar { position: absolute; inset: 0; border-radius: 6px; background: var(--v-accent); transform-origin: 0 50%; box-shadow: 0 8px 0 rgba(0, 0, 0, 0.3), 0 20px 44px rgba(0, 0, 0, 0.32); }
+.v-letter { position: relative; display: inline-block; }
+.v-title-sub { padding: 7px 16px 8px; border-radius: 10px; background: rgba(10, 14, 24, 0.84); color: #fff; font-weight: 800; font-size: clamp(14px, calc(var(--stage-w) * 0.0125), 21px); transform: rotate(-2deg); box-shadow: 0 6px 0 rgba(0, 0, 0, 0.22); }
+@media (max-width: 760px) {
+  .v-bubble { white-space: normal; max-width: 82%; text-align: center; }
+  .v-bubble::after { left: calc(50% - 6px); }
+}
 
 /* 보상 상자 — 진짜 선물 상자 사진 셋, 고르면 흔들리다 열린다 */
 .reward-boxes { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px; text-align: center; }

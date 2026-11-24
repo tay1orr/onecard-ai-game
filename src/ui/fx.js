@@ -3,10 +3,11 @@
 import gsap from 'gsap';
 import { Physics2DPlugin } from 'gsap/Physics2DPlugin';
 import { h } from './dom.js';
-import { cut, paint, photo, scene } from '../data/assets.js';
+import { cut, scene } from '../data/assets.js';
 import { cardFace } from './cards.js';
 import { SUIT_NAMES, RED_SUITS, suitSvg } from './suits.js';
 import { play } from './sound.js';
+import { playVictory } from './victory.js';
 import { settings } from './settings.js';
 
 gsap.registerPlugin(Physics2DPlugin);
@@ -97,7 +98,6 @@ export function createFx({ layer, root, director }) {
     const motion = effect.motion;
     const timeline = gsap.timeline();
     if (effect.band) timeline.add(band(effect.band, at), 0);
-    if (motion === 'strike') return timeline.add(strike(effect, at), 0);
     const total = reduced() ? Math.min(1, effect.count) : Math.max(0, count ?? effect.count);
     const [min, max] = effect.size || [70, 110];
     for (let index = 0; index < total; index += 1) {
@@ -156,20 +156,6 @@ export function createFx({ layer, root, director }) {
       .fromTo(el, { opacity: 0, scaleY: 0.5 }, { opacity: 1, scaleY: 1, duration: 0.3, ease: 'power2.out' }, 0)
       .fromTo(el, { backgroundPosition: '0% 50%' }, { backgroundPosition: '100% 50%', duration, ease: 'sine.inOut' }, 0)
       .to(el, { opacity: 0, duration: 0.4 }, duration - 0.25);
-  }
-
-  // 번개 — 진짜 번개 사진을 위에서 내리꽂고 화면을 하얗게
-  function strike(effect, at) {
-    const point = local(at);
-    const size = (effect.size || [200, 240])[1];
-    const el = sprite(effect.sprites[0] || 'lightning', size, { x: point.x, y: point.y - size * 0.45 }, { blend: 'screen' });
-    flash('#f4f1ff', 0.34);
-    shake(0.7);
-    play('glitch', { volume: 0.6 });
-    return gsap.timeline({ onComplete: () => el.remove() })
-      .fromTo(el, { scaleY: 0, transformOrigin: '50% 0%', opacity: 1 }, { scaleY: 1, duration: 0.1, ease: 'power4.in' })
-      .to(el, { opacity: 0.2, duration: 0.05, yoyo: true, repeat: 3 }, 0.12)
-      .to(el, { opacity: 0, duration: 0.3 }, 0.5);
   }
 
   // 장난감을 누를 때 — 꽃잎 · 물보라 두세 개
@@ -335,154 +321,9 @@ export function createFx({ layer, root, director }) {
     return timeline;
   }
 
-  // ── 승리 · 패배
-  function backdropUrl(backdrop) {
-    if (!backdrop) return null;
-    if (backdrop.scene) return scene(backdrop.scene);
-    if (backdrop.paint) return paint(backdrop.paint);
-    if (backdrop.photo) return photo(backdrop.photo, 'wide');
-    return null;
-  }
-
-  // 피날레 — 화면이 어두워지고 배경이 천천히 다가온 뒤, 가운데 모인 빛 속에서 주인공 실물이 또렷해진다.
-  // 실물이 화면 밖에서 툭 튀어 들어오면 「뜬금없이 땋 나온다」(11-24 선생님) — 빛 · 바닥 그림자 · 반짝임으로 장면에 붙인다.
-  function victory({ look, avatarEl = null, title = '승리', sub = '' }) {
-    play('win');
-    const box = layer.getBoundingClientRect();
-    const center = { x: box.width / 2, y: box.height * 0.4 };
-    const stage = h('div.fx-victory', { vars: { '--v-accent': look.accent } }, h('i.v-dim'));
-    layer.append(stage);
-    const timeline = director.timeline();
-    const extras = [];
-    const loops = [];
-    const quick = reduced();
-    const bgUrl = backdropUrl(look.backdrop);
-    let bg = null;
-    if (bgUrl) {
-      bg = h('div.v-backdrop');
-      bg.style.backgroundImage = `url("${bgUrl}")`;
-      stage.append(bg, h('i.v-veil'));
-      timeline.fromTo(bg, { opacity: 0, scale: 1.12 }, { opacity: 1, scale: 1.03, duration: quick ? 0.2 : 1.4, ease: 'power2.out' }, 0);
-      if (!quick) loops.push(gsap.to(bg, { scale: look.zoom ? 1.12 : 1.06, duration: 10, ease: 'none', delay: 1.4 }));
-    }
-    timeline.fromTo(stage.querySelector('.v-dim'), { opacity: 0 }, { opacity: bg ? 0.3 : 0.78, duration: 0.4 }, 0);
-
-    const motion = quick ? 'rise' : look.motion;
-    const heroPx = Math.min(340, box.width * 0.42, box.height * 0.44) * (look.heroSize || 1);
-    // 왕관은 내 캐릭터 머리 위로, 나머지는 화면 가운데 위쪽에
-    const rect = motion === 'crown' ? avatarEl?.getBoundingClientRect() : null;
-    const spot = rect ? local({ x: rect.left + rect.width / 2, y: rect.top - rect.height * 0.12 }) : center;
-    const size = rect ? heroPx * 0.62 : heroPx;
-
-    // 빛 — 실물이 나타날 자리에 먼저 모인다(전설 아이템은 빛살도)
-    const glow = h('i.v-glow');
-    const rays = h('i.v-rays');
-    stage.append(rays, glow);
-    const glowPx = size * 2.3;
-    gsap.set([glow, rays], { width: glowPx, height: glowPx, left: spot.x - glowPx / 2, top: spot.y - glowPx / 2 });
-    timeline.fromTo(glow, { opacity: 0, scale: 0.35 }, { opacity: 1, scale: 1, duration: quick ? 0.2 : 0.8, ease: 'power2.out' }, 0.2);
-    timeline.fromTo(rays, { opacity: 0, rotation: -12 }, { opacity: 0.85, rotation: 0, duration: 1.2, ease: 'power2.out' }, 0.45);
-    if (!quick) loops.push(gsap.to(rays, { rotation: 40, duration: 14, ease: 'none', delay: 1.6 }));
-
-    // 바닥 그림자 — 실물이 허공에 떠 있지 않게
-    const ground = h('i.v-shadow');
-    stage.append(ground);
-    gsap.set(ground, { width: size * 0.78, height: size * 0.16, left: spot.x - size * 0.39, top: spot.y + size * 0.42 });
-    timeline.fromTo(ground, { opacity: 0, scaleX: 0.4 }, { opacity: 1, scaleX: 1, duration: 0.7, ease: 'power2.out' }, 0.85);
-
-    const hero = sprite(look.hero || 'trophy', size, spot);
-    hero.classList.add('v-hero');
-    if (motion === 'crown') {
-      // 빛이 머리 위에 모인 뒤 왕관이 위에서 천천히 내려와 앉는다
-      timeline.fromTo(hero, { y: -box.height * 0.32, opacity: 0, rotation: -10, filter: 'brightness(2.2) blur(5px)' }, { y: 0, opacity: 1, rotation: 0, filter: 'brightness(1) blur(0px)', duration: quick ? 0.3 : 1.1, ease: 'power3.out' }, 0.7);
-      timeline.to(hero, { y: 5, duration: 0.14, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 1.8);
-    } else if (motion === 'bloom') {
-      // 꽃은 빛 속에서 작게 돋아 활짝 핀다
-      timeline.fromTo(hero, { scale: 0.3, rotation: -18, opacity: 0, filter: 'brightness(2) blur(6px)' }, { scale: 1, rotation: 0, opacity: 1, filter: 'brightness(1) blur(0px)', duration: 1.3, ease: 'power3.out' }, 0.75);
-    } else if (motion === 'drop') {
-      timeline.fromTo(hero, { y: -box.height * 0.35, opacity: 0, filter: 'brightness(1.8) blur(4px)' }, { y: 0, opacity: 1, filter: 'brightness(1) blur(0px)', duration: 1, ease: 'power3.out' }, 0.75);
-    } else {
-      // 솟음 — 아래에서 짧게 떠오르며 빛에서 또렷해진다(화면 밖에서 튀어 오르지 않음)
-      timeline.fromTo(hero, { y: size * 0.22, scale: 0.86, opacity: 0, filter: 'brightness(2.2) blur(6px)' }, { y: 0, scale: 1, opacity: 1, filter: 'brightness(1) blur(0px)', duration: quick ? 0.3 : 1.1, ease: 'power3.out' }, 0.75);
-    }
-    // 실물 모양대로 반짝임이 한 번 스친다
-    const shine = h('i.v-shine', { vars: { '--hero-mask': `url("${cut(look.hero || 'trophy')}")` } });
-    stage.append(shine);
-    gsap.set(shine, { width: size, height: size, left: spot.x - size / 2, top: spot.y - size / 2 });
-    timeline.fromTo(shine, { backgroundPosition: '130% 0', opacity: 1 }, { backgroundPosition: '-30% 0', duration: 0.9, ease: 'power2.inOut' }, 1.55);
-    timeline.to(shine, { opacity: 0, duration: 0.2 }, 2.45);
-    // 다 나타난 뒤에는 천천히 숨 쉬듯 떠 있다
-    if (!quick && motion !== 'crown') loops.push(gsap.to(hero, { y: -7, duration: 1.8, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 1.9 }));
-
-    if (motion === 'fireworks') {
-      (look.fireworks || ['fireworks-1']).forEach((key, index) => {
-        const at = { x: box.width * (index % 2 ? rand(0.66, 0.84) : rand(0.16, 0.34)), y: box.height * rand(0.16, 0.36) };
-        const burstEl = h('img.v-firework', { src: scene(key), alt: '' });
-        const size = Math.min(520, box.width * 0.42);
-        Object.assign(burstEl.style, { width: `${size}px`, height: `${size * 0.6}px`, left: `${at.x - size / 2}px`, top: `${at.y - size * 0.3}px` });
-        stage.append(burstEl);
-        extras.push(burstEl);
-        // 불꽃은 실물 뒤에서, 실물이 또렷해진 다음에
-        burstEl.style.zIndex = 1;
-        const startAt = 1.05 + index * 0.55;
-        timeline.fromTo(burstEl, { scale: 0.3, opacity: 0 }, { scale: 1.12, opacity: 1, duration: 0.6, ease: 'power3.out' }, startAt);
-        timeline.call(() => play('pluck', { rate: rand(1.4, 2), volume: 0.4 }), null, startAt);
-        timeline.to(burstEl, { opacity: 0, scale: 1.25, duration: 0.9, ease: 'power1.in' }, startAt + 0.8);
-      });
-    } else if (motion === 'cannons') {
-      // 실물이 나타난 뒤 양쪽에서 두 개씩 — 떼로 쏟아지지 않게
-      [[0.06, -64], [0.94, -116]].forEach(([ratio, angle], side) => {
-        for (let index = 0; index < 2; index += 1) {
-          const key = (look.sprites || [])[(index + side) % Math.max(1, look.sprites.length)] || 'confetti';
-          const el = sprite(key, rand(100, 140), { x: box.width * ratio, y: box.height * 1.02 });
-          extras.push(el);
-          timeline.to(el, { physics2D: { velocity: rand(880, 1040), angle: angle + rand(-8, 8), gravity: 980 }, rotation: rand(-200, 200), duration: 2.2, ease: 'none' }, 1.3 + index * 0.22 + side * 0.08);
-          timeline.to(el, { opacity: 0, duration: 0.4 }, 3.1 + index * 0.1);
-        }
-      });
-    } else if (motion === 'rain') {
-      // 위에서 다섯 개가 천천히 흔들리며 내려온다
-      for (let index = 0; index < 5; index += 1) {
-        const key = (look.sprites || [])[index % Math.max(1, look.sprites.length)] || look.hero;
-        const depth = rand(0.8, 1.2);
-        const el = sprite(key, 112 * depth, { x: box.width * (0.1 + index * 0.2 + rand(-0.04, 0.04)), y: -130 });
-        el.style.zIndex = depth > 1 ? 4 : 2;
-        extras.push(el);
-        timeline.to(el, { y: box.height + 260, rotation: rand(-70, 70), x: `+=${rand(-60, 60)}`, duration: rand(3.2, 3.8) / depth, ease: 'sine.in' }, 1.2 + index * 0.24);
-      }
-    } else if (motion === 'curtain' || motion === 'bloom') {
-      // 꽃잎 · 꽃 몇 개가 양옆에서 들어와 살며시 내려앉는다(튕기지 않음)
-      const count = motion === 'curtain' ? 3 : 4;
-      for (let index = 0; index < count; index += 1) {
-        const key = (look.sprites || [])[index % Math.max(1, look.sprites.length)];
-        if (!key) break;
-        const fromLeft = index % 2 === 0;
-        const el = sprite(key, rand(80, 116), { x: fromLeft ? -90 : box.width + 90, y: box.height * 0.82 });
-        extras.push(el);
-        const land = { x: (fromLeft ? 1 : -1) * rand(box.width * 0.26, box.width * 0.4), y: -rand(10, box.height * 0.1) };
-        timeline.to(el, { x: land.x, y: land.y, rotation: rand(-90, 90), duration: 1.4, ease: 'power3.out' }, 1.25 + index * 0.2);
-        if (!quick) loops.push(gsap.to(el, { y: `+=${rand(8, 14)}`, rotation: `+=${rand(-8, 8)}`, duration: rand(1.8, 2.4), ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 2.7 + index * 0.2 }));
-      }
-    }
-
-    // 글자는 실물이 또렷해진 뒤, 실물 아래에 차분하게 — 자간이 모이며 떠오르고 가는 선이 퍼진다
-    const word = h('div.v-word', {}, h('b', {}, look.word || title), h('i.v-rule'), sub ? h('small', {}, sub) : null);
-    stage.append(word);
-    gsap.set(word, { left: box.width / 2, top: box.height * (motion === 'crown' ? 0.44 : 0.76), xPercent: -50, yPercent: -50 });
-    const [wordMain, wordRule, wordSub] = word.children;
-    timeline.fromTo(wordMain, { opacity: 0, y: 16, letterSpacing: '0.38em' }, { opacity: 1, y: 0, letterSpacing: '0.08em', duration: 0.9, ease: 'power3.out' }, 1.45);
-    timeline.fromTo(wordRule, { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.7, ease: 'power2.out' }, 1.7);
-    if (wordSub) timeline.fromTo(wordSub, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 1.85);
-    timeline.call(() => play('stack', { volume: 0.6 }), null, 1.45);
-    timeline.to({}, { duration: 0.7 }, '>');
-    const finish = () => {
-      loops.forEach((tween) => tween.kill());
-      gsap.killTweensOf([hero, ...extras]);
-      stage.remove();
-      hero.remove();
-      extras.forEach((el) => el.remove());
-    };
-    return { timeline, scene: stage, finish };
+  // ── 승리(victory.js — 맵 위 마지막 한 장 → 우는 상대 → 뛰어오르는 나 → 승리 장면) · 패배
+  function victory(options) {
+    return playVictory({ layer, director, shockwave, shake, reduced }, options);
   }
 
   // 패배 — 상대 초상이 가운데로 다가오고, 이긴 상대 이름

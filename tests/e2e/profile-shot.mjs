@@ -47,7 +47,7 @@ try {
   await shot('2-chosen');
   const saved = await page.evaluate(() => ({ name: JSON.parse(localStorage.getItem('onecard-s2-settings') || '{}').nickname, avatar: JSON.parse(localStorage.getItem('onecard-player-profile-v2') || '{}').equipped?.avatar }));
   if (saved.name !== '장미여왕') problems.push(`이름이 저장되지 않음(${saved.name})`);
-  if (!saved.avatar || saved.avatar === 'avatar-rabbit') problems.push(`캐릭터가 바뀌지 않음(${saved.avatar})`);
+  if (!saved.avatar || saved.avatar === 'avatar-choonsik') problems.push(`캐릭터가 바뀌지 않음(${saved.avatar})`);
   await page.click('.profile-page .page-top .icon-btn');
   await page.waitForSelector('.lobby', { timeout: 8000 });
   await page.click('.play-btn.is-primary');

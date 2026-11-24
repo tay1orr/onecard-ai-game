@@ -2,28 +2,130 @@
 
 실제 사진 · 명화를 이어 붙이면 오려 붙인 티가 나는 것만 모았습니다. 시즌 1 그림(장미 무도회 · 리얼 로즈가든)과 같은 화풍 · 구도로 맞췄습니다.
 
-## 지금 게임에 들어간 그림(11-24 오후, 62장 모두)
+## 지금 게임에 들어간 그림(11-24 저녁)
 - 캐릭터는 파일 이름(상대 · 나)과 상관없이 그림을 보고 나눴습니다.
   - 상대 15명(카드를 든 그림): 치이카와 · 하치와레 · 우사기 · 랏코 · 짱구 · 체리 · 코난 · 키드 · 케로로 · 하츄핑 · 쿠로미 · 헬로키티 · 포차코 · 한교동 · 장미 공주
-  - 내 캐릭터 7명(장미 · 디저트 · 풍선을 든 그림, 처음부터 고를 수 있음): 마이멜로디 · 망그러진 곰 · 세일러문 · 시나모롤 · 폼폼푸린 · 잔망루피 · 춘식이
+  - 내 캐릭터 7명(장미 · 디저트 · 풍선을 든 그림). 동물은 모두 뺐습니다.
+    - 처음부터: 춘식이(기본) · 마이멜로디 · 시나모롤
+    - 시즌 패스: 폼폼푸린 1단계 · 잔망루피 5단계 · 망그러진 곰 10단계 · 세일러문 19단계
   - 누가 누구인지는 `scripts/build-gpt.mjs` 의 `CHARACTER_FILES` 표에 적었습니다. 새 캐릭터 그림이 오면 표에 한 줄 더합니다.
 - 판 · 뒷면 · 앞면은 같은 주제끼리 한 벌(세트)로 묶었습니다. 상자 전용은 피스타치오 한 벌(두 장)뿐입니다.
 
-| 세트 | 판 | 뒷면 | 앞면 | 열리는 점수 |
+| 세트 | 판 | 뒷면 | 앞면 | 여는 곳 |
 |---|---|---|---|---|
 | 장미 정원 7곳 · 베르사유 · 장미 온실 · 꿈빛 왕국 · 블랙 오닉스 | 01~08 · 12~14 | — | — | 원래 아이템 자리 그대로(그림만 바뀜) |
-| 분홍 장미 | — | 04 | — | 41만 5천 |
+| 달빛 티아라 | — | 07 | 05 | 시즌 패스 3 · 4단계 |
+| 진주 조개 | — | 08 | 06 | 시즌 패스 8 · 9단계 |
+| 흑임자 몽블랑 | — | 06 | 04 | 시즌 패스 14 · 15단계 |
+| 분홍 장미 | — | 04 | — | 시즌 패스 17단계 |
 | 왕실 겨울 정원 | 11 | 03 | 02 | 43만 5천 · 44만 5천 · 45만 5천 |
-| 달빛 티아라 | — | 07 | 05 | 47만 5천 · 48만 5천 |
-| 진주 조개 | — | 08 | 06 | 50만 5천 · 51만 5천 |
-| 흑임자 몽블랑 | — | 06 | 04 | 53만 5천 · 54만 5천 |
 | 밀푀유 파티스리 | 15 | 09 | 07 | 60만 · 62만 · 64만 |
 | 두바이 쫀득쿠키 | 19 | 13 | 11 | 70만 · 71만 · 73만 |
-| 자수정 | 18 | 12 | 10 | 75만 · 77만 · 79만 |
-| 루비 왕관 | 17 | 11 | 09 | 80만 · 82만 · 84만 |
-| 황금 장미 | 09 | 01 | 01 | 88만 · 89만 · 90만 |
+| 자수정 | 18 | 12 | 10 | 75만 · 76만 · 78만 |
+| 루비 왕관 | 17 | 11 | 09 | 80만 · 81만 · 83만 |
+| 황금 장미(효과 · 장난감 · 피날레는 뺌) | 09 | 01 | 01 | 89만 · 90만 5천 · 92만 |
 | 백만 송이 장미 | 10 | 02 | — | 뒷면 95만 · 판 100만 |
 | 피스타치오 파리브레스트 | — | 05 | 03 | 보상 상자에서만 |
+
+## 다음에 만들 그림 — 승리 연출용 표정 22장(11-24 저녁)
+- 이기면 상대가 앞으로 나와 울고, 내 캐릭터가 뛰어올라 장면 한가운데 섭니다.
+  - 지금은 원래 그림에 낯빛이 질리는 효과를 입혀 둡니다. 아래 그림이 들어오면 그 자리에 저절로 바뀝니다.
+- 만드는 법은 아래 「만드는 법」과 같습니다.
+  - **각 프롬프트에 적힌 원래 그림(`gpt그림\` 의 파일)을 함께 첨부**하면 같은 캐릭터 · 같은 화풍으로 나옵니다.
+  - 파일 이름은 `울음01` ~ `울음15`, `승리01` ~ `승리07`(번호만 맞으면 뒤는 아무렇게나).
+  - 생각 모드 없이 보통 모드로 충분합니다. 배경 투명이 안 되면 흰 배경도 됩니다(제가 지웁니다).
+
+### 우는 상대 15(정사각형, 배경 투명)
+
+**울음01 — 치이카와** · 첨부: `상대2.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Chiikawa who has just lost a card game and is crying: tears pouring like little fountains, mouth trembling in a tiny wavy line. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음02 — 하치와레** · 첨부: `상대3.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Hachiware who has just lost a card game and is crying: big shiny tears, still trying to smile bravely. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음03 — 우사기** · 첨부: `상대4.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Usagi who has just lost a card game and is crying: crying loudly with the mouth wide open, arms flailing, tears flying sideways. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음04 — 랏코** · 첨부: `상대7.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Rakko (the sea otter hunter) who has just lost a card game and is crying: trying to stay cool with arms crossed, a single big tear rolling down, eyes shut tight. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음05 — 짱구** · 첨부: `상대5.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Shin-chan who has just lost a card game and is crying: bawling dramatically with the mouth wide open, snot bubble, cards slipping from his hands. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음06 — 체리** · 첨부: `상대6.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Sakura Kinomoto (Cardcaptor Sakura) who has just lost a card game and is crying: teary eyes and a wobbly "hoe~" mouth, holding her card to her chest. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음07 — 코난** · 첨부: `상대15.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Conan Edogawa (Detective Conan) who has just lost a card game and is crying: frustrated, glasses slipping down the nose, tears in the corners of his eyes, gritting his teeth. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음08 — 키드** · 첨부: `상대16.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Kaito Kid (the phantom thief) who has just lost a card game and is crying: theatrical sorrow, top hat tipped over one eye, one hand on his forehead, a single tear behind the monocle. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음09 — 케로로** · 첨부: `상대12.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Sergeant Keroro who has just lost a card game and is crying: wailing with streams of tears, cap slipping, cards scattering. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음10 — 하츄핑** · 첨부: `상대11.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Hachuping (Catch! Teenieping) who has just lost a card game and is crying: sniffling with big glossy tears, heart decorations drooping. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음11 — 쿠로미** · 첨부: `나2.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Kuromi who has just lost a card game and is crying: angry-crying: pouting, fists clenched, tears at the eye corners, ears drooping. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음12 — 헬로키티** · 첨부: `상대13.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Hello Kitty who has just lost a card game and is crying: teary eyes, bow drooping, hugging her cards sadly (she has no mouth, keep it that way). Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음13 — 포차코** · 첨부: `상대9.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Pochacco who has just lost a card game and is crying: ears drooping all the way down, big tears, sitting down with cards dropped on the floor. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음14 — 한교동** · 첨부: `상대10.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw Hangyodon who has just lost a card game and is crying: crying a little river of tears, lips trembling, fins covering his face. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+**울음15 — 장미 공주** · 첨부: `상대14.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions, same framing. Draw the rose princess who has just lost a card game and is crying: elegant sorrow, a lace handkerchief at her eyes, one tear, holding her card fan limply. Cute and funny sadness, never scary. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character as large in the frame as in the reference.
+
+### 기뻐하는 내 캐릭터 7(정사각형, 배경 투명)
+
+**승리01 — 마이멜로디** · 첨부: `나1.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions. Draw My Melody celebrating a victory: jumping for joy with both arms up, sparkling eyes and a big happy smile, holding her pink rose high in one hand. Full body. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character fills about 85% of the frame.
+
+**승리02 — 망그러진 곰** · 첨부: `나5.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions. Draw Mangeureojin Gom (the squishy yellow bear) celebrating a victory: jumping for joy with both arms up, sparkling eyes and a big happy smile, holding his red rose high in one hand. Full body. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character fills about 85% of the frame.
+
+**승리03 — 세일러문** · 첨부: `상대8.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions. Draw Sailor Moon celebrating a victory: jumping for joy with both arms up, sparkling eyes and a big happy smile, holding her red rose high in one hand. Full body. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character fills about 85% of the frame.
+
+**승리04 — 시나모롤** · 첨부: `나3.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions. Draw Cinnamoroll celebrating a victory: jumping for joy with both arms up, sparkling eyes and a big happy smile, holding his cinnamon roll high in one hand. Full body. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character fills about 85% of the frame.
+
+**승리05 — 폼폼푸린** · 첨부: `나4.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions. Draw Pompompurin celebrating a victory: jumping for joy with both arms up, sparkling eyes and a big happy smile, holding his pudding cup high in one hand. Full body. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character fills about 85% of the frame.
+
+**승리06 — 잔망루피** · 첨부: `나6.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions. Draw Zanmang Loopy celebrating a victory: jumping for joy with both arms up, sparkling eyes and a big happy smile, holding her heart-shaped balloon high in one hand. Full body. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character fills about 85% of the frame.
+
+**승리07 — 춘식이** · 첨부: `상대1.png`
+
+Use the attached picture as the exact character reference: same character design, same art style, same colors and proportions. Draw Choonsik celebrating a victory: jumping for joy with both arms up, sparkling eyes and a big happy smile, holding his roasted sweet potato high in one hand. Full body. Transparent background (PNG), no floor, no shadow, no text. Square 1:1, centered, the character fills about 85% of the frame.
 
 ## 어느 모델로 (2026-11-24 확인)
 - 그림 모델은 고를 필요가 없습니다. ChatGPT 에서 그림을 부탁하면 최신 그림 모델 **ChatGPT Images 2.6**(11-04 출시)이 저절로 그립니다.
