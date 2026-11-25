@@ -39,13 +39,13 @@
 /* 보관함 */
 .locker-body { flex: 1; display: grid; grid-template-columns: minmax(380px, 0.95fr) minmax(0, 1.25fr); gap: clamp(16px, 2vw, 32px); padding: 0 clamp(16px, 3vw, 40px) 24px; min-height: 0; }
 .locker-left { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
-.locker-preview { --cw: clamp(54px, 4.6vw, 84px); position: relative; isolation: isolate; aspect-ratio: 16 / 10; border-radius: 26px; overflow: hidden; background: var(--scene-base, #0c1322); padding: 7% 9%; }
+.locker-preview { --cw: clamp(54px, 4.6vw, 84px); position: relative; isolation: isolate; aspect-ratio: 3 / 2; border-radius: 26px; overflow: hidden; background: var(--scene-base, #0c1322); padding: 7% 9%; }
 .locker-preview .scene-prop { max-width: 14%; }
 /* 미리 보기 상자는 늘 가로 모양 — 휴대폰 세로 화면에서도 가로 판 그림을 쓴다(11-24 세로 그림이 가로 상자에 맞춰져 탁자 가운데만 크게 보였음) */
 .locker-preview .scene-photo { background-image: var(--scene-photo, none); }
-/* 판 그림은 자르지 않고 다 보이게(탁자 테두리 · 위아래 장식까지, 11-25 선생님 「조금 더 축소해서」). 남는 양옆은 같은 그림을 흐리게 깔아 메운다 */
-.locker-preview[data-map="painted"] .scene::before { content: ''; position: absolute; inset: -12%; background: var(--scene-photo, none) center / cover no-repeat; filter: blur(14px) brightness(calc(var(--scene-bright, 0.7) * 0.7)); }
-.locker-preview[data-map="painted"] .scene-photo { inset: 0; background-size: contain; }
+/* 미리 보기 상자는 판 그림과 같은 3:2 — 판 그림 25장이 자르지도 남지도 않고 꼭 맞는다(11-25 선생님 「조금 더 축소해서」 다음 「양쪽 날개가 잘려」:
+   가로가 더 긴 상자에 그림을 다 넣었더니 양옆에 흐린 띠가 날개처럼 남았다). 사진 판(16:9)은 양옆을 조금 자른다 */
+.locker-preview[data-map="painted"] .scene-photo { inset: 0; }
 .locker-preview[data-map="painted"] .rim, .locker-preview[data-map="painted"] .felt { background: none; box-shadow: none; }
 .locker-preview[data-map="painted"] .felt-light { display: none; }
 .locker-preview[data-rim="none"] .rim { padding: 0; background: none; box-shadow: none; }
@@ -203,10 +203,12 @@
   .locker-body { display: block; flex: none; }
   .locker-right { margin-top: 8px; }
   .locker-left { position: sticky; top: 0; z-index: 4; gap: 8px; padding: 6px 0 10px; background: var(--ink); box-shadow: 0 12px 14px -12px rgba(0, 0, 0, 0.7); }
-  .locker-preview { --cw: 44px; aspect-ratio: auto; height: clamp(150px, 24vh, 240px); border-radius: 18px; padding: 4% 7%; }
+  /* 휴대폰도 3:2(높이가 화면을 따라가면 카카오톡처럼 낮은 화면에서 2:1 넘게 길어졌다). 아주 낮은 화면에서만 높이를 묶고 위아래를 조금 자른다 */
+  .locker-preview { --cw: 44px; max-height: max(150px, 36vh); border-radius: 18px; padding: 4% 7%; }
   .locker-sel { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 10px; padding: 10px 12px; border-radius: 14px; }
   .locker-sel .sel-head { grid-column: 1; min-width: 0; }
   .locker-sel .sel-name { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .locker-sel .sel-state:is([data-state="on"], [data-state="ready"]) { flex: none; white-space: nowrap; } /* 짧은 상태 꼬리표는 한 줄로(폭 360 에서 「장착 / 중」으로 꺾였다) — 긴 이름이 줄임표로 줄어든다 */
   .locker-sel .sel-set { display: none; }
   .locker-sel .sel-desc { grid-column: 1; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .locker-sel .charm-slots { grid-column: 1 / -1; }

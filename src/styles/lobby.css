@@ -116,8 +116,9 @@
 
 @media (max-width: 980px) {
   body { overflow: auto; }
-  .lobby { height: auto; min-height: 100dvh; overflow: visible; }
-  .lobby-main { grid-template-columns: 1fr; }
+  /* 칸 폭을 화면에 묶는다 — 1fr 은 안쪽 최소 폭(372px)까지 늘어나 폭 360 휴대폰에서 화면이 12px 넓게 깔렸다(11-25) */
+  .lobby { height: auto; min-height: 100dvh; overflow: visible; grid-template-columns: minmax(0, 1fr); }
+  .lobby-main { grid-template-columns: minmax(0, 1fr); }
   .stage { min-height: 420px; }
   .lobby-actions { overflow: visible; }
 }

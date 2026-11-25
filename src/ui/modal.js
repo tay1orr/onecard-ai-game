@@ -73,17 +73,16 @@ export function toast(text, { anchor = null, tone = 'info' } = {}) {
   }
   toastEl.textContent = text;
   toastEl.dataset.tone = tone;
-  if (anchor) {
-    const rect = anchor.getBoundingClientRect();
-    toastEl.style.left = `${rect.left + rect.width / 2}px`;
-    toastEl.style.top = `${Math.max(12, rect.top - 52)}px`;
-    toastEl.style.bottom = 'auto';
-  } else {
-    toastEl.style.left = '50%';
-    toastEl.style.top = 'auto';
-    toastEl.style.bottom = '24px';
-  }
+  // 자리는 여기서 픽셀로 정하고 화면 양옆 8px 안에 묶는다(11-25 휴대폰에서 오른쪽 장착 단추 위에 맞춘 긴 알림이 화면 밖으로 잘렸다.
+  // 전에는 CSS 의 translateX(-50%) 와 GSAP 의 xPercent 가 겹쳐, 글자 폭에 따라 단추 가운데이거나 반 칸 왼쪽이었다)
+  const view = document.documentElement.clientWidth;
+  const width = toastEl.offsetWidth;
+  const rect = anchor?.getBoundingClientRect();
+  const center = rect ? rect.left + rect.width / 2 : view / 2;
+  toastEl.style.left = `${Math.round(Math.max(8, Math.min(center - width / 2, view - 8 - width)))}px`;
+  toastEl.style.top = rect ? `${Math.max(12, rect.top - toastEl.offsetHeight - 10)}px` : 'auto';
+  toastEl.style.bottom = rect ? 'auto' : '24px';
   clearTimeout(toastTimer);
-  gsap.fromTo(toastEl, { opacity: 0, y: 8, xPercent: -50 }, { opacity: 1, y: 0, xPercent: -50, duration: 0.2 });
+  gsap.fromTo(toastEl, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.2 });
   toastTimer = setTimeout(() => gsap.to(toastEl, { opacity: 0, duration: 0.2 }), 2200);
 }

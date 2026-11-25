@@ -73,9 +73,9 @@ h1, h2, h3 { margin: 0; text-wrap: balance; }
 .modal-x svg { width: 18px; height: 18px; }
 
 .toast {
-  position: fixed; z-index: 120; left: 50%; bottom: 24px; transform: translateX(-50%);
+  position: fixed; z-index: 120; left: 0; bottom: 24px; width: max-content; max-width: calc(100vw - 16px); /* 자리는 modal.js toast() 가 픽셀로 · 화면보다 길면 줄을 바꾼다 */
   padding: 10px 16px; border-radius: 12px; background: #0b1120; border: 1px solid var(--line-strong);
-  color: var(--chalk); font-size: 14px; font-weight: 600; pointer-events: none; opacity: 0; white-space: nowrap; box-shadow: var(--drop);
+  color: var(--chalk); font-size: 14px; font-weight: 600; pointer-events: none; opacity: 0; text-align: center; box-shadow: var(--drop);
 }
 .toast[data-tone="good"] { border-color: rgba(79, 209, 161, 0.6); }
 .toast[data-tone="warn"] { border-color: rgba(232, 72, 59, 0.7); }

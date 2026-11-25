@@ -110,7 +110,7 @@
 .rb-dim { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 70% at 50% 45%, rgba(12, 14, 24, 0.86), rgba(5, 6, 10, 0.96)); backdrop-filter: blur(3px); }
 .rb-title { position: relative; font-size: clamp(26px, 2.4vw, 38px); font-weight: 900; letter-spacing: -0.03em; color: #fff; }
 .rb-sub { position: relative; color: #d6dbe6; font-size: 15px; }
-.rb-row { position: relative; display: flex; gap: clamp(14px, 4vw, 64px); align-items: flex-end; margin-top: 12px; }
+.rb-row { position: relative; display: flex; gap: clamp(14px, 4vw, 64px); align-items: flex-end; margin-top: clamp(12px, 2.6vw, 44px); } /* 위 간격 — 열린 상자의 들린 뚜껑이 위 글씨를 가리지 않게(상자가 큰 화면일수록 넓게) */
 .rb-box { position: relative; width: clamp(96px, 13vw, 230px); aspect-ratio: 1; border: 0; padding: 0; background: none; cursor: pointer; transition: filter 0.15s ease; }
 .rb-box:hover:not(:disabled), .rb-box:focus-visible { filter: brightness(1.1) drop-shadow(0 0 0 transparent); }
 .rb-box:focus-visible { outline: 3px solid var(--gold); outline-offset: 6px; border-radius: 18px; }
@@ -143,8 +143,13 @@
 .rb-card .pv { --cw: 60px; width: 132px; height: 132px; }
 .rb-coin { position: absolute; width: 76px; height: 76px; object-fit: contain; pointer-events: none; z-index: 4; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.45)); }
 .rb-take { position: relative; z-index: 3; min-width: 160px; margin-top: 6px; }
-/* 좋은 상자 — 흔들릴 때 새는 금빛 · 열릴 때 퍼지는 빛살 · 전설 이상의 빛기둥(reward-boxes.js goldBeams, 11-25) */
-.rb-leak { position: absolute; left: 50%; top: 48%; width: 150%; height: 150%; margin: -75% 0 0 -75%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 240, 190, 0.95), rgba(255, 200, 90, 0.5) 34%, transparent 68%); opacity: 0; pointer-events: none; }
+/* 상자 열림(reward-boxes.js pick · goldBeams, 11-25) — 빛은 모두 뚜껑 틈에서. 좋은 상자는 흔들릴 때 틈으로 금빛이 새고, 열리면 틈에서 빛살 · 전설 이상은 빛기둥 */
+.rb-leak { position: absolute; left: -12%; width: 124%; top: 22.5%; height: 20%; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse 46% 16% at 50% 50%, rgba(255, 255, 248, 1), rgba(255, 238, 180, 0.9) 45%, transparent 100%), radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255, 210, 110, 0.6), transparent 70%); } /* 틈을 따라 흰 금빛 선 + 상자 밖으로 번지는 빛(금색 띠 위에서도 보이게) */
+/* 같은 그림을 뚜껑 틈(앞면 32.5% · 오른쪽 옆면으로 가며 30% 쪽으로 오르는 선)에서 두 장으로 나눈다. 바깥으로 넉넉히 넓혀 그림자까지 담는다 */
+.rb-art.is-body { clip-path: polygon(-30% 32.5%, 80.4% 32.5%, 95% 30%, 130% 24%, 130% 170%, -30% 170%); }
+.rb-lid { position: absolute; left: 0; top: 0; pointer-events: none; clip-path: polygon(-30% -40%, 130% -40%, 130% 24%, 95% 30%, 80.4% 32.5%, -30% 32.5%); }
+.rb-inner { position: absolute; left: 2%; width: 96%; top: 12%; height: 34%; border-radius: 50%; background: radial-gradient(ellipse 50% 50%, rgba(255, 253, 240, 1), rgba(255, 224, 140, 0.8) 36%, rgba(255, 196, 90, 0.28) 60%, transparent 74%); opacity: 0; pointer-events: none; }
 .rb-beams { position: absolute; width: 0; height: 0; pointer-events: none; }
 .rb-beam { position: absolute; left: 0; bottom: 0; transform-origin: 50% 100%; clip-path: polygon(50% 100%, 0 0, 100% 0); background: linear-gradient(to top, rgba(255, 250, 228, 0.95), rgba(255, 214, 110, 0.6) 30%, rgba(255, 190, 80, 0.18) 70%, transparent); }
 .rb-beam.is-rose { background: linear-gradient(to top, rgba(255, 246, 238, 0.95), rgba(255, 170, 205, 0.55) 30%, rgba(255, 140, 190, 0.16) 70%, transparent); }

@@ -182,6 +182,12 @@ Use the attached picture only as a style reference (painting style, lighting and
 
 ## 보상 상자(11-25 — 1장 들어감)
 - 파일 이름 `미스터리상자`(배경 투명) → `cut/chest-mystery.webp`. 보상 상자 셋이 모두 이 그림(src/core/reward-box.js 의 BOX_ART). 넣기: `node scripts/build-gpt.mjs`.
+- 열 때는 지금 이 그림을 뚜껑 틈에서 뚜껑 · 몸통으로 나눠 뚜껑을 들어 올리고, 빛은 그 틈에서 나옵니다(reward-boxes.js).
+- 더 자연스럽게 하려면(선택) 뚜껑이 젖혀진 그림 한 장. 들어오면 여는 순간 이 그림으로 바꿉니다(아직 안 들어옴 — build-gpt 의 CHEST_FILES 에 한 줄, 여는 자리 맞추기는 그때).
+
+**미스터리상자_열림** · 첨부: `미스터리상자.png`
+
+Use the attached picture as the exact reference: the same red-lacquered treasure chest with ornate gold baroque trim, the gold roses on the front corners, the big gold question mark on the front, the same three-quarter view from the front-left, the same lighting, art style and colors. Draw this same chest with its domed lid swung wide open backwards on its back hinge, so the inside of the lid (deep red velvet) faces us and the ruby ornament sits on the lid's top edge. Brilliant warm golden light pours up out of the open chest and fills the opening with a soft bright glow and a few sparkles; the light hides the inside, so no coins and no objects. Keep the chest body (the front with the question mark, the gold band, the roses, the feet) the same size and shape as in the reference. Portrait 2:3 canvas with the body in the lower part and the open lid above it. Transparent background (PNG), no floor, no shadow, no text.
 
 ## 세로 판(11-24 밤 — 26장 들어감)
 - 휴대폰 세로 화면용 판. 넣으면 휴대폰 세로 화면의 로비 무대 · 게임판이 이 그림을 쓴다(없으면 가로 판의 가운데를 자른 그림).
