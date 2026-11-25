@@ -254,6 +254,9 @@
 .pf-character { font-size: 12px; font-weight: 800; opacity: 0.75; }
 .pf-name { font-size: clamp(24px, 2.4vw, 34px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; }
 .pf-stars { color: #7a4f0c; letter-spacing: 2px; font-size: 14px; }
+.pf-rank { color: #5c3a08; font-size: 12px; font-weight: 700; } /* 단계 이름 · 다음 단계까지(단계 그림이 들어온 뒤에만) */
+.pf-rank-btn { border-color: rgba(29, 20, 5, 0.28); background: rgba(255, 255, 255, 0.28); letter-spacing: 0; }
+.pf-rank-btn small { color: #5c3a08; }
 .pf-stats { position: relative; margin-top: 14px; color: #c9d2e2; font-size: 14px; font-weight: 600; }
 .pf-side { display: flex; flex-direction: column; gap: 18px; min-height: 0; }
 .pf-input { max-width: 320px; }

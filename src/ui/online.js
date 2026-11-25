@@ -1,10 +1,11 @@
 // 친구와 대전 — 방 만들기 · 코드로 들어가기 · 대기실 · 주사위 · 게임판(AI 대전과 같은 판) · 재대결
 import gsap from 'gsap';
-import { h, formatNumber, stars, wait, josa } from './dom.js';
+import { h, formatNumber, wait, josa } from './dom.js';
 import { MultiplayerClient } from '../net/multiplayer.js';
 import { getSeatView, isMyTurn, normalizeRoomCode, validateNickname, validateRoomCode } from '../net/multiplayer-helpers.js';
 import { isSupabaseConfigured } from '../net/config.js';
 import { loadPlayerProfile, playerStarsForPoints, recordMatchResult } from '../core/rating.js';
+import { rankForPoints } from '../core/rank.js';
 import { applyMissionEvents, missionEventsForCard } from '../core/missions.js';
 import { cosmeticById, DEFAULT_EQUIPPED } from '../core/cosmetics.js';
 import { onlineLook } from '../data/characters.js';
@@ -16,6 +17,7 @@ import { applyEquipped, backVars, lookFor } from './look-apply.js';
 import { mountToys } from './toys.js';
 import { pickSuit, playHint, blockedReason } from './play-ui.js';
 import { showResult } from './result.js';
+import { rankBadge, showRankUp } from './rank.js';
 import { confirmModal, toast } from './modal.js';
 import { stickerPicker, showSticker } from './reactions.js';
 import { rollDie } from './intro.js';
@@ -142,7 +144,7 @@ export function startOnline({ host, onExit, openRules }) {
     const seat = (player, label, me) => h(`div.seat${player?.ready ? '.is-ready' : ''}${me ? '.is-me' : ''}`, {},
       h('img', { src: cut(me ? avatar.portrait : onlineLook(player?.nickname || '').portrait), alt: '' }),
       h('b', {}, player?.nickname || '친구를 기다리는 중'),
-      h('small', {}, player ? `${stars(playerStarsForPoints(player.rating || 0))} ${formatNumber(player.rating || 0)}점, ${player.ready ? '준비 완료' : '준비 전'}` : '방 코드를 알려 주세요'),
+      h('small', {}, ...(player ? [rankBadge(player.rating || 0), ` ${formatNumber(player.rating || 0)}점, ${player.ready ? '준비 완료' : '준비 전'}`] : ['방 코드를 알려 주세요'])),
       h('span.seat-label', {}, label));
     const readyButton = h('button.btn.primary', { type: 'button', disabled: !opponent, onClick: () => run(() => client.setReady()) }, mine?.ready ? '준비 취소' : opponent ? '준비 완료' : '친구를 기다려요');
     const next = h('section.room', { 'aria-label': '대기실' },
@@ -190,8 +192,8 @@ export function startOnline({ host, onExit, openRules }) {
     table.root.addEventListener('pointerdown', (event) => { if (event.target.closest('.fx-layer') && director.busy()) director.skip(); });
     const { opponent } = getSeatView(view);
     const look = onlineLook(opponent?.nickname || '');
-    table.setRival({ name: opponent?.nickname || '상대', starsCount: playerStarsForPoints(opponent?.rating || 0), color: look.color, portrait: look.portrait, status: '' });
-    table.setMe({ name: getSeatView(view).mine?.nickname || '나', portrait: avatar.portrait, points: profile.points, starsCount: playerStarsForPoints(profile.points), color: '#f2b544' });
+    table.setRival({ name: opponent?.nickname || '상대', rankPoints: opponent?.rating || 0, color: look.color, portrait: look.portrait, status: '' });
+    table.setMe({ name: getSeatView(view).mine?.nickname || '나', portrait: avatar.portrait, points: profile.points, color: '#f2b544' });
   }
 
   function syncTable(view) {
@@ -348,7 +350,8 @@ export function startOnline({ host, onExit, openRules }) {
     resultKey = key;
     const { mine, opponent } = getSeatView(view);
     const won = view.winnerSeat === view.mySeat;
-    const xpBefore = loadPlayerProfile().seasonXp;
+    const before = loadPlayerProfile();
+    const xpBefore = before.seasonXp;
     const rating = recordMatchResult({ won, opponentStars: playerStarsForPoints(opponent?.rating || 0), mode: 'multi', matchId: key, bonusMultiplier: view.bonusMultiplier || 1 });
     applyMissionEvents([
       { id: `${key}:mission:game`, type: 'game', mode: 'multi' },
@@ -369,6 +372,7 @@ export function startOnline({ host, onExit, openRules }) {
       })
       : fx.defeat({ rival: { name: opponent?.nickname || '상대', portrait: look.portrait }, portrait: table.rivalPortrait });
     await finale.timeline;
+    if (!rating.duplicate) await showRankUp({ host: table.root, from: rankForPoints(before.points), to: rankForPoints(after.points), points: after.points });
     resultPanel = showResult({
       host: table.root, won, delta: rating.delta || 0, bonus: (view.bonusMultiplier || 1) > 1, profile: after,
       xpGained: after.seasonXp - xpBefore, xpBefore, unlocked: rating.unlockedItems || [],

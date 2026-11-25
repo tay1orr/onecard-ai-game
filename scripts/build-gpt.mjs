@@ -47,6 +47,10 @@ const files = fs.readdirSync(SRC, { withFileTypes: true })
       const full = path.join(SRC, entry.name);
       return { kind: 'tall', number: 0, target, label: `세로판 ${target}`, file: full, time: fs.statSync(full).mtimeMs, name: entry.name };
     }
+    if (/^(레벨\s*단계|랭크)/.test(entry.name)) { // 「랭크아이콘」(11-25 선생님) · 「레벨단계」
+      const full = path.join(SRC, entry.name);
+      return { kind: 'rank', number: 0, target: 'rank', label: '랭크 아이콘', file: full, time: fs.statSync(full).mtimeMs, name: entry.name };
+    }
     const chest = CHEST_FILES.find(([pattern]) => pattern.test(entry.name));
     if (chest) {
       const full = path.join(SRC, entry.name);
@@ -130,6 +134,19 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
     await sharp(trimmed).resize(480, 480, { fit: 'inside' }).webp({ quality: 88, alphaQuality: 92 }).toFile(path.join(OUT, 'cut', `${entry.target}.webp`));
     await sharp(trimmed).resize(160, 160, { fit: 'inside' }).webp({ quality: 82, alphaQuality: 88 }).toFile(path.join(OUT, 'cut', `${entry.target}-s.webp`));
     made.push(entry.target);
+  } else if (entry.kind === 'rank') {
+    // 내 단계 그림(11-25) — 2 × 2 한 장: 왼쪽 위 금별 · 오른쪽 위 루비 · 왼쪽 아래 분홍 장미 · 오른쪽 아래 왕관 → cut/rank-*.webp
+    // 넷이 다 들어오면 src/ui/rank.js 가 저절로 별 글자 대신 이 그림을 쓴다
+    const keys = ['rank-star', 'rank-ruby', 'rank-rose', 'rank-crown'];
+    const cellW = Math.floor(meta.width / 2);
+    const cellH = Math.floor(meta.height / 2);
+    for (let cell = 0; cell < 4; cell += 1) {
+      const piece = await sharp(entry.file).extract({ left: (cell % 2) * cellW, top: Math.floor(cell / 2) * cellH, width: cellW, height: cellH }).png().toBuffer();
+      const trimmed = await sharp(await cutOut(piece)).trim({ threshold: 1 }).png().toBuffer();
+      await sharp(trimmed).resize(256, 256, { fit: 'inside' }).webp({ quality: 88, alphaQuality: 90 }).toFile(path.join(OUT, 'cut', `${keys[cell]}.webp`));
+      await sharp(trimmed).resize(96, 96, { fit: 'inside' }).webp({ quality: 84, alphaQuality: 88 }).toFile(path.join(OUT, 'cut', `${keys[cell]}-s.webp`));
+    }
+    made.push('rank');
   } else if (entry.kind === 'tall') {
     // 휴대폰 세로 화면용 판 — 화면을 덮는 크기 하나. look-apply 가 tall-<판> 이 있으면 세로 화면에서 이 그림을 쓴다
     const key = `tall-${entry.target}`;
@@ -171,7 +188,7 @@ for (const entry of [...latest.values()].sort((a, b) => a.kind.localeCompare(b.k
 const list = [
   ...fs.readdirSync(path.join(OUT, 'paint')).map((name) => name.match(/^gpt-((?:map|back|face|scene)-\d+)\.webp$/)?.[1]),
   ...fs.readdirSync(path.join(OUT, 'paint')).map((name) => name.match(/^(tall-[a-z0-9-]+)\.webp$/)?.[1]),
-  ...fs.readdirSync(path.join(OUT, 'cut')).map((name) => name.match(/^((?:char|fx|chest)-[a-z0-9-]+?)\.webp$/)?.[1]).filter((key) => key && !key.endsWith('-s')),
+  ...fs.readdirSync(path.join(OUT, 'cut')).map((name) => name.match(/^((?:char|fx|chest|rank)-[a-z0-9-]+?)\.webp$/)?.[1]).filter((key) => key && !key.endsWith('-s')),
 ].filter(Boolean).sort();
 fs.writeFileSync(path.join(root, 'src/data/gpt-art.js'), `// GPT 로 만든 그림 목록 — scripts/build-gpt.mjs 가 gpt그림/ 을 줄여 public 에 넣고 이 파일을 다시 쓴다(손으로 고치지 않음)\nexport const GPT_ART = Object.freeze(${JSON.stringify(list)});\nexport const hasGptArt = (key) => GPT_ART.includes(key);\n`);
 console.log(`GPT 그림 ${list.length}장: ${list.join(', ') || '없음'}`);

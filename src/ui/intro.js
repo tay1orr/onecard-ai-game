@@ -5,6 +5,7 @@ import { cut } from '../data/assets.js';
 import { CHARACTERS } from '../data/characters.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
+import { rankBadge } from './rank.js';
 
 const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
 const FACE_ROT = { 1: [0, 0], 2: [-90, 0], 3: [0, 90], 4: [0, -90], 5: [90, 0], 6: [180, 0] };
@@ -42,7 +43,7 @@ export async function showVersus({ host, me, rival, reward, bonus, eventName }) 
   const rivalSide = h('div.vs-side.vs-rival', {}, rivalPlate, h('div.vs-text', {}, rivalTitle, rivalName, rivalStars, rivalLevel));
   const meSide = h('div.vs-side.vs-me', { vars: { '--side': me.color || '#f2b544' } },
     h('div.vs-plate', {}, h('img.vs-portrait', { src: cut(me.portrait), alt: '' })),
-    h('div.vs-text', {}, h('small.vs-title', {}, `${formatNumber(me.points)}점`), h('strong.vs-name', {}, me.name || '나'), h('span.vs-stars', {}, stars(me.stars))));
+    h('div.vs-text', {}, h('small.vs-title', {}, `${formatNumber(me.points)}점`), h('strong.vs-name', {}, me.name || '나'), h('span.vs-stars', {}, rankBadge(me.points))));
   const vsMark = h('b.vs-mark', {}, 'VS');
   const rewardLine = h('div.vs-reward', {}, '');
   const bonusBadge = bonus ? h('div.vs-bonus', {}, h('b', {}, '보너스판'), h('small', {}, '이기면 점수 2배')) : null;

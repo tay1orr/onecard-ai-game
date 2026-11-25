@@ -154,3 +154,53 @@
 .rb-beam { position: absolute; left: 0; bottom: 0; transform-origin: 50% 100%; clip-path: polygon(50% 100%, 0 0, 100% 0); background: linear-gradient(to top, rgba(255, 250, 228, 0.95), rgba(255, 214, 110, 0.6) 30%, rgba(255, 190, 80, 0.18) 70%, transparent); }
 .rb-beam.is-rose { background: linear-gradient(to top, rgba(255, 246, 238, 0.95), rgba(255, 170, 205, 0.55) 30%, rgba(255, 140, 190, 0.16) 70%, transparent); }
 .rb-pillar { position: absolute; transform-origin: 50% 100%; border-radius: 50% 50% 0 0 / 10% 10% 0 0; background: linear-gradient(to top, rgba(255, 250, 232, 0.95), rgba(255, 222, 140, 0.55) 45%, transparent); filter: blur(6px); opacity: 0; pointer-events: none; }
+
+/* 내 단계(ui/rank.js, 11-25) — 금별 · 루비 · 분홍 장미 · 왕관을 단계 수만큼 글자 줄 안에. 크기는 둘레 글자를 따른다 */
+.rank-badge { display: inline-flex; align-items: center; gap: 1px; vertical-align: -0.22em; }
+.rank-badge img { width: 1.3em; height: 1.3em; object-fit: contain; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.5)); }
+.rank-badge.is-md img { width: 1.7em; height: 1.7em; }
+/* 단계 그림 단추 — 누르면 단계표(결과 판 · 내 프로필) */
+.rank-btn { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 6px; border-radius: 99px; border: 1px solid var(--line-strong); background: rgba(255, 255, 255, 0.05); color: inherit; font: inherit; cursor: pointer; vertical-align: middle; }
+.rank-btn small { font-size: 12px; font-weight: 800; color: var(--mute); }
+.rank-btn:hover small, .rank-btn:focus-visible small { color: var(--chalk); }
+/* 단계표 창 — 넓으면 두 칸, 휴대폰은 한 칸. 줄마다 그림 · 이름 · 점수 · 지금/남은 점수 */
+.modal-card.is-rank { width: min(760px, 94vw); }
+.rt-now { margin: -2px 0 14px; color: #d7deeb; font-size: 15px; }
+.rt-now b { color: var(--chalk); }
+.rt-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.rt-group { padding: 10px 12px 8px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); }
+.rt-title { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 16px; font-weight: 900; }
+.rt-title img { width: 28px; height: 28px; object-fit: contain; }
+.rt-rows { list-style: none; margin: 0; padding: 0; }
+.rt-row { display: grid; grid-template-columns: 94px minmax(0, 1fr) auto; align-items: center; gap: 2px 10px; padding: 6px 4px; border-radius: 10px; }
+.rt-row + .rt-row { border-top: 1px solid var(--line); }
+.rt-icons { display: inline-flex; gap: 1px; }
+.rt-icons img { width: 18px; height: 18px; object-fit: contain; }
+.rt-name { font-size: 14px; font-weight: 800; }
+.rt-points { color: #d7deeb; font-size: 14px; font-variant-numeric: tabular-nums; text-align: right; }
+.rt-tag { grid-column: 2 / -1; justify-self: start; padding: 1px 8px; border-radius: 99px; font-size: 12px; font-style: normal; font-weight: 800; }
+.rt-row.is-done { opacity: 0.55; }
+.rt-row.is-now { background: rgba(242, 181, 68, 0.12); box-shadow: inset 0 0 0 1.5px rgba(242, 181, 68, 0.7); border-top-color: transparent; }
+.rt-row.is-now + .rt-row { border-top-color: transparent; }
+.rt-row.is-now .rt-tag { background: var(--gold); color: #1d1405; }
+.rt-row.is-next .rt-tag { background: rgba(255, 255, 255, 0.08); color: #e9d9b0; }
+@media (max-width: 640px) {
+  .rt-groups { grid-template-columns: minmax(0, 1fr); }
+  .modal-card.is-rank { padding: 22px 16px 16px; }
+}
+/* 단계 오름 — 결과 판 앞에 한 번. 뒤로 그림 색 빛줄기가 돌고, 가운데 그림 줄 · 단계 이름 */
+.rank-up { position: absolute; inset: 0; z-index: 85; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; overflow: hidden; --ru: #ffd77a; }
+.rank-up.u-ruby { --ru: #ff7b7b; }
+.rank-up.u-rose { --ru: #ff9fcb; }
+.ru-dim { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(18, 14, 26, 0.86), rgba(5, 6, 10, 0.95)); }
+.ru-rays { position: absolute; left: 50%; top: 44%; width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax; opacity: 0; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--ru) 32%, transparent) 0deg 7deg, transparent 7deg 20deg);
+  -webkit-mask: radial-gradient(circle, #000 0, rgba(0, 0, 0, 0.55) 16%, transparent 40%); mask: radial-gradient(circle, #000 0, rgba(0, 0, 0, 0.55) 16%, transparent 40%); }
+.ru-flash { position: absolute; left: 50%; top: 44%; width: 360px; height: 360px; margin: -180px 0 0 -180px; border-radius: 50%; opacity: 0; pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 252, 236, 0.95), color-mix(in srgb, var(--ru) 55%, transparent) 38%, transparent 70%); }
+.ru-row { position: relative; display: flex; gap: clamp(6px, 1.2vw, 16px); align-items: center; justify-content: center; min-height: clamp(64px, 10vw, 116px); }
+.ru-icon { width: clamp(56px, 9vw, 104px); height: clamp(56px, 9vw, 104px); object-fit: contain; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.55)); }
+.ru-text { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.ru-kicker { color: color-mix(in srgb, var(--ru) 80%, #fff); font-size: 14px; font-weight: 800; }
+.ru-name { font-size: clamp(30px, 4vw, 46px); font-weight: 900; letter-spacing: -0.02em; color: #fff; text-shadow: 0 2px 18px color-mix(in srgb, var(--ru) 60%, transparent); }
+.ru-next { color: #c9d2e2; font-size: 14px; font-weight: 600; }

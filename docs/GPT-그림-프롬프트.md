@@ -180,18 +180,19 @@ Use the attached picture only as a style reference (painting style, lighting and
 
 Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a tiny sitting teddy bear with a red bow, (2) a red satin bow, (3) a small red heart, (4) a little pink heart balloon, (5) a tiny golden star, (6) a small curl of red ribbon. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
 
-## 레벨 단계 그림(11-25 — 선생님께 요청, 아직 안 들어옴)
-- 별 7 ~ 8 개가 한 줄로 늘어서 한눈에 안 세지고 찬란하지 않아서(선생님 「별 다음에는 루비?」 → 「루비도 5개, 그다음 것도 5개씩」)
-  — 금별 1~5 → 루비 1~5 → 황금 장미 1~5 → 왕관 1~5, 모두 20단계(내 단계 그림만 · AI 상대 난이도 ★1~★8 은 그대로).
-  - 금별: 0 · 500 · 1,500 · 3,500 · 1만 1천(지금 그대로) · 루비: 3만 · 5만 · 8만 · 12만 · 17만
-  - 황금 장미: 23만 · 30만 · 38만 · 47만 · 57만 · 왕관: 68만 · 76만 · 84만 · 92만 · 100만(시즌 목표)
-  - 판당 점수로 루비 · 황금 장미 · 왕관 구간이 저마다 150판 안팎. 그림은 넷, 개수는 화면이 그린다.
+## 내 단계 그림(11-25 — 4개 들어감)
+- 별 7 ~ 8 개가 한 줄로 늘어서 한눈에 안 세지고 찬란하지 않아서(선생님 「별 다음에는 루비?」 → 「루비도 5개, 그다음 것도 5개씩」 → 「황금 말고 분홍 장미」)
+  — 금별 1~5 → 루비 1~5 → 분홍 장미 1~5 → 왕관 1~5, 모두 20단계(src/core/rank.js · 내 단계만 · AI 상대 난이도 ★1~★8 은 그대로).
+  - 「왕관 5 = 100만 점으로 잘 스케일링」 — 시즌 2 규칙 모의 실험으로 0 → 100만 점 약 680판, 한 단계에 4판(처음) ~ 64판(마지막)으로 고르게 늘게:
+  - 금별: 0 · 1,000 · 5,000 · 1만 3천 · 2만 6천 · 루비: 4만 2천 · 6만 2천 · 8만 7천 · 12만 · 16만
+  - 분홍 장미: 20만 · 25만 · 30만 · 37만 · 45만 · 왕관: 54만 · 64만 · 75만 · 87만 · 100만(시즌 목표)
   - 보상 · 친구 대전 점수 계산은 지금 별(1~8, playerStarsForPoints) 그대로 — 단계 그림은 보이는 것만.
-- 파일 이름 `레벨단계`(한 장에 넷, 2 × 2 — 들어오면 넷으로 잘라 넣고 build-gpt 에 한 줄).
+- 파일 이름 `랭크아이콘`(또는 `레벨단계`, 한 장에 넷 2 × 2) → cut/rank-star · rank-ruby · rank-rose · rank-crown(src/ui/rank.js 가 쓴다). 넣기: `node scripts/build-gpt.mjs`.
+- 결과 판 · 내 프로필의 단계 그림을 누르면 단계표. 단계가 오르면 결과 판 앞에 단계 오름 연출.
 
-**레벨단계 — 금별 · 루비 · 황금 장미 · 왕관(한 장에 넷)** · 첨부: `미스터리상자.png`(화풍 참고)
+**랭크아이콘 — 금별 · 루비 · 분홍 장미 · 왕관(한 장에 넷)** · 첨부: `미스터리상자.png`(화풍 참고)
 
-Use the attached picture only as the style reference: the same glossy, richly lit, painterly-realistic premium game-art style, the same warm polished gold with baroque ornament, and the same deep faceted ruby. Draw a set of four rank icons in a 2 × 2 grid on one square canvas, each centered in its own quarter, all the same size, seen from the front: top-left, a five-pointed gold star with softly rounded points, bevelled polished metal and a warm inner glow; top-right, a brilliant cushion-cut ruby set in a thin gold rim, deep red with bright white sparkles inside; bottom-left, a single golden rose blossom of polished gold with two small gold leaves; bottom-right, a small golden crown whose points end in red rose blossoms, studded with tiny rubies, the highest rank. Bold, simple silhouettes that stay readable when shrunk to 20 pixels: no thin spikes, no loose sparkles outside the shapes, no text. Leave generous empty space around each icon so they can be cut apart. Transparent background (PNG), no floor, no shadow, no frame. Square 1:1.
+Use the attached picture only as the style reference: the same glossy, richly lit, painterly-realistic premium game-art style, the same warm polished gold with baroque ornament, and the same deep faceted ruby. Draw a set of four rank icons in a 2 × 2 grid on one square canvas, each centered in its own quarter, all the same size, seen from the front: top-left, a five-pointed gold star with softly rounded points, bevelled polished metal and a warm inner glow; top-right, a brilliant cushion-cut ruby set in a thin gold rim, deep red with bright white sparkles inside; bottom-left, a single lush pink rose blossom with velvety petals shading from soft blush to deep pink, and two small green leaves; bottom-right, a small golden crown whose points end in red rose blossoms, studded with tiny rubies, the highest rank. Bold, simple silhouettes that stay readable when shrunk to 20 pixels: no thin spikes, no loose sparkles outside the shapes, no text. Leave generous empty space around each icon so they can be cut apart. Transparent background (PNG), no floor, no shadow, no frame. Square 1:1.
 
 ## 보상 상자(11-25 — 2장 들어감)
 - 파일 이름 `미스터리상자`(배경 투명) → `cut/chest-mystery.webp`. 보상 상자 셋이 모두 이 그림(src/core/reward-box.js 의 BOX_ART). 넣기: `node scripts/build-gpt.mjs`.

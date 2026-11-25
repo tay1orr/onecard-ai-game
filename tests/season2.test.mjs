@@ -188,8 +188,10 @@ const { GPT_ART } = await import('../src/data/gpt-art.js');
 const LOOKS_BY_SLOT = { table: MAPS, cardBack: BACKS, cardFace: FACES };
 const gptKeyOf = (slot, look) => ({ table: look?.painted, cardBack: look?.paint, cardFace: look?.frame?.replace?.(/^paint:/, '') }[slot] || '').replace(/^gpt-/, '');
 const { BOX_ART, BOX_OPEN_ART } = await import('../src/core/reward-box.js');
+const { RANK_UNITS: RANK_ART_UNITS } = await import('../src/core/rank.js');
 const gptUsed = new Set([
   BOX_ART, BOX_OPEN_ART, // 보상 상자 그림(셋 모두 같은 상자) · 열린 상자
+  ...RANK_ART_UNITS.map((unit) => unit.art), // 내 단계 그림 넷(「레벨단계」가 들어오면)
   ...CHARACTERS.map((persona) => persona.portrait),
   ...COSMETICS.map((item) => item.portrait),
   ...COSMETICS.filter((item) => LOOKS_BY_SLOT[item.slot]).map((item) => gptKeyOf(item.slot, LOOKS_BY_SLOT[item.slot][item.look])),
@@ -198,7 +200,7 @@ const gptUsed = new Set([
   ...Object.values(VICTORIES).flatMap((look) => [look.hero, (look.backdrop?.paint || '').replace(/^gpt-/, ''), ...(look.sprites || []), ...(look.petals || []), ...(look.sweep || [])]),
 ]);
 const unusedGpt = GPT_ART.filter((key) => !gptUsed.has(key));
-check(GPT_ART.length === 217 && unusedGpt.length === 0, `선생님 GPT 그림(캐릭터 29 · 판 19 · 세로 판 26 · 뒷면 14 · 앞면 13 · 승리 배경 6 · 효과 조각 108 · 보상 상자 2)은 모두 써야 함(지금 ${GPT_ART.length} · 안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
+check(GPT_ART.length === 221 && unusedGpt.length === 0, `선생님 GPT 그림(캐릭터 29 · 판 19 · 세로 판 26 · 뒷면 14 · 앞면 13 · 승리 배경 6 · 효과 조각 108 · 보상 상자 2 · 단계 그림 4)은 모두 써야 함(지금 ${GPT_ART.length} · 안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
 // 시즌 2 첫 판 선물 — 크리스마스 다섯 칸, 상자에서는 나오지 않음
 const { FIRST_GAME_GIFT } = await import('../src/core/cosmetics.js');
 check(FIRST_GAME_GIFT.length === 5 && new Set(FIRST_GAME_GIFT.map((item) => item.slot)).size === 5 && FIRST_GAME_GIFT.every((item) => !item.box && item.set === 'christmas'), '첫 판 선물은 크리스마스 세트 다섯 칸(맵 · 뒷면 · 앞면 · 효과 · 승리)');
@@ -285,5 +287,17 @@ check(!keepMissing.ok && keepMissing.status === 404, 'SQL 을 아직 안 넣었�
 check(!/service_role|sb_secret_/.test(fs.readFileSync(path.join(root, 'api/keepalive.js'), 'utf8')), '휴면 막기에 비밀 키를 쓰지 않음');
 const keepCron = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8')).crons?.find((entry) => entry.path === '/api/keepalive');
 check(keepCron && /^\d{1,2} \d{1,2} \* \* \*$/.test(keepCron.schedule), 'Vercel 예약 실행은 하루 한 번(무료 요금제 한도)');
+
+// 내 단계(11-25) — 금별 · 루비 · 분홍 장미 · 왕관 다섯 단계씩 20단계, 마지막 왕관 5단계 = 100만 점(시즌 목표)
+const { RANK_UNITS, RANK_LEVELS, rankForPoints } = await import('../src/core/rank.js');
+const { FINAL_TARGET } = await import('../src/core/rating.js');
+const rankAt = (points) => { const rank = rankForPoints(points); return `${rank.unit}${rank.count}`; };
+check(RANK_LEVELS === 20 && RANK_UNITS.every((unit) => unit.thresholds.length === 5), '단계는 네 가지 × 다섯 단계 = 20');
+const rankMins = RANK_UNITS.flatMap((unit) => unit.thresholds);
+check(rankMins[0] === 0 && rankMins.every((min, index) => index === 0 || min > rankMins[index - 1]) && rankMins.at(-1) === FINAL_TARGET, '단계 점수는 0 에서 시작해 늘 오르고 마지막이 100만 점');
+check(rankAt(0) === 'star1' && rankAt(999) === 'star1' && rankAt(1000) === 'star2' && rankAt(25999) === 'star4' && rankAt(26000) === 'star5' && rankAt(41999) === 'star5', '금별 경계(2만 6천 점에서 금별 5)');
+check(rankAt(42000) === 'ruby1' && rankAt(160000) === 'ruby5' && rankAt(199999) === 'ruby5' && rankAt(200000) === 'rose1', '루비 → 분홍 장미 경계');
+check(rankAt(335000) === 'rose3' && rankAt(540000) === 'crown1' && rankAt(1000000) === 'crown5' && rankAt(5000000) === 'crown5' && rankForPoints(1000000).next === null, '분홍 장미 → 왕관, 100만 점이 마지막(다음 없음)');
+check(rankForPoints(41999).next?.name === '루비 1단계' && rankForPoints(-5).level === 1 && rankForPoints('abc').level === 1, '다음 단계 이름 · 이상한 점수는 1단계');
 
 console.log(`시즌 2 테스트 ${count}개 통과`);

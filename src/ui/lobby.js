@@ -1,6 +1,7 @@
 // 로비 — 장착한 맵 사진을 깐 무대 위에 지금 점수로 만나는 상대들 + 시즌 2 글자. 나머지(패스 · 미션 · 보관함)는 차분하게
 import gsap from 'gsap';
-import { h, formatNumber, stars } from './dom.js';
+import { h, formatNumber } from './dom.js';
+import { rankBadge } from './rank.js';
 import { cut } from '../data/assets.js';
 import { lookOf } from '../data/looks.js';
 import { mapVars } from './look-apply.js';
@@ -8,7 +9,7 @@ import { CHARACTERS, pickLine, shufflePersonas } from '../data/characters.js';
 import { loadMissionDashboard } from '../core/missions.js';
 import { tierProgress, isOpeningEventActive, openingEventDaysLeft, OPENING_EVENT, SEASON, PASS_REWARDS } from '../core/season.js';
 import { cosmeticById, nextCosmeticUnlock, DEFAULT_EQUIPPED } from '../core/cosmetics.js';
-import { matchmakingWeights, playerStarsForPoints, ratingProgress } from '../core/rating.js';
+import { matchmakingWeights, playerStarsForPoints } from '../core/rating.js';
 import { itemPreview } from './item-preview.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
@@ -39,7 +40,6 @@ function say(button, line) {
 }
 
 export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCollection, onPass, onMissions, onSettings, onAccount, onProfile, onToggleSound }) {
-  const progress = ratingProgress(profile.points);
   const weights = matchmakingWeights(profile.points);
   const pass = tierProgress(profile.seasonXp);
   const nextPass = PASS_REWARDS.find((reward) => reward.tier > pass.tier);
@@ -87,7 +87,7 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
       h('div.top-right', {},
         h('button.profile-chip', { type: 'button', onClick: () => onProfile?.(), 'aria-label': `내 프로필 열기, ${formatNumber(profile.points)}점, ${statusLabel}` },
           h('img', { src: cut(avatar.portrait), alt: '' }),
-          h('span.chip-text', {}, h('b', {}, `${formatNumber(profile.points)}점`), h('small', {}, `${stars(progress.stars)} ${statusLabel}`))),
+          h('span.chip-text', {}, h('b', {}, `${formatNumber(profile.points)}점`), h('small', {}, rankBadge(profile.points), ` ${statusLabel}`))),
         h('button.icon-btn.sound-btn', { type: 'button', 'aria-label': '소리 켜기 끄기', html: soundIcon(), onClick: (event) => { onToggleSound?.(); event.currentTarget.innerHTML = soundIcon(); } }),
         h('button.icon-btn', { type: 'button', 'aria-label': '설정', html: ICON.gear, onClick: () => onSettings?.() }))),
     h('div.lobby-main', {},

@@ -3,11 +3,11 @@
 // 11-25 선생님 「승리 점수와 보상 점수를 합해 총 몇 점 얻었는지 잘 보이게 · 배치 · 가독성 전면 보완」 — 전에는 큰 숫자가 승패 점수뿐이고
 // 상자 점수는 맨 아래 작은 알약, 미션은 따로 떨어진 칸이라 한 판에 얼마를 얻었는지 더해 봐야 했다. 합계는 「지금 N점」의 변화와 꼭 맞는다
 import gsap from 'gsap';
-import { h, formatNumber, stars } from './dom.js';
+import { h, formatNumber } from './dom.js';
 import { itemPreview } from './item-preview.js';
 import { tierProgress } from '../core/season.js';
-import { playerStarsForPoints } from '../core/rating.js';
 import { RARITY_NAMES } from '../core/reward-box.js';
+import { rankButton } from './rank.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
 
@@ -48,7 +48,7 @@ export function showResult({ host, won, delta = 0, bonus = false, box = null, pr
         h('small.res-hero-label', {}, '이번 판 합계'),
         h(`div.res-score${total < 0 ? '.is-minus' : ''}`, {}, counter, h('small', {}, '점'))),
       h('ol.res-rows', {}, ...rowEls.map((entry) => entry.el)),
-      h('p.res-total', {}, '지금 ', h('b', {}, `${formatNumber(profile.points)}점`), ` ${stars(playerStarsForPoints(profile.points))}`),
+      h('p.res-total', {}, '지금 ', h('b', {}, `${formatNumber(profile.points)}점`), ' ', rankButton(profile.points)),
       h('div.res-xp', {}, h('div.xp-top', {}, xpLabel, h('b', {}, `+${formatNumber(xpGained)} 경험치`)), h('div.xp-bar', {}, xpFill)),
       unlocked.length ? h('div.res-unlocks', {}, h('p.res-label', {}, unlocked.length > 1 ? `새 아이템 ${unlocked.length}개` : '새 아이템'),
         h('div.unlock-row', {}, ...unlocked.slice(0, 5).map((item) => h('div.unlock-card', {}, itemPreview(item), h('small', {}, item.name))))) : null,

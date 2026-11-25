@@ -7,6 +7,7 @@ import { SUIT_NAMES, RED_SUITS, suitSvg } from './suits.js';
 import { cut } from '../data/assets.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
+import { rankBadge } from './rank.js';
 
 const PILE_KEEP = 5;
 const RIVAL_TOP = 16; // CSS .rival-card top 과 같게
@@ -416,17 +417,19 @@ export function createTable({ mode = 'ai', onPlay, onDraw, onPileTap, onExit, on
       matchSub.textContent = sub || '';
       bonusTag.hidden = !bonus;
     },
-    setRival({ name, starsCount, color, portrait, status }) {
+    // starsCount = AI 상대 난이도(★1~★8) · rankPoints = 친구(사람)의 점수 — 사람은 내 단계와 같은 그림으로
+    setRival({ name, starsCount, rankPoints, color, portrait, status }) {
       rivalName.textContent = name;
-      rivalStars.textContent = starsCount ? starText(starsCount) : '';
+      if (rankPoints != null) rivalStars.replaceChildren(rankBadge(rankPoints));
+      else rivalStars.textContent = starsCount ? starText(starsCount) : '';
       rivalStatus.textContent = status || '';
       rivalZone.style.setProperty('--who-color', color);
       rivalImg.src = cut(portrait);
     },
     setRivalStatus(text) { rivalStatus.textContent = text || ''; },
-    setMe({ name = '나', portrait, points, starsCount, color }) {
+    setMe({ name = '나', portrait, points, color }) {
       meName.textContent = name;
-      meStars.textContent = starsCount ? `${starText(starsCount)} ${formatNumber(points)}점` : '';
+      meStars.replaceChildren(...(points != null ? [rankBadge(points), ` ${formatNumber(points)}점`] : []));
       meImg.src = cut(portrait);
       if (color) meZone.style.setProperty('--who-color', color);
     },

@@ -3,10 +3,11 @@
 // 내 캐릭터는 상대 캐릭터와 따로(「아예 별도의 캐릭터로 상대 캐릭터 + 아예 별도 사용자 캐릭터 몇 개」).
 // 고르면 바로 장착되고(적용 단추 없음), 이름은 적는 대로 저장된다.
 import gsap from 'gsap';
-import { h, formatNumber, stars } from './dom.js';
+import { h, formatNumber } from './dom.js';
+import { rankButton, rankCaption } from './rank.js';
 import { cut } from '../data/assets.js';
 import { COSMETICS, cosmeticById, isUnlocked, DEFAULT_EQUIPPED } from '../core/cosmetics.js';
-import { loadPlayerProfile, savePlayerProfile, playerStarsForPoints } from '../core/rating.js';
+import { loadPlayerProfile, savePlayerProfile } from '../core/rating.js';
 import { tierForXp } from '../core/season.js';
 import { normalizeNickname } from '../net/multiplayer-helpers.js';
 import { settings } from './settings.js';
@@ -33,7 +34,8 @@ export function openProfile({ host, onClose, onChanged, onAccount }) {
   const heroName = h('strong.pf-name', {}, '');
   const heroLabel = h('small.pf-character', {}, '');
   const heroStats = h('p.pf-stats', {}, '');
-  const stage = h('div.pf-stage', {}, h('div.pf-hero-wrap', {}, h('i.pf-spot'), heroImg), h('div.pf-plate', {}, heroLabel, heroName, h('span.pf-stars', {}, stars(playerStarsForPoints(profile.points)))), heroStats);
+  const caption = rankCaption(profile.points);
+  const stage = h('div.pf-stage', {}, h('div.pf-hero-wrap', {}, h('i.pf-spot'), heroImg), h('div.pf-plate', {}, heroLabel, heroName, h('span.pf-stars', {}, rankButton(profile.points, { size: 'md', className: 'pf-rank-btn' })), caption ? h('small.pf-rank', {}, caption) : null), heroStats);
 
   // 오른쪽 — 이름 · 캐릭터 고르기 · 기록 보호
   const nameInput = h('input.text-input.pf-input', { maxlength: '12', placeholder: '이름 2~12자', value: settings.get().nickname || '', 'aria-label': '내 이름', autocomplete: 'off' });
