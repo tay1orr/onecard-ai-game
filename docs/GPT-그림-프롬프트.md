@@ -181,14 +181,17 @@ Use the attached picture only as a style reference (painting style, lighting and
 Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a tiny sitting teddy bear with a red bow, (2) a red satin bow, (3) a small red heart, (4) a little pink heart balloon, (5) a tiny golden star, (6) a small curl of red ribbon. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
 
 ## 레벨 단계 그림(11-25 — 선생님께 요청, 아직 안 들어옴)
-- 별 7 ~ 8 개가 한 줄로 늘어서 한눈에 안 세지고 찬란하지 않아서(선생님 「별 다음에는 루비?」) — 별 1~5 → 루비 1~5 → 황금 장미 왕관.
-  - 별: 0 · 500 · 1,500 · 3,500 · 11,000점(지금 그대로) · 루비: 5만 · 15만 · 40만(지금 ★6~★8) · 60만 · 80만(새로) · 왕관: 100만.
-  - AI 상대 난이도도 같은 자(★6~★8 → 루비 1~3). 그림은 셋만, 개수는 화면이 그린다.
-- 파일 이름 `레벨단계`(한 장에 셋 — 들어오면 셋으로 잘라 넣고 build-gpt 에 한 줄).
+- 별 7 ~ 8 개가 한 줄로 늘어서 한눈에 안 세지고 찬란하지 않아서(선생님 「별 다음에는 루비?」 → 「루비도 5개, 그다음 것도 5개씩」)
+  — 금별 1~5 → 루비 1~5 → 황금 장미 1~5 → 왕관 1~5, 모두 20단계(내 단계 그림만 · AI 상대 난이도 ★1~★8 은 그대로).
+  - 금별: 0 · 500 · 1,500 · 3,500 · 1만 1천(지금 그대로) · 루비: 3만 · 5만 · 8만 · 12만 · 17만
+  - 황금 장미: 23만 · 30만 · 38만 · 47만 · 57만 · 왕관: 68만 · 76만 · 84만 · 92만 · 100만(시즌 목표)
+  - 판당 점수로 루비 · 황금 장미 · 왕관 구간이 저마다 150판 안팎. 그림은 넷, 개수는 화면이 그린다.
+  - 보상 · 친구 대전 점수 계산은 지금 별(1~8, playerStarsForPoints) 그대로 — 단계 그림은 보이는 것만.
+- 파일 이름 `레벨단계`(한 장에 넷, 2 × 2 — 들어오면 넷으로 잘라 넣고 build-gpt 에 한 줄).
 
-**레벨단계 — 금별 · 루비 · 황금 장미 왕관(한 장에 셋)** · 첨부: `미스터리상자.png`(화풍 참고)
+**레벨단계 — 금별 · 루비 · 황금 장미 · 왕관(한 장에 넷)** · 첨부: `미스터리상자.png`(화풍 참고)
 
-Use the attached picture only as the style reference: the same glossy, richly lit, painterly-realistic premium game-art style, the same warm polished gold with baroque ornament, and the same deep faceted ruby. Draw a set of three rank icons side by side on one wide canvas, evenly spaced, each centered in its own third, all the same size, seen from the front: 1) a five-pointed gold star with softly rounded points, bevelled polished metal and a warm inner glow; 2) a brilliant cushion-cut ruby set in a thin gold rim, deep red with bright white sparkles inside; 3) a small golden crown whose points end in red rose blossoms, studded with tiny rubies, the highest rank. Bold, simple silhouettes that stay readable when shrunk to 20 pixels: no thin spikes, no loose sparkles outside the shapes, no text. Leave generous empty space between the three icons so they can be cut apart. Transparent background (PNG), no floor, no shadow, no frame. Landscape 3:2.
+Use the attached picture only as the style reference: the same glossy, richly lit, painterly-realistic premium game-art style, the same warm polished gold with baroque ornament, and the same deep faceted ruby. Draw a set of four rank icons in a 2 × 2 grid on one square canvas, each centered in its own quarter, all the same size, seen from the front: top-left, a five-pointed gold star with softly rounded points, bevelled polished metal and a warm inner glow; top-right, a brilliant cushion-cut ruby set in a thin gold rim, deep red with bright white sparkles inside; bottom-left, a single golden rose blossom of polished gold with two small gold leaves; bottom-right, a small golden crown whose points end in red rose blossoms, studded with tiny rubies, the highest rank. Bold, simple silhouettes that stay readable when shrunk to 20 pixels: no thin spikes, no loose sparkles outside the shapes, no text. Leave generous empty space around each icon so they can be cut apart. Transparent background (PNG), no floor, no shadow, no frame. Square 1:1.
 
 ## 보상 상자(11-25 — 2장 들어감)
 - 파일 이름 `미스터리상자`(배경 투명) → `cut/chest-mystery.webp`. 보상 상자 셋이 모두 이 그림(src/core/reward-box.js 의 BOX_ART). 넣기: `node scripts/build-gpt.mjs`.
