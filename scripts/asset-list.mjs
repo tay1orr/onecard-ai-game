@@ -70,6 +70,7 @@ export const FLUENT_ANIMATED = [];
 export const OGA_FILES = {
   'kenney-casino': 'https://opengameart.org/sites/default/files/kenney_casino-audio.zip',
   'kenney-interface': 'https://opengameart.org/sites/default/files/kenney_interfaceSounds.zip',
+  'kenney-rpg': 'https://opengameart.org/sites/default/files/RPGsounds_Kenney.zip', // 창 열기(bookOpen) — 11-25 선생님 고름
   felt: 'https://opengameart.org/sites/default/files/felt.tar.gz',
 };
 

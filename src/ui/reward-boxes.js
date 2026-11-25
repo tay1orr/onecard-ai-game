@@ -155,7 +155,7 @@ export function openRewardBoxes({ host, boxes, won, veteran = 1, games = 0 }) {
         card.append(extra);
         gsap.set(extra, { opacity: 0 });
         // 점수 카드가 자리를 잡자마자 뒤따라 나온다(전에는 점수가 다 오른 뒤라 열고 2초 넘게 빈 칸이었다)
-        timeline.call(() => { if (reduced) gsap.set(extra, { opacity: 1 }); else emerge(extra, at, { lift: 50, duration: 0.6 }); play('unlock'); }, null, reduced ? 0 : 0.6);
+        timeline.call(() => { if (reduced) gsap.set(extra, { opacity: 1 }); else emerge(extra, at, { lift: 50, duration: 0.6 }); play('confirmBig'); }, null, reduced ? 0 : 0.6);
         timeline.to({}, { duration: 0.01 }, reduced ? 0.05 : 1.25); // 아이템이 자리를 잡을 때까지는 끝나지 않게
       }
       timeline.call(show);

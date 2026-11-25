@@ -122,7 +122,7 @@ export function showResult({ host, won, delta = 0, bonus = false, box = null, pr
   }
   panel.querySelectorAll('.unlock-card').forEach((card, index) => {
     timeline.fromTo(card, { rotationY: 90, opacity: 0 }, { rotationY: 0, opacity: 1, duration: 0.4, ease: 'back.out(1.8)' }, settled + 0.3 + index * 0.15);
-    if (index === 0) timeline.call(() => play('unlock'), null, settled + 0.3);
+    if (index === 0) timeline.call(() => play('confirmBig'), null, settled + 0.3); // 새 아이템 — 큰 확인 소리(11-25 선생님 고름)
   });
   // preventScroll — 휴대폰에서 판이 길면 맨 아래 단추로 포커스가 가며 판이 스크롤되어 점수가 잘렸다(11-24)
   setTimeout(() => panel.querySelector('.btn.primary')?.focus({ preventScroll: true }), 400);

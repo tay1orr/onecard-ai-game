@@ -1,4 +1,5 @@
 // 소리 — Kenney(CC0) 녹음 소리를 Web Audio 로 재생. 같은 소리도 조금씩 다르게(높이 · 크기)
+// 단추 소리(누르기 · 고르기 · 확인 = 포커 칩, 큰 확인 = 피치카토, 창 열기 = 책, 창 닫기 = 카드 밀기)는 11-25 선생님이 고름. 큰 확인은 새 아이템이 나올 때
 import { sfxUrl } from '../data/assets.js';
 import { settings } from './settings.js';
 
@@ -22,7 +23,7 @@ const GROUPS = {
   bonus: ['jingle-bonus'], onecard: ['jingle-onecard'], level: ['jingle-level'],
 };
 
-const CORE = ['place', 'slide', 'shuffle', 'click', 'select', 'confirm', 'error', 'chip', 'chips', 'whoosh', 'bong', 'onecard', 'win', 'lose', 'dice', 'throw'];
+const CORE = ['place', 'slide', 'shuffle', 'click', 'select', 'confirm', 'confirmBig', 'open', 'close', 'error', 'chip', 'chips', 'whoosh', 'bong', 'onecard', 'win', 'lose', 'dice', 'throw'];
 
 let context = null;
 let master = null;

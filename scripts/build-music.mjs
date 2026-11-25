@@ -22,6 +22,26 @@ fs.mkdirSync(OUT, { recursive: true });
 const listFile = path.join(SRC, '목록.json');
 const info = fs.existsSync(listFile) ? JSON.parse(fs.readFileSync(listFile, 'utf8')) : {};
 
+// 앞뒤 무음 — 곡 끝에서 처음으로 되풀이할 때 빈 틈이 짧게. 소리가 끝난 뒤 여운 0.5초만 남긴다(Kevin MacLeod 곡은 끝에 2초 정적이 있었음)
+async function audibleRange(file) {
+  const { stderr } = await run('ffmpeg', ['-hide_banner', '-nostats', '-i', file, '-af', 'silencedetect=noise=-55dB:d=0.25', '-f', 'null', '-'], { maxBuffer: 1 << 24 });
+  const [, h, m, sec] = stderr.match(/Duration: (\d+):(\d+):([\d.]+)/) || [0, 0, 0, 0];
+  const duration = Number(h) * 3600 + Number(m) * 60 + Number(sec);
+  const starts = [...stderr.matchAll(/silence_start: (-?[\d.]+)/g)].map((match) => Number(match[1]));
+  const ends = [...stderr.matchAll(/silence_end: ([\d.]+)/g)].map((match) => Number(match[1]));
+  const start = starts.length && starts[0] <= 0.05 && ends.length ? Math.max(0, ends[0] - 0.05) : 0;
+  const lastStart = starts.at(-1);
+  const trailing = lastStart != null && lastStart > start && (ends.length < starts.length || ends.at(-1) >= duration - 0.05);
+  return { start, end: trailing ? Math.min(duration, lastStart + 0.5) : duration, duration };
+}
+
+// 소리 크기 맞추기 — 두 번 잰다(한 번에 하면 곡의 셈여림이 눌림)
+async function loudnormArgs(file, trim) {
+  const { stderr } = await run('ffmpeg', ['-hide_banner', '-nostats', '-i', file, '-af', `${trim},loudnorm=I=-18:TP=-1.5:LRA=11:print_format=json`, '-f', 'null', '-'], { maxBuffer: 1 << 24 });
+  const json = JSON.parse(stderr.slice(stderr.lastIndexOf('{'), stderr.lastIndexOf('}') + 1));
+  return `loudnorm=I=-18:TP=-1.5:LRA=11:measured_I=${json.input_i}:measured_TP=${json.input_tp}:measured_LRA=${json.input_lra}:measured_thresh=${json.input_thresh}:offset=${json.target_offset}:linear=true`;
+}
+
 const files = fs.readdirSync(SRC).filter((name) => AUDIO.test(name)).sort((a, b) => a.localeCompare(b, 'ko'));
 const tracks = [];
 const counts = {};
@@ -30,8 +50,12 @@ for (const name of files) {
   if (!scene) { console.log(`건너뜀(이름 앞에 로비- 나 대전- 을 붙여 주세요): ${name}`); continue; }
   counts[scene] = (counts[scene] || 0) + 1;
   const file = `${scene}-${counts[scene]}`;
-  await run('ffmpeg', ['-v', 'error', '-y', '-i', path.join(SRC, name), '-vn', '-ac', '2', '-ar', '44100',
-    '-af', 'loudnorm=I=-18:TP=-1.5:LRA=11', '-b:a', '128k', path.join(OUT, `${file}.mp3`)]);
+  const input = path.join(SRC, name);
+  const range = await audibleRange(input);
+  const trim = `atrim=start=${range.start.toFixed(3)}:end=${range.end.toFixed(3)},asetpts=PTS-STARTPTS`;
+  await run('ffmpeg', ['-v', 'error', '-y', '-i', input, '-vn', '-map_metadata', '-1', '-ac', '2',
+    '-af', `${trim},${await loudnormArgs(input, trim)}`, '-ar', '44100', '-b:a', '128k', path.join(OUT, `${file}.mp3`)]);
+  console.log(`${file} ← ${name}: ${range.duration.toFixed(1)}초 → ${(range.end - range.start).toFixed(1)}초(앞 ${range.start.toFixed(2)}초 · 뒤 ${(range.duration - range.end).toFixed(2)}초 무음 자름)`);
   const meta = info[name] || {};
   tracks.push({
     scene, file,
@@ -40,7 +64,6 @@ for (const name of files) {
     license: String(meta.license || '').trim(),
     source: String(meta.source || '').trim(),
   });
-  console.log(`${file} ← ${name}`);
 }
 
 const keep = new Set(tracks.map((track) => `${track.file}.mp3`));

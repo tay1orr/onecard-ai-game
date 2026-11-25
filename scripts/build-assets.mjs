@@ -78,10 +78,12 @@ const sounds = {
   'chips-handle': 'kenney-casino/Audio/chips-handle-4.ogg',
   'dice-shake': 'kenney-casino/Audio/dice-shake-1.ogg', 'dice-throw': 'kenney-casino/Audio/dice-throw-2.ogg',
   'die-throw': 'kenney-casino/Audio/die-throw-3.ogg',
-  click: 'kenney-interface/Audio/click_002.ogg', select: 'kenney-interface/Audio/select_002.ogg',
-  confirm: 'kenney-interface/Audio/confirmation_002.ogg', 'confirm-big': 'kenney-interface/Audio/confirmation_004.ogg',
-  error: 'kenney-interface/Audio/error_006.ogg', open: 'kenney-interface/Audio/open_002.ogg',
-  close: 'kenney-interface/Audio/close_002.ogg', toggle: 'kenney-interface/Audio/toggle_002.ogg',
+  // 단추 소리 — 11-25 선생님이 소리 고르기 페이지에서 고름(누르기 · 고르기 · 확인 = 포커 칩, 큰 확인 = 피치카토 네 음, 창 열기 = 책, 창 닫기 = 카드 밀기).
+  // 들어간 파일은 그 페이지에서 들은 그대로(앞 무음을 자르고 최고 −3dB 에 맞춤) — 여기서 다시 만들면 원본 크기라 조금 다를 수 있다
+  click: 'kenney-casino/Audio/chips-collide-3.ogg', select: 'kenney-casino/Audio/chips-stack-5.ogg',
+  confirm: 'kenney-casino/Audio/chips-handle-3.ogg', 'confirm-big': 'kenney-jingles/OGG/jingles_PIZZA/jingles_PIZZA10.ogg',
+  error: 'kenney-interface/Audio/error_006.ogg', open: 'kenney-rpg/OGG/bookOpen.ogg',
+  close: 'kenney-casino/Audio/card-slide-6.ogg', toggle: 'kenney-interface/Audio/toggle_002.ogg',
   drop: 'kenney-interface/Audio/drop_002.ogg', glass: 'kenney-interface/Audio/glass_002.ogg',
   pluck: 'kenney-interface/Audio/pluck_002.ogg', bong: 'kenney-interface/Audio/bong_001.ogg',
   tick: 'kenney-interface/Audio/tick_002.ogg', glitch: 'kenney-interface/Audio/glitch_003.ogg',
