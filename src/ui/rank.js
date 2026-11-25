@@ -13,17 +13,13 @@ import { openModal } from './modal.js';
 export const rankArtReady = () => RANK_UNITS.every((unit) => hasGptArt(unit.art));
 
 // 단계 그림 줄 — 그림이 없으면 지금 별 글자(문장 안에 그대로 넣을 수 있게 글자 마디로)
-// compact — 그림 하나 + ×개수(휴대폰 점수 칩처럼 좁은 자리. 다섯 개를 다 그리면 칩 밖으로 넘쳤다, 11-25 선생님 사진)
-export function rankBadge(points, { size = 'sm', compact = false } = {}) {
+// --n = 그림 수 — 좁은 자리(휴대폰 점수 칩)는 CSS 가 이 수로 겹침 폭을 정해 다섯 개를 모두 보인다
+// (11-25 선생님 「×5 는 별로 — 다 표기하면서」. 그 전에는 다섯 개가 칩 밖으로 넘쳤다)
+export function rankBadge(points, { size = 'sm' } = {}) {
   if (!rankArtReady()) return document.createTextNode(stars(playerStarsForPoints(points)));
   const rank = rankForPoints(points);
-  const icon = () => h('img', { src: cut(rank.art, 's'), alt: '', draggable: 'false' });
-  if (compact) {
-    return h(`span.rank-badge.is-compact.u-${rank.unit}.is-${size}`, { role: 'img', 'aria-label': rank.name, title: rank.name },
-      icon(), rank.count > 1 ? h('small.rank-count', {}, `×${rank.count}`) : null);
-  }
-  return h(`span.rank-badge.u-${rank.unit}.is-${size}`, { role: 'img', 'aria-label': rank.name, title: rank.name },
-    ...Array.from({ length: rank.count }, icon));
+  return h(`span.rank-badge.u-${rank.unit}.is-${size}`, { role: 'img', 'aria-label': rank.name, title: rank.name, vars: { '--n': rank.count } },
+    ...Array.from({ length: rank.count }, () => h('img', { src: cut(rank.art, 's'), alt: '', draggable: 'false' })));
 }
 
 // AI 상대 난이도(★1~★8) — 같은 그림으로(core/rank.js AI_RANK_LEVELS). 그림이 없으면 옛 별 글자
@@ -34,12 +30,12 @@ export function aiBadge(difficulty, { size = 'sm' } = {}) {
     ...Array.from({ length: rank.count }, () => h('img', { src: cut(rank.art, 's'), alt: '' })));
 }
 
-// 로비 「만나는 난이도」 한 칸 — 그림 하나 + 개수(×4)로 짧게
+// 로비 「만나는 난이도」 한 칸 — 그 난이도의 단계 그림을 모두(11-25 선생님 「×4 말고 다 표기」)
 export function aiOddsBadge(difficulty) {
   if (!rankArtReady()) return h('i', {}, `★${difficulty}`);
   const rank = aiRankForStars(difficulty);
   return h(`span.odds-rank.u-${rank.unit}`, { role: 'img', 'aria-label': rank.name, title: rank.name },
-    h('img', { src: cut(rank.art, 's'), alt: '' }), rank.count > 1 ? h('small', {}, `×${rank.count}`) : null);
+    ...Array.from({ length: rank.count }, () => h('img', { src: cut(rank.art, 's'), alt: '' })));
 }
 
 // 단계표 창 — 네 가지 × 다섯 단계를 점수와 함께. 지난 단계는 흐리게, 지금은 「지금」, 다음은 「○점 남음」(11-25 선생님 「어떤 걸 누르면 랭크표를 볼 수 있게」)
