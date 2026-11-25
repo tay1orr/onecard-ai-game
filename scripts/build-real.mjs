@@ -91,20 +91,24 @@ for (const file of fs.existsSync(BACKS) ? fs.readdirSync(BACKS).filter((name) =>
 }
 
 // 4) 그림카드 · 에이스 · 조커 — 바탕은 whiteToAlpha 로 투명하게(장식 묶음 ornaments 는 화면에서 안 써서 그대로)
+//   최대 320×426 · 알파 품질 70 — 휴대폰(3배 화면)에서 그림카드가 그려지는 크기(약 140×200)의 두 배쯤. 420×560 · 알파 90 이면 투명 바탕 때문에
+//   영국식 묶음이 658KB → 1,373KB 로 커져(11-25) 줄였다(632KB, 흰 바탕 위 차이 4.5 → 5.0)
+const courtWebp = (img) => img.webp({ quality: 84, alphaQuality: 70, effort: 5 });
 const COURTS = path.join(SRC, 'courts/out');
 if (fs.existsSync(COURTS)) {
   for (const set of fs.readdirSync(COURTS).filter((name) => fs.statSync(path.join(COURTS, name)).isDirectory())) {
     for (const file of fs.readdirSync(path.join(COURTS, set)).filter((name) => /\.(png|jpe?g)$/i.test(name) && !/-full\./.test(name))) {
       const key = file.replace(/\.(png|jpe?g)$/i, '');
-      const fit = (img) => img.resize(420, 560, { fit: 'inside' });
-      if (await make(path.join(COURTS, set, file), path.join(OUT, 'r/court', set, `${key}.webp`), async (img) => webp(84, true)(set === 'ornaments' ? fit(img) : await whiteToAlpha(fit(img))))) note('그림카드');
+      const output = path.join(OUT, 'r/court', set, `${key}.webp`);
+      if (set === 'ornaments') { if (await make(path.join(COURTS, set, file), output, (img) => webp(84, true)(img.resize(420, 560, { fit: 'inside' })))) note('그림카드'); continue; }
+      if (await make(path.join(COURTS, set, file), output, async (img) => courtWebp(await whiteToAlpha(img.resize(320, 426, { fit: 'inside' }))))) note('그림카드');
     }
   }
 }
 // 레두테 장미로 그린 그림카드(보태니컬 카드) — 뒷면 그림에서 꽃 부분을 세로로
 for (const [rank, plate] of [['K', 'redoute-01'], ['Q', 'redoute-04'], ['J', 'redoute-07']]) {
   const input = path.join(BACKS, `${plate}.jpg`);
-  if (await make(input, path.join(OUT, 'r/court/redoute', `${rank}.webp`), async (img) => webp(84, true)(await whiteToAlpha(img.resize(420, 560, { fit: 'cover', position: 'attention' }))))) note('그림카드');
+  if (await make(input, path.join(OUT, 'r/court/redoute', `${rank}.webp`), async (img) => courtWebp(await whiteToAlpha(img.resize(320, 426, { fit: 'cover', position: 'attention' }))))) note('그림카드');
 }
 
 // 5) 맵 · 승리 배경 사진
