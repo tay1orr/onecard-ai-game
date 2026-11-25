@@ -114,10 +114,9 @@ export function faceVars(face) {
     '--red': face.red,
     '--face-accent': face.accent,
     '--court-fx': face.courtFx || 'none',
-    '--court-blend': face.courtBlend || 'multiply',
     '--court-fit': face.courtFit || 'cover',
     '--face-frame': face.frame?.startsWith?.('paint:') ? url(paint(face.frame.slice(6))) : 'none',
-    '--joker-art': url(courtUrl(face.joker || 'jokers/joker-1')),
+    '--joker-art': face.joker === null ? 'none' : url(courtUrl(face.joker || 'jokers/joker-1')), // null = 조커 그림 없이 글자만(아케이드)
     '--pip-foil': face.pips === 'gold' ? url(tex('gold-foil')) : face.pips === 'silver' ? url(tex('onyx-white')) : 'none',
   };
   Object.entries(SUITS).forEach(([suit, letter]) => {

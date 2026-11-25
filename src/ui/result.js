@@ -1,9 +1,13 @@
-// 결과 판 — 점수가 굴러가며 올라가고, 시즌 패스 막대가 차고, 새 아이템이 뒤집혀 나온다
+// 결과 판 — 이번 판 합계가 맨 위에 크게, 그 아래 승패 · 보상 상자 · 미션이 한 줄씩 들어오며 합계를 채운다.
+// 그 밑에 지금 점수 · 시즌 패스 막대 · 새 아이템(뒤집혀 나옴) · 걸린 시간
+// 11-25 선생님 「승리 점수와 보상 점수를 합해 총 몇 점 얻었는지 잘 보이게 · 배치 · 가독성 전면 보완」 — 전에는 큰 숫자가 승패 점수뿐이고
+// 상자 점수는 맨 아래 작은 알약, 미션은 따로 떨어진 칸이라 한 판에 얼마를 얻었는지 더해 봐야 했다. 합계는 「지금 N점」의 변화와 꼭 맞는다
 import gsap from 'gsap';
 import { h, formatNumber, stars } from './dom.js';
 import { itemPreview } from './item-preview.js';
 import { tierProgress } from '../core/season.js';
 import { playerStarsForPoints } from '../core/rating.js';
+import { RARITY_NAMES } from '../core/reward-box.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
 
@@ -11,25 +15,44 @@ function formatTime(ms) {
   const seconds = Math.max(0, Math.floor(ms / 1000));
   return `${Math.floor(seconds / 60)}분 ${String(seconds % 60).padStart(2, '0')}초`;
 }
+const signed = (value) => `${value > 0 ? '+' : value < 0 ? '−' : ''}${formatNumber(Math.abs(Math.round(value)))}`;
 
-export function showResult({ host, won, delta = 0, bonus = false, profile, xpGained = 0, xpBefore = 0, unlocked = [], missions = [], missionPoints = 0, stats = {}, title, subtitle, primaryLabel = '다시 하기', onPrimary, onHome, extra = null }) {
+// box: { delta, multiplier, rarity, item } — AI 대전에서 고른 보상 상자(없으면 줄을 두지 않음)
+export function showResult({ host, won, delta = 0, bonus = false, box = null, profile, xpGained = 0, xpBefore = 0, unlocked = [], missions = [], missionPoints = 0, stats = {}, title, subtitle, primaryLabel = '다시 하기', onPrimary, onHome }) {
+  const rows = [
+    { key: 'match', label: won ? '승리' : '패배', note: bonus && won ? '보너스판 2배' : '', value: delta },
+    box ? { key: 'box', label: '보상 상자', note: `${RARITY_NAMES[box.rarity] || '일반'}${box.multiplier > 1 ? ` ×${box.multiplier}` : ''}`, rarity: box.rarity, value: box.delta, item: box.item } : null,
+    missionPoints > 0 ? { key: 'mission', label: '미션', note: missions.length > 1 ? `${missions[0].title} 외 ${missions.length - 1}개` : missions[0]?.title || '', value: missionPoints } : null,
+  ].filter(Boolean);
+  const total = rows.reduce((sum, row) => sum + row.value, 0);
+
   const counter = h('b.res-points', {}, '0');
+  const rowEls = rows.map((row) => {
+    const value = h('b.res-row-value', {}, '0');
+    const el = h(`li.res-row${row.value < 0 ? '.is-minus' : ''}${row.key === 'box' ? `.is-box.r-${row.rarity || 'common'}` : ''}`, { dataset: { key: row.key } },
+      h('span.res-row-label', {}, h('b', {}, row.label), row.note ? h('small.res-row-note', {}, row.note) : null),
+      value,
+      row.item ? h('small.res-row-item', {}, `상자 전용 ${row.item.name}도 받았어요`) : null);
+    return { row, el, value };
+  });
   const before = tierProgress(xpBefore);
   const after = tierProgress(xpBefore + xpGained);
   const xpFill = h('i.xp-fill');
   const tierText = (tier) => (tier > 0 ? `시즌 패스 ${tier}단계` : '시즌 패스 1단계까지');
   const xpLabel = h('span.xp-label', {}, tierText(before.tier));
+  // 내용은 판 안에서 스크롤되고 단추 줄은 늘 아래에 보인다(낮은 휴대폰 화면에서 아이템이 많으면 단추가 판 밖으로 밀렸다)
   const panel = h(`div.result-panel${won ? '.is-win' : '.is-lose'}`, { role: 'dialog', 'aria-label': won ? '승리 결과' : '패배 결과' },
-    h('div.res-head', {}, h('strong.res-title', {}, title || (won ? '승리' : '패배')), subtitle ? h('small.res-sub', {}, subtitle) : null),
-    h('div.res-score', {}, counter, h('small', {}, '점')),
-    bonus && won ? h('span.res-bonus', {}, '보너스판 2배') : null,
-    h('p.res-total', {}, `지금 ${formatNumber(profile.points)}점 ${stars(playerStarsForPoints(profile.points))}`),
-    h('div.res-xp', {}, h('div.xp-top', {}, xpLabel, h('b', {}, `+${formatNumber(xpGained)} 경험치`)), h('div.xp-bar', {}, xpFill)),
-    unlocked.length ? h('div.res-unlocks', {}, h('p.res-label', {}, unlocked.length > 1 ? `새 아이템 ${unlocked.length}개` : '새 아이템'),
-      h('div.unlock-row', {}, ...unlocked.slice(0, 5).map((item) => h('div.unlock-card', {}, itemPreview(item), h('small', {}, item.name))))) : null,
-    missions.length ? h('div.res-missions', {}, h('p.res-label', {}, `미션 완료 +${formatNumber(missionPoints)}점`), h('p.res-mission-names', {}, missions.map((mission) => mission.title).join(', '))) : null,
-    stats.time != null ? h('p.res-stats', {}, `걸린 시간 ${formatTime(stats.time)}, 낸 카드 ${stats.moves || 0}장`) : null,
-    extra,
+    h('div.res-body', {},
+      h('div.res-head', {}, h('strong.res-title', {}, title || (won ? '승리' : '패배')), subtitle ? h('small.res-sub', {}, subtitle) : null),
+      h('div.res-hero', { 'aria-label': `이번 판 합계 ${signed(total)}점` },
+        h('small.res-hero-label', {}, '이번 판 합계'),
+        h(`div.res-score${total < 0 ? '.is-minus' : ''}`, {}, counter, h('small', {}, '점'))),
+      h('ol.res-rows', {}, ...rowEls.map((entry) => entry.el)),
+      h('p.res-total', {}, '지금 ', h('b', {}, `${formatNumber(profile.points)}점`), ` ${stars(playerStarsForPoints(profile.points))}`),
+      h('div.res-xp', {}, h('div.xp-top', {}, xpLabel, h('b', {}, `+${formatNumber(xpGained)} 경험치`)), h('div.xp-bar', {}, xpFill)),
+      unlocked.length ? h('div.res-unlocks', {}, h('p.res-label', {}, unlocked.length > 1 ? `새 아이템 ${unlocked.length}개` : '새 아이템'),
+        h('div.unlock-row', {}, ...unlocked.slice(0, 5).map((item) => h('div.unlock-card', {}, itemPreview(item), h('small', {}, item.name))))) : null,
+      stats.time != null ? h('p.res-stats', {}, `걸린 시간 ${formatTime(stats.time)}, 낸 카드 ${stats.moves || 0}장`) : null),
     h('div.res-actions', {},
       h('button.btn.primary', { type: 'button', onClick: () => { play('confirm'); onPrimary?.(); } }, primaryLabel),
       h('button.btn.ghost', { type: 'button', onClick: () => { play('click'); onHome?.(); } }, '로비로')));
@@ -37,24 +60,38 @@ export function showResult({ host, won, delta = 0, bonus = false, profile, xpGai
   const reduced = settings.reduced();
   const timeline = gsap.timeline();
   timeline.fromTo(panel, { y: 80, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: 'back.out(1.4)' });
+
+  // 줄이 하나씩 들어오며 제 점수를 세고, 그만큼 합계가 이어서 오른다(승패 → 상자 → 미션)
   const tally = { value: 0 };
-  timeline.to(tally, {
-    value: delta, duration: reduced ? 0.1 : 0.9, ease: 'power2.out',
-    onUpdate: () => { counter.textContent = `${delta > 0 ? '+' : ''}${formatNumber(Math.round(tally.value))}`; },
-    onStart: () => play(won ? 'stack' : 'scratch', { volume: 0.6 }),
-  }, 0.2);
+  const showTotal = () => { counter.textContent = signed(tally.value); };
+  let running = 0;
+  rowEls.forEach(({ row, el, value }, index) => {
+    const at = reduced ? 0 : 0.3 + index * 0.5;
+    const own = { value: 0 };
+    running += row.value;
+    timeline.fromTo(el, { x: -14, opacity: 0 }, { x: 0, opacity: 1, duration: reduced ? 0.01 : 0.25, ease: 'power2.out' }, at);
+    timeline.to(own, { value: row.value, duration: reduced ? 0.01 : 0.4, ease: 'power2.out', onUpdate: () => { value.textContent = signed(own.value); } }, at);
+    timeline.to(tally, { value: running, duration: reduced ? 0.01 : 0.45, ease: 'power2.out', onUpdate: showTotal, onStart: () => play(row.value < 0 ? 'scratch' : 'stack', { volume: 0.5 + index * 0.1 }) }, at + 0.05);
+  });
+  timeline.call(() => {
+    tally.value = total;
+    showTotal();
+    rowEls.forEach(({ row, value }) => { value.textContent = signed(row.value); });
+    if (!reduced) gsap.fromTo(counter, { scale: 1.12 }, { scale: 1, duration: 0.35, ease: 'back.out(2.4)' });
+  });
+  const settled = reduced ? 0.1 : 0.3 + rowEls.length * 0.5;
   gsap.set(xpFill, { scaleX: before.ratio, transformOrigin: '0% 50%' });
   if (after.tier > before.tier) {
-    timeline.to(xpFill, { scaleX: 1, duration: 0.5, ease: 'power2.inOut' }, 0.6);
-    timeline.call(() => { xpLabel.textContent = `시즌 패스 ${after.tier}단계 달성`; play('level'); panel.classList.add('is-levelup'); }, null, 1.1);
-    timeline.set(xpFill, { scaleX: 0 }, 1.12);
-    timeline.to(xpFill, { scaleX: after.ratio, duration: 0.4 }, 1.15);
+    timeline.to(xpFill, { scaleX: 1, duration: 0.5, ease: 'power2.inOut' }, settled);
+    timeline.call(() => { xpLabel.textContent = `시즌 패스 ${after.tier}단계 달성`; play('level'); panel.classList.add('is-levelup'); }, null, settled + 0.5);
+    timeline.set(xpFill, { scaleX: 0 }, settled + 0.52);
+    timeline.to(xpFill, { scaleX: after.ratio, duration: 0.4 }, settled + 0.55);
   } else {
-    timeline.to(xpFill, { scaleX: after.ratio, duration: 0.6, ease: 'power2.out' }, 0.6);
+    timeline.to(xpFill, { scaleX: after.ratio, duration: 0.6, ease: 'power2.out' }, settled);
   }
   panel.querySelectorAll('.unlock-card').forEach((card, index) => {
-    timeline.fromTo(card, { rotationY: 90, opacity: 0 }, { rotationY: 0, opacity: 1, duration: 0.4, ease: 'back.out(1.8)' }, 1.2 + index * 0.15);
-    if (index === 0) timeline.call(() => play('unlock'), null, 1.2);
+    timeline.fromTo(card, { rotationY: 90, opacity: 0 }, { rotationY: 0, opacity: 1, duration: 0.4, ease: 'back.out(1.8)' }, settled + 0.3 + index * 0.15);
+    if (index === 0) timeline.call(() => play('unlock'), null, settled + 0.3);
   });
   // preventScroll — 휴대폰에서 판이 길면 맨 아래 단추로 포커스가 가며 판이 스크롤되어 점수가 잘렸다(11-24)
   setTimeout(() => panel.querySelector('.btn.primary')?.focus({ preventScroll: true }), 400);

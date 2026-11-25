@@ -227,7 +227,8 @@ export function startOnline({ host, onExit, openRules }) {
     const card = applied.myHand.find((item) => item.id === cardId);
     if (!card) return;
     let suit = null;
-    if (card.rank === '7') {
+    if (card.rank === '7' && applied.myHand.length === 1) suit = card.suit; // 마지막 한 장 — 이 카드로 이기므로 무늬를 묻지 않는다(서버는 7에 무늬가 있어야 받아 줌)
+    else if (card.rank === '7') {
       suit = await pickSuit({ host: table.root, hand: applied.myHand.filter((item) => item.id !== cardId) });
       if (!suit) return;
     }
@@ -323,7 +324,7 @@ export function startOnline({ host, onExit, openRules }) {
       fx.burst(mine ? table.looks.effect : lookFor('effect-classic'), at, { tier, onto: table.pile.lastElementChild });
       if (card.rank === 'JOKER') await fx.jokerTime({ at, owner: mine ? 'me' : 'rival', card });
       else if (card.rank === '2' || card.rank === 'A') await fx.attack({ at, added: card.rank === '2' ? 2 : 3, total: event.payload.attackCount || view.attackCount, owner: mine ? 'me' : 'rival' });
-      else if (card.rank === '7') { table.setActiveSuit(event.payload.chosenSuit); await fx.suitChange({ at, suit: event.payload.chosenSuit, medallion: table.root.querySelector('.suit-medallion') }); }
+      else if (card.rank === '7' && event.payload.remaining !== 0) { table.setActiveSuit(event.payload.chosenSuit); await fx.suitChange({ at, suit: event.payload.chosenSuit, medallion: table.root.querySelector('.suit-medallion') }); } // 마지막 장으로 낸 7 은 무늬 바뀜 없이 끝
       else if (card.rank === 'J') await fx.skip({ zone: mine ? table.rivalZone : table.meZone, portrait: mine ? table.rivalPortrait : null, owner: mine ? 'me' : 'rival' });
       if (event.payload.remaining === 1) await fx.oneCard({ zone: mine ? table.meZone : table.rivalZone, mine, color: '#f2b544' });
     } else if (event.eventType === 'draw') {

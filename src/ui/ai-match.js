@@ -12,7 +12,7 @@ import { bonusChanceWithEvent, isOpeningEventActive, OPENING_EVENT } from '../co
 import { cosmeticById, DEFAULT_EQUIPPED } from '../core/cosmetics.js';
 import { makeRival, pickLine } from '../data/characters.js';
 import { normalizeNickname } from '../net/multiplayer-helpers.js';
-import { h, wait, formatNumber, josa } from './dom.js';
+import { wait, josa } from './dom.js';
 import { openRewardBoxes } from './reward-boxes.js';
 import { createTable } from './table.js';
 import { createFx, preloadEffect } from './fx.js';
@@ -143,7 +143,10 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     const card = game.hands[0].find((item) => item.id === cardId);
     if (!card || !game.isPlayable(card)) return;
     let suit = null;
-    if (card.rank === '7') {
+    // 마지막 한 장인 7 은 이 카드로 이기므로 무늬를 묻지 않는다 — 규칙 엔진은 7에 무늬가 있어야 받아 줘서 카드 무늬를 그대로 넘긴다
+    // (11-25 선생님: 마지막에 7을 내면 고르는 창이 뜨고 「undefined」가 나왔다)
+    if (card.rank === '7' && game.hands[0].length === 1) suit = card.suit;
+    else if (card.rank === '7') {
       busy = true;
       sync();
       suit = await pickSuit({ host: table.root, hand: game.hands[0].filter((item) => item.id !== cardId) });
@@ -219,7 +222,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     } else if (card.rank === '2' || card.rank === 'A') {
       await director.run(() => fx.attack({ at, added: card.rank === '2' ? 2 : 3, total: game.attackCount, owner: mine ? 'me' : 'rival' }));
       if (mine) rivalCtl.react('angry', 'playerAttack'); else rivalCtl.react('smug', 'attack');
-    } else if (card.rank === '7') {
+    } else if (card.rank === '7' && result.type !== 'win') { // 이긴 판은 바꾼 무늬가 없다(「undefined로 변경」이 떴다)
       await director.run(() => fx.suitChange({ at, suit: result.requestedSuit, medallion: table.root.querySelector('.suit-medallion') }));
     } else if (card.rank === 'J') {
       await director.run(() => fx.skip({ zone: mine ? table.rivalZone : table.meZone, portrait: mine ? table.rivalPortrait : null, owner: mine ? 'me' : 'rival' }));
@@ -293,11 +296,10 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     const pickedBox = await openRewardBoxes({ host: table.root, boxes, won, veteran: veteranBonus(beforeBox.games), games: beforeBox.games });
     const claim = claimRewardBox({ matchId, box: pickedBox });
     const profileAfter = loadPlayerProfile();
-    const boxPoints = `보상 상자 ${claim.multiplier > 1 ? `×${claim.multiplier} ` : ''}+${formatNumber(claim.delta)}점`;
-    const boxLine = claim.duplicate ? null : h('p.res-box', {}, claim.item ? `${boxPoints} · ${claim.item.name}` : boxPoints);
+    const box = claim.duplicate ? null : { delta: claim.delta, multiplier: claim.multiplier, rarity: pickedBox?.rarity, item: claim.item };
     const unlocked = mergeUnlockedItems([...(rating.unlockedItems || []), ...(claim.unlockedItems || [])], missionUnlocks);
     showResult({
-      host: table.root, won, delta: rating.delta, bonus, profile: profileAfter, extra: boxLine,
+      host: table.root, won, delta: rating.delta, bonus, profile: profileAfter, box,
       xpGained: profileNow.seasonXp - xpBefore, xpBefore, unlocked, missions: missionDone, missionPoints,
       stats: { time: Date.now() - startedAt, moves },
       subtitle: won ? `${rival.title} ${josa(rival.name, '을/를')} 이겼어요` : pickLine(rival, 'win'),

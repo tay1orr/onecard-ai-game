@@ -218,13 +218,14 @@
 .vs-side { position: relative; display: flex; align-items: center; gap: clamp(10px, 1.6vw, 24px); padding: clamp(14px, 2vw, 26px); border-radius: 18px; background: color-mix(in srgb, var(--side, var(--gold)) 22%, var(--ink-2)); transform: skewX(-8deg); }
 .vs-side > * { transform: skewX(8deg); }
 .vs-rival { flex-direction: row-reverse; text-align: right; }
-.vs-plate { width: clamp(88px, 10vw, 180px); aspect-ratio: 1; flex: none; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--side, var(--gold)) 40%, transparent); }
-.vs-portrait { width: 96%; height: 96%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.5)); }
+.vs-plate { position: relative; width: clamp(88px, 10vw, 180px); aspect-ratio: 1; flex: none; border-radius: 50%; background: color-mix(in srgb, var(--side, var(--gold)) 40%, transparent); }
+/* 그림은 판 안에 띄워 둔다 — 판 크기를 밀지 못하게(세로로 긴 그림이 판을 키워 룰렛이 돌 때마다 상대 칸 높이가 출렁였다, 11-25) */
+.vs-portrait { position: absolute; left: 2%; top: 2%; width: 96%; height: 96%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.5)); }
 .vs-text { display: flex; flex-direction: column; min-width: 0; }
 .vs-title { color: #d7deeb; font-size: 14px; font-weight: 700; }
 .vs-name { font-size: clamp(26px, 3.4vw, 50px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; }
-.vs-stars { display: inline-block; min-height: 1.3em; color: var(--gold); letter-spacing: 2px; transform-origin: 100% 50%; }
-.vs-level { min-height: 1.3em; margin-top: 2px; color: #c9d2e2; font-size: 13px; font-weight: 600; }
+.vs-stars { display: inline-block; min-height: 1.5em; color: var(--gold); letter-spacing: 2px; transform-origin: 100% 50%; } /* 별 · 설명 자리는 처음부터 한 줄 높이 그대로(룰렛이 끝나고 별이 켜질 때 칸이 커지지 않게) */
+.vs-level { min-height: 1.5em; margin-top: 2px; color: #c9d2e2; font-size: 13px; font-weight: 600; }
 .vs-rival.is-elite .vs-stars { color: #ffd77a; }
 .vs-mark { position: relative; font: 900 clamp(56px, 8vw, 132px)/0.8 var(--font-display); color: var(--gold); text-shadow: 6px 6px 0 #05070d; opacity: 0; }
 .vs-reward { position: relative; font: 800 22px/1 var(--font-ui); color: var(--chalk); }
@@ -259,22 +260,37 @@
 .dice-note { color: #d7deeb; font-weight: 600; min-height: 1.5em; text-align: center; }
 .dice-btn { min-width: 220px; min-height: 54px; font-size: 17px; }
 
-/* 결과 판 */
+/* 결과 판 — 맨 위 이번 판 합계, 그 아래 승패 · 보상 상자 · 미션이 한 줄씩(이름 왼쪽 · 점수 오른쪽), 그 밑에 지금 점수 · 시즌 패스 · 새 아이템(11-25) */
 .result-panel {
   position: absolute; left: 50%; bottom: clamp(10px, 4vh, 40px); transform: translateX(-50%); z-index: 75;
-  width: min(560px, 94vw); max-height: 78dvh; overflow: auto; padding: 22px 24px 20px; border-radius: var(--r-l);
+  width: min(520px, 94vw); max-height: 82dvh; overflow: hidden; padding: 20px 22px 18px; border-radius: var(--r-l);
   background: var(--ink-2); border: 1px solid var(--line-strong); box-shadow: var(--drop);
-  display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+  display: flex; flex-direction: column; gap: 12px; text-align: center;
 }
-.res-head { display: flex; flex-direction: column; }
-.res-title { font-size: 20px; font-weight: 900; }
-.res-sub { color: var(--mute); }
-.res-score { display: flex; align-items: baseline; gap: 4px; }
-.res-points { font: 900 64px/0.95 var(--font-display); color: var(--gold); }
-.result-panel.is-lose .res-points { color: #ff8f86; }
-.res-score small { font-weight: 800; color: var(--mute); }
-.res-bonus { padding: 3px 10px; border-radius: 6px; background: var(--gold); color: #1d1405; font-size: 13px; font-weight: 800; }
-.res-total { color: #d7deeb; }
+.res-body { display: flex; flex-direction: column; align-items: stretch; gap: 12px; min-height: 0; overflow: auto; }
+.res-head { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.res-title { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; color: var(--gold); }
+.result-panel.is-lose .res-title { color: #ff8f86; }
+.res-sub { color: var(--mute); font-size: 14px; }
+.res-hero { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.res-hero-label { color: #c9d2e2; font-size: 13px; font-weight: 800; }
+.res-score { display: flex; align-items: baseline; gap: 6px; }
+.res-points { font: 900 68px/0.92 var(--font-display); color: var(--gold); font-variant-numeric: tabular-nums; }
+.res-score.is-minus .res-points { color: #ff8f86; }
+.res-score small { font-size: 18px; font-weight: 800; color: var(--mute); }
+/* 나눔 줄 — 영수증처럼 이름 · 메모는 왼쪽, 점수는 오른쪽 끝에 맞춘다 */
+.res-rows { list-style: none; margin: 0; padding: 2px 16px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); text-align: left; }
+.res-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 12px; padding: 10px 0; }
+.res-row + .res-row { border-top: 1px solid var(--line); }
+.res-row-label { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.res-row-label b { font-size: 16px; font-weight: 800; white-space: nowrap; }
+.res-row-note { min-width: 0; color: var(--mute); font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.res-row.is-box .res-row-note { color: var(--rb, var(--mute)); } /* 상자 등급 색 */
+.res-row-value { font: 900 26px/1 var(--font-display); color: var(--gold); font-variant-numeric: tabular-nums; }
+.res-row.is-minus .res-row-value { color: #ff8f86; }
+.res-row-item { grid-column: 1 / -1; color: #e9d9b0; font-size: 13px; font-weight: 700; }
+.res-total { color: #d7deeb; font-size: 15px; }
+.res-total b { color: var(--chalk); font-weight: 900; }
 .res-xp { width: 100%; text-align: left; }
 .xp-top { display: flex; justify-content: space-between; font-size: 13px; color: var(--mute); margin-bottom: 6px; }
 .xp-top b { color: var(--chalk); }
@@ -282,18 +298,19 @@
 .res-label { font-weight: 800; font-size: 14px; margin-bottom: 6px; }
 .res-unlocks { width: 100%; }
 .unlock-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; perspective: 600px; }
-.unlock-card { width: 90px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; background: rgba(242, 181, 68, 0.1); border: 1px solid rgba(242, 181, 68, 0.4); }
+.unlock-card { width: min(90px, calc((100% - 40px) / 5)); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; background: rgba(242, 181, 68, 0.1); border: 1px solid rgba(242, 181, 68, 0.4); }
 .unlock-card small { font-size: 12px; font-weight: 700; }
-.res-missions { width: 100%; padding: 10px 12px; border-radius: 12px; background: rgba(79, 209, 161, 0.08); }
-.res-mission-names { color: #cfe9de; font-size: 13px; }
 .res-stats { color: var(--mute); font-size: 13px; }
-.res-actions { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
+.res-actions { flex: none; display: flex; gap: 10px; width: 100%; }
 /* 휴대폰 — 점수 글씨 · 새 아이템 칸을 줄여 다섯 칸이 한 줄에, 판이 한 화면에 들어오게(11-24) */
 @media (max-width: 760px) {
-  .result-panel { padding: 16px 14px 14px; gap: 8px; max-height: 86dvh; }
-  .res-points { font-size: 50px; }
+  .result-panel { padding: 16px 14px 14px; gap: 10px; max-height: 88dvh; }
+  .res-points { font-size: 56px; }
+  .res-rows { padding: 0 12px; }
+  .res-row { padding: 8px 0; }
+  .res-row-value { font-size: 22px; }
   .unlock-row { gap: 6px; }
-  .unlock-card { width: 62px; padding: 6px 3px; gap: 3px; }
+  .unlock-card { width: min(62px, calc((100% - 24px) / 5)); padding: 6px 3px; gap: 3px; } /* 폭 360 에서도 다섯 칸이 한 줄에 */
   .unlock-card .pv { zoom: 0.7; }
   .unlock-card small { font-size: 10.5px; line-height: 1.2; }
 }

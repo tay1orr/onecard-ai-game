@@ -131,7 +131,7 @@ export const BACKS = {
 // court: 묶음 이름(영국식은 무늬마다 다른 그림, perSuit) 또는 { K, Q, J } 그림 값
 const F = (o) => ({
   paper: 'paper-white', tint: '#fbf8f1', ink: '#1b1d24', red: '#b8232f', accent: '#c9a25a',
-  court: 'english', perSuit: true, ace: null, courtBlend: 'multiply', courtFx: null, courtFit: 'cover',
+  court: 'english', perSuit: true, ace: null, courtFx: null, courtFit: 'cover',
   pips: 'ink', frame: null, joker: 'jokers/joker-1', ...o,
 });
 // 에이스 그림은 따로 줄 때만(사각형 스캔 에이스는 붙여 넣은 티가 나서 큰 무늬로)
@@ -142,21 +142,21 @@ export const FACES = {
   classic: F({}),
   bunny: set3('potter', { paper: 'paper-white', tint: '#fbf6ec', red: '#b8343c' }),
   manuscript: set3('cloisters', { paper: 'paper-white', tint: '#f4e7cc', ink: '#3b2a18', red: '#9b2d20', frame: 'thin', accent: '#9b7a3a' }),
-  arcade: F({ paper: 'onyx-black', tint: '#17151f', ink: '#e9f1ff', red: '#ff5c93', court: { K: 'cut:joystick', Q: 'cut:gamepad', J: 'cut:dice' }, perSuit: false, ace: null, courtBlend: 'normal', courtFit: 'contain', frame: 'neon', accent: '#5cf2ff' }),
-  deco: F({ paper: 'onyx-black', tint: '#131313', ink: '#e2c27a', red: '#e8c77e', courtFx: 'invert(1) sepia(1) saturate(2.4) hue-rotate(-10deg) brightness(.92)', courtBlend: 'screen', pips: 'gold', frame: 'deco', accent: '#e2c27a' }),
-  'stone-temple': set3('antiquity', { paper: 'paper-white', tint: '#efe4cf', ink: '#3a2b1c', red: '#8f3a1e', courtBlend: 'multiply' }),
+  arcade: F({ paper: 'onyx-black', tint: '#17151f', ink: '#e9f1ff', red: '#ff5c93', court: { K: 'cut:joystick', Q: 'cut:gamepad', J: 'cut:dice' }, perSuit: false, ace: null, joker: null, courtFit: 'contain', frame: 'neon', accent: '#5cf2ff' }), // 조커는 글자만(옛 광대 그림은 검은 종이에 탁하게 비쳐서)
+  deco: F({ paper: 'onyx-black', tint: '#131313', ink: '#e2c27a', red: '#e8c77e', courtFx: 'invert(1) sepia(1) saturate(2.4) hue-rotate(-10deg) brightness(.92)', pips: 'gold', frame: 'deco', accent: '#e2c27a' }),
+  'stone-temple': set3('antiquity', { paper: 'paper-white', tint: '#efe4cf', ink: '#3a2b1c', red: '#8f3a1e' }),
   'rose-conservatory': set3('botanical', { paper: 'paper-white', tint: '#fbf6ee', red: '#b3263a', ace: { hearts: 'cut:rose-pink', diamonds: 'cut:rose-pink' } }),
-  glass: F({ paper: 'paper-white', tint: '#eef5fb', ink: '#1d2a3a', red: '#c2304a', court: { K: 'cut:galle-vase', Q: 'cut:perfume', J: 'cut:diamond' }, perSuit: false, ace: null, courtBlend: 'normal', courtFit: 'contain', frame: 'glass', accent: '#7fc3e8' }),
-  'dessert-cafe': F({ paper: 'paper-white', tint: '#fff9f3', ink: '#4a2a22', red: '#d0364d', court: { K: 'cut:birthday-cake', Q: 'cut:cake-slice', J: 'cut:cupcake' }, perSuit: false, ace: { hearts: 'cut:strawberry', diamonds: 'cut:strawberry' }, courtBlend: 'normal', courtFit: 'contain', accent: '#ff9db0' }),
-  blueprint: set3('patent', { paper: 'paper-white', tint: '#2a5ea8', ink: '#f2f7ff', red: '#ffffff', courtFx: 'invert(1)', courtBlend: 'screen', frame: 'grid', accent: '#cfe2ff' }),
+  glass: F({ paper: 'paper-white', tint: '#eef5fb', ink: '#1d2a3a', red: '#c2304a', court: { K: 'cut:galle-vase', Q: 'cut:perfume', J: 'cut:diamond' }, perSuit: false, ace: null, courtFit: 'contain', frame: 'glass', accent: '#7fc3e8' }),
+  'dessert-cafe': F({ paper: 'paper-white', tint: '#fff9f3', ink: '#4a2a22', red: '#d0364d', court: { K: 'cut:birthday-cake', Q: 'cut:cake-slice', J: 'cut:cupcake' }, perSuit: false, ace: { hearts: 'cut:strawberry', diamonds: 'cut:strawberry' }, courtFit: 'contain', accent: '#ff9db0' }),
+  blueprint: set3('patent', { paper: 'paper-white', tint: '#2a5ea8', ink: '#f2f7ff', red: '#ffffff', courtFx: 'invert(1)', frame: 'grid', accent: '#cfe2ff' }),
   ink: set3('ink', { paper: 'paper-white', tint: '#f7f1e4', ink: '#1a1a1a', red: '#b3262e' }),
-  tarot: set3('tarot', { paper: 'paper-white', tint: '#f6ecd6', ink: '#2a1d10', red: '#9e2a22', courtBlend: 'multiply', frame: 'gold' }),
-  dream: set3('fairy', { paper: 'paper-white', tint: '#fbf7f0', ink: '#2b2240', red: '#a8324a', courtBlend: 'normal', frame: 'thin', accent: '#a58bd6' }),
-  'real-rose': F({ paper: null, tint: '#fbf3e6', court: { K: 'photo:rose-1', Q: 'photo:rose-2', J: 'photo:rose-3' }, perSuit: false, ace: { hearts: 'cut:rose-pink', diamonds: 'cut:rose-pink' }, courtBlend: 'normal', frame: 'paint:real-rose-face' }),
+  tarot: set3('tarot', { paper: 'paper-white', tint: '#f6ecd6', ink: '#2a1d10', red: '#9e2a22', frame: 'gold' }),
+  dream: set3('fairy', { paper: 'paper-white', tint: '#fbf7f0', ink: '#2b2240', red: '#a8324a', frame: 'thin', accent: '#a58bd6' }),
+  'real-rose': F({ paper: null, tint: '#fbf3e6', court: { K: 'photo:rose-1', Q: 'photo:rose-2', J: 'photo:rose-3' }, perSuit: false, ace: { hearts: 'cut:rose-pink', diamonds: 'cut:rose-pink' }, frame: 'paint:real-rose-face' }),
   // 시즌 2
-  'golden-rose': F({ paper: 'paper-white', tint: '#fcf8ef', ink: '#1f1a12', red: '#a5212e', frame: hasGptArt('face-01') ? 'paint:gpt-face-01' : 'gold', ace: { hearts: 'cut:rose-gold', diamonds: 'cut:rose-gold' }, courtBlend: 'multiply', accent: '#c9a043' }),
-  redoute: F({ paper: 'paper-white', tint: '#fbf6ec', ink: '#2b241a', red: '#a3223a', court: { K: 'redoute/K', Q: 'redoute/Q', J: 'redoute/J' }, perSuit: false, ace: { hearts: 'cut:rose-red', diamonds: 'cut:rose-pink' }, courtBlend: 'multiply', frame: 'thin', accent: '#a3223a' }),
-  obsidian: F({ paper: 'onyx-black', tint: '#101012', ink: '#dfe5f0', red: '#e0566d', courtFx: 'invert(1) grayscale(1) brightness(.92)', courtBlend: 'screen', pips: 'silver', frame: 'thin', accent: '#c9d3e6' }),
+  'golden-rose': F({ paper: 'paper-white', tint: '#fcf8ef', ink: '#1f1a12', red: '#a5212e', frame: hasGptArt('face-01') ? 'paint:gpt-face-01' : 'gold', ace: { hearts: 'cut:rose-gold', diamonds: 'cut:rose-gold' }, accent: '#c9a043' }),
+  redoute: F({ paper: 'paper-white', tint: '#fbf6ec', ink: '#2b241a', red: '#a3223a', court: { K: 'redoute/K', Q: 'redoute/Q', J: 'redoute/J' }, perSuit: false, ace: { hearts: 'cut:rose-red', diamonds: 'cut:rose-pink' }, frame: 'thin', accent: '#a3223a' }),
+  obsidian: F({ paper: 'onyx-black', tint: '#101012', ink: '#dfe5f0', red: '#e0566d', courtFx: 'invert(1) grayscale(1) brightness(.92)', pips: 'silver', frame: 'thin', accent: '#c9d3e6' }),
   // 선생님 GPT 앞면 테(11-24) — 종이 · 테가 그림에 들어 있어 잉크 · 빨강만 종이 색에 맞춘다
   'winter-garden': gptFace('02', { tint: '#ffffff', ink: '#1d2433', red: '#b3263a', accent: '#9fb3c8' }),
   pistachio: gptFace('03', { tint: '#f8f0dc', ink: '#2c2a17', red: '#a8322a', accent: '#8fa84a' }),

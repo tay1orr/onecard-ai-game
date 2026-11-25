@@ -40,7 +40,7 @@
 .card.s-clubs { --suit-mask: var(--mask-clubs); --court-img-K: var(--court-KC); --court-img-Q: var(--court-QC); --court-img-J: var(--court-JC); --ace-img: var(--ace-C); }
 
 /* 에이스 — 그림이 있으면 그림 + 작은 무늬, 없으면 큰 무늬 하나 */
-.card .ace-art { position: absolute; inset: 0 -8% 16%; background: var(--ace-img, none) center / contain no-repeat; mix-blend-mode: var(--court-blend, multiply); }
+.card .ace-art { position: absolute; inset: 0 -8% 16%; background: var(--ace-img, none) center / contain no-repeat; }
 .card .ace-suit { left: 50%; top: 50%; width: 64%; height: auto; aspect-ratio: 1; }
 .card.s-spades { --ace-on: var(--ace-on-S, 0); }
 .card.s-hearts { --ace-on: var(--ace-on-H, 0); }
@@ -50,14 +50,15 @@
 .card.r-A .ace-suit { width: calc(64% - var(--ace-on, 0) * 42%); top: calc(50% + var(--ace-on, 0) * 40%); }
 
 /* 그림카드 — 실제 옛 카드 · 명화 · 사진 한 장을 판에 넣는다
-   액자(.court)는 그림을 자르지 않는다(overflow 없음) — 카카오톡 안 브라우저(안드로이드 WebView)는 둥글게 자르는 틀 안의 곱하기 섞기 그림을
-   멈춘 동안 그리지 않아 K · Q · J 가 비고 턴이 바뀔 때만 잠깐 보였다(11-24). 같은 섞기를 카드 한 겹 안에서만 쓰는 조커는 멀쩡했다.
-   그림은 액자 크기에 꼭 맞게 채워지므로(inset 0 · cover) 자르지 않아도 넘치지 않고, 달라지는 것은 모서리 2~3px 둥글림뿐 */
+   그림 · 에이스 · 조커는 섞기(mix-blend-mode) 없이 그냥 얹는다. 종이 바탕은 그림 파일에서 미리 투명하게 바꿔 두어(build-real.mjs whiteToAlpha)
+   곱하기로 섞은 모습과 같다. 안드로이드 WebView(카카오톡 · 네이버 앱)는 둥글게 자른 카드 안의 섞기 그림을 자주 못 그렸다 —
+   11-24 는 멈춘 동안, 11-25 는 낸 카드 · 들렸다 내려온 손패(따로 떼어 그리는 동안)에서 K · Q · J 가 비었다.
+   액자(.court)는 그림을 자르지 않는다 — 그림은 액자 크기에 꼭 맞게 채워지고(inset 0 · cover) 달라지는 것은 모서리 2~3px 둥글림뿐 */
 .card .court {
   position: absolute; inset: -4% -9% -4%; border-radius: calc(var(--cw) * 0.04);
   box-shadow: inset 0 0 0 1.2px color-mix(in srgb, currentColor 38%, transparent);
 }
-.card .court-art { position: absolute; inset: 0; background-position: center; background-size: var(--court-fit, cover); background-repeat: no-repeat; mix-blend-mode: var(--court-blend, multiply); filter: var(--court-fx, none); }
+.card .court-art { position: absolute; inset: 0; background-position: center; background-size: var(--court-fit, cover); background-repeat: no-repeat; filter: var(--court-fx, none); }
 .card.r-K .court-art { background-image: var(--court-img-K); }
 .card.r-Q .court-art { background-image: var(--court-img-Q); }
 .card.r-J .court-art { background-image: var(--court-img-J); }
@@ -68,7 +69,7 @@
 .card .joker-band { position: absolute; z-index: 2; left: 8%; top: 8%; writing-mode: vertical-rl; }
 .card .joker-band b { font: 900 calc(var(--cw) * 0.16) / 1 var(--font-display); letter-spacing: 0.04em; }
 .card .joker-band.bottom { left: auto; top: auto; right: 8%; bottom: 8%; transform: rotate(180deg); }
-.card .joker-art { position: absolute; inset: 9% 16% 14%; background: var(--joker-art) center / contain no-repeat; mix-blend-mode: multiply; }
+.card .joker-art { position: absolute; inset: 9% 16% 14%; background: var(--joker-art) center / contain no-repeat; filter: var(--court-fx, none); } /* 어두운 · 파란 종이 앞면은 그림카드처럼 색을 뒤집어 같은 모습으로 */
 .card .joker-power {
   position: absolute; z-index: 2; left: 50%; bottom: 6%; transform: translateX(-50%) rotate(-4deg);
   padding: 2px 8px; border-radius: 6px; background: var(--strike); color: #fff;

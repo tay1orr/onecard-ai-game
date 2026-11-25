@@ -23,10 +23,24 @@ const note = (kind) => { counts[kind] = (counts[kind] || 0) + 1; };
 async function make(input, output, pipeline) {
   if (!fs.existsSync(input) || fresh(output)) return false;
   ensure(path.dirname(output));
-  await pipeline(sharp(input, { limitInputPixels: 80_000_000 })).toFile(output);
+  await (await pipeline(sharp(input, { limitInputPixels: 80_000_000 }))).toFile(output);
   return true;
 }
 const webp = (quality, alpha = false) => (img) => img.webp({ quality, effort: 5, ...(alpha ? { alphaQuality: 90 } : {}) });
+
+// 흰 종이 기준 「색 → 투명도」 — 흰색은 투명, 짙을수록 불투명(가장 짙은 채널 기준). 카드 종이 위에 섞기 없이 얹어도
+// 곱하기(multiply)로 섞은 모습과 같다(흰 종이 위에서는 꼭 같고, 크림 종이에서 2~5% 차이 · 색을 뒤집는 어두운 앞면도 그대로).
+// 11-25 안드로이드 WebView(카카오톡 · 네이버 앱)가 움직인 카드 안의 곱하기 섞기 그림을 그리지 못해 J Q K 가 비었다 → 그림카드에서 섞기를 없앰
+async function whiteToAlpha(img) {
+  const { data, info } = await img.ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = 255 - Math.min(data[i], data[i + 1], data[i + 2]);
+    if (alpha === 0) { data[i] = 255; data[i + 1] = 255; data[i + 2] = 255; data[i + 3] = 0; continue; }
+    for (let c = 0; c < 3; c += 1) data[i + c] = Math.round(255 - ((255 - data[i + c]) * 255) / alpha);
+    data[i + 3] = Math.round((alpha * data[i + 3]) / 255);
+  }
+  return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } });
+}
 
 // 1) 재질 사진
 for (const file of fs.existsSync(path.join(SRC, 'tex')) ? fs.readdirSync(path.join(SRC, 'tex')).filter((name) => name.endsWith('.jpg')) : []) {
@@ -76,20 +90,21 @@ for (const file of fs.existsSync(BACKS) ? fs.readdirSync(BACKS).filter((name) =>
   await make(input, path.join(OUT, 'r/back', `${key}-s.webp`), (img) => webp(72)(img.resize(150, 210, { fit: 'cover' })));
 }
 
-// 4) 그림카드 · 에이스 · 조커
+// 4) 그림카드 · 에이스 · 조커 — 바탕은 whiteToAlpha 로 투명하게(장식 묶음 ornaments 는 화면에서 안 써서 그대로)
 const COURTS = path.join(SRC, 'courts/out');
 if (fs.existsSync(COURTS)) {
   for (const set of fs.readdirSync(COURTS).filter((name) => fs.statSync(path.join(COURTS, name)).isDirectory())) {
     for (const file of fs.readdirSync(path.join(COURTS, set)).filter((name) => /\.(png|jpe?g)$/i.test(name) && !/-full\./.test(name))) {
       const key = file.replace(/\.(png|jpe?g)$/i, '');
-      if (await make(path.join(COURTS, set, file), path.join(OUT, 'r/court', set, `${key}.webp`), (img) => webp(84, true)(img.resize(420, 560, { fit: 'inside' })))) note('그림카드');
+      const fit = (img) => img.resize(420, 560, { fit: 'inside' });
+      if (await make(path.join(COURTS, set, file), path.join(OUT, 'r/court', set, `${key}.webp`), async (img) => webp(84, true)(set === 'ornaments' ? fit(img) : await whiteToAlpha(fit(img))))) note('그림카드');
     }
   }
 }
 // 레두테 장미로 그린 그림카드(보태니컬 카드) — 뒷면 그림에서 꽃 부분을 세로로
 for (const [rank, plate] of [['K', 'redoute-01'], ['Q', 'redoute-04'], ['J', 'redoute-07']]) {
   const input = path.join(BACKS, `${plate}.jpg`);
-  if (await make(input, path.join(OUT, 'r/court/redoute', `${rank}.webp`), (img) => webp(84)(img.resize(420, 560, { fit: 'cover', position: 'attention' })))) note('그림카드');
+  if (await make(input, path.join(OUT, 'r/court/redoute', `${rank}.webp`), async (img) => webp(84, true)(await whiteToAlpha(img.resize(420, 560, { fit: 'cover', position: 'attention' }))))) note('그림카드');
 }
 
 // 5) 맵 · 승리 배경 사진
