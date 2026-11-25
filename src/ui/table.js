@@ -1,13 +1,13 @@
 // 게임판 — AI 대전과 온라인이 함께 쓴다. 카드는 실제 자리에서 실제 자리로 움직인다.
 import gsap from 'gsap';
-import { h, stars as starText, formatNumber } from './dom.js';
+import { h, formatNumber } from './dom.js';
 import { cardBack, cardFace, cardLabel } from './cards.js';
 import { fanLayout, sortHand } from '../core/hand-layout.js';
 import { SUIT_NAMES, RED_SUITS, suitSvg } from './suits.js';
 import { cut } from '../data/assets.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
-import { rankBadge } from './rank.js';
+import { aiBadge, rankBadge } from './rank.js';
 
 const PILE_KEEP = 5;
 const RIVAL_TOP = 16; // CSS .rival-card top 과 같게
@@ -421,7 +421,7 @@ export function createTable({ mode = 'ai', onPlay, onDraw, onPileTap, onExit, on
     setRival({ name, starsCount, rankPoints, color, portrait, status }) {
       rivalName.textContent = name;
       if (rankPoints != null) rivalStars.replaceChildren(rankBadge(rankPoints));
-      else rivalStars.textContent = starsCount ? starText(starsCount) : '';
+      else rivalStars.replaceChildren(...(starsCount ? [aiBadge(starsCount)] : [])); // AI 난이도도 단계 그림으로(그림이 없으면 옛 별 글자)
       rivalStatus.textContent = status || '';
       rivalZone.style.setProperty('--who-color', color);
       rivalImg.src = cut(portrait);

@@ -12,3 +12,6 @@ tests/e2e/_shots/
 
 # GPT 로 만든 그림 원본(줄인 webp 만 public 에 올림)
 gpt그림/
+
+# 배경음악 원본(줄인 mp3 만 public 에 올림 — node scripts/build-music.mjs)
+음악/

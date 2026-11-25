@@ -45,7 +45,7 @@ const WEEKLY_GROUPS = Object.freeze([
     { id: 'weekly-bonus-see-3', period: 'weekly', counter: 'bonus-match', target: 3, reward: 270, title: '보너스판 사냥', description: '보너스판 3번 만나기' },
     { id: 'weekly-bonus-win-1', period: 'weekly', counter: 'bonus-win', target: 1, reward: 420, title: '더블 찬스 성공', description: '보너스판에서 1승 하기' },
     { id: 'weekly-onecard-5', period: 'weekly', counter: 'one-card', target: 5, reward: 330, title: '원카드 감각', description: '내 카드가 1장 남는 순간 5번 만들기' },
-    { id: 'weekly-strong-ai-win-2', period: 'weekly', counter: 'win-strong-ai', target: 2, reward: 420, title: '강자에게 한 방', description: '4성 이상 AI에게 2승 하기' },
+    { id: 'weekly-strong-ai-win-2', period: 'weekly', counter: 'win-strong-ai', target: 2, reward: 420, title: '강자에게 한 방', description: '금별 5단계 이상 AI에게 2승 하기' }, // 4성(★4) 이상 — AI 난이도를 단계 그림으로 보이면서 이름도 같이(11-25)
   ]),
 ]);
 

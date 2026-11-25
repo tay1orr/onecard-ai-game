@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { h, formatNumber, stars } from './dom.js';
 import { cut } from '../data/assets.js';
 import { hasGptArt } from '../data/gpt-art.js';
-import { RANK_UNITS, rankForPoints } from '../core/rank.js';
+import { RANK_UNITS, aiRankForStars, rankForPoints } from '../core/rank.js';
 import { playerStarsForPoints } from '../core/rating.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
@@ -18,6 +18,22 @@ export function rankBadge(points, { size = 'sm' } = {}) {
   const rank = rankForPoints(points);
   return h(`span.rank-badge.u-${rank.unit}.is-${size}`, { role: 'img', 'aria-label': rank.name, title: rank.name },
     ...Array.from({ length: rank.count }, () => h('img', { src: cut(rank.art, 's'), alt: '', draggable: 'false' })));
+}
+
+// AI 상대 난이도(★1~★8) — 같은 그림으로(core/rank.js AI_RANK_LEVELS). 그림이 없으면 옛 별 글자
+export function aiBadge(difficulty, { size = 'sm' } = {}) {
+  if (!rankArtReady()) return document.createTextNode(stars(difficulty));
+  const rank = aiRankForStars(difficulty);
+  return h(`span.rank-badge.u-${rank.unit}.is-${size}`, { role: 'img', 'aria-label': `난이도 ${rank.name}`, title: rank.name },
+    ...Array.from({ length: rank.count }, () => h('img', { src: cut(rank.art, 's'), alt: '' })));
+}
+
+// 로비 「만나는 난이도」 한 칸 — 그림 하나 + 개수(×4)로 짧게
+export function aiOddsBadge(difficulty) {
+  if (!rankArtReady()) return h('i', {}, `★${difficulty}`);
+  const rank = aiRankForStars(difficulty);
+  return h(`span.odds-rank.u-${rank.unit}`, { role: 'img', 'aria-label': rank.name, title: rank.name },
+    h('img', { src: cut(rank.art, 's'), alt: '' }), rank.count > 1 ? h('small', {}, `×${rank.count}`) : null);
 }
 
 // 단계표 창 — 네 가지 × 다섯 단계를 점수와 함께. 지난 단계는 흐리게, 지금은 「지금」, 다음은 「○점 남음」(11-25 선생님 「어떤 걸 누르면 랭크표를 볼 수 있게」)
@@ -48,6 +64,61 @@ export function rankButton(points, { size = 'sm', className = '' } = {}) {
   if (!rankArtReady()) return rankBadge(points, { size });
   return h(`button.rank-btn${className ? `.${className}` : ''}`, { type: 'button', 'aria-label': `${rankForPoints(points).name}, 단계표 보기`, onClick: () => { play('click'); openRankTable(points); } },
     rankBadge(points, { size }), h('small', {}, '단계표'));
+}
+
+const UNIT_CLASSES = RANK_UNITS.map((unit) => `u-${unit.key}`);
+const ratioIn = (rank, value) => (rank.next ? Math.min(1, Math.max(0, (value - rank.min) / (rank.next.min - rank.min))) : 1);
+
+// 다음 단계까지 막대 — 단계 그림 · 이름 · 막대 · 남은 점수(로비 「내 단계」 칸 · 결과 판).
+// 처음 점수로 그리고, update(점수)로 옮기면 함께 바뀐다. 결과 판은 판 앞 점수로 그린 뒤 점수가 들어오는 만큼 막대가 옆으로 차오르고,
+// 처음 점수에서 얻은 만큼은 밝게(잃은 만큼은 붉게) 따로 보인다. 단계를 넘으면 그림 · 이름이 바뀌고 막대는 새 단계 처음부터(11-25 선생님)
+export function rankMeter(points, { size = 'sm' } = {}) {
+  if (!rankArtReady()) return null;
+  const badge = h('span.rm-badge');
+  const name = h('b.rm-name');
+  const base = h('i.rm-base');
+  const gain = h('i.rm-gain');
+  const tip = h('i.rm-tip');
+  const bar = h('div.rm-track', {}, h('div.rm-bar', {}, gain, base), tip);
+  const next = h('small.rm-next');
+  const meter = { badge, name, bar, tip, next, root: null, rank: null, value: 0, update };
+  let start = Math.max(0, Math.floor(Number(points) || 0));
+  function update(value) {
+    const score = Math.max(0, Math.floor(Number(value) || 0));
+    const rank = rankForPoints(score);
+    const crossed = meter.rank && rank.level !== meter.rank.level;
+    if (crossed) start = rank.level > meter.rank.level ? rank.min : (rank.next?.min ?? rank.min);
+    if (!meter.rank || crossed) {
+      badge.replaceChildren(rankBadge(score, { size }));
+      name.textContent = rank.name;
+      meter.root?.classList.remove(...UNIT_CLASSES);
+      meter.root?.classList.add(`u-${rank.unit}`);
+    }
+    const low = ratioIn(rank, Math.min(start, score));
+    const high = ratioIn(rank, Math.max(start, score));
+    base.style.transform = `scaleX(${low})`;
+    gain.style.transform = `scaleX(${high})`;
+    gain.classList.toggle('is-minus', score < start);
+    tip.style.transform = `translate(${(score < start ? low : high) * bar.clientWidth}px, -50%)`;
+    next.textContent = rank.next ? `${rank.next.name}까지 ${formatNumber(Math.max(0, rank.next.min - score))}점 남았어요` : '가장 높은 단계예요';
+    meter.rank = rank;
+    meter.value = score;
+    return crossed;
+  }
+  update(start);
+  return meter;
+}
+
+// 로비 「내 단계」 칸 — 단계 그림 · 이름 · 다음 단계까지 막대와 남은 점수, 누르면 단계표(11-25 선생님 「모바일 메인 화면에서도 잘 보이게」)
+export function rankCard(points) {
+  const meter = rankMeter(points, { size: 'lg' });
+  if (!meter) return null;
+  const card = h(`button.rank-card.rank-meter.u-${meter.rank.unit}`, { type: 'button', 'aria-label': `내 단계 ${meter.rank.name}, 단계표 보기`, onClick: () => { play('click'); openRankTable(meter.value); } },
+    h('div.card-head', {}, h('b', {}, '내 단계'), h('small.rank-card-more', {}, '단계표')),
+    h('div.rank-card-now', {}, meter.badge, meter.name),
+    meter.bar, meter.next);
+  meter.root = card;
+  return card;
 }
 
 // 단계 이름과 다음 단계까지 남은 점수 한 줄(그림이 들어온 뒤에만 — 그 전에는 빈 글)

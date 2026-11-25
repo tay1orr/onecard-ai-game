@@ -33,7 +33,6 @@
 .lobby[data-map="painted"] .stage-felt { display: none; }
 .stage-copy { position: relative; z-index: 2; padding: clamp(20px, 3vw, 44px) clamp(20px, 3vw, 48px) 0; max-width: 640px; }
 .stage-title { font-size: clamp(26px, 2.4vw, 38px); font-weight: 900; letter-spacing: -0.035em; line-height: 1.15; }
-.stage-sub { margin-top: 6px; color: #b8c2d6; font-size: 15px; }
 .stage-odds { margin-top: 10px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; color: #e9eef6; font-size: 14px; font-weight: 700; }
 .stage-odds small { color: #9aa6bb; font-size: 12px; font-weight: 700; }
 .stage-odds i { font-style: normal; color: var(--gold); }
@@ -86,9 +85,22 @@
 .play-art { width: clamp(64px, 5vw, 96px); aspect-ratio: 1; object-fit: contain; transform: rotate(8deg); filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.2)); }
 .play-btn.is-primary .play-art { width: clamp(84px, 6.4vw, 118px); transform: rotate(-6deg) translateX(6px); }
 
-.pass-card, .mission-card, .locker-card { border-radius: 18px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); color: var(--chalk); padding: 14px 16px; text-align: left; }
-.pass-card, .locker-card { cursor: pointer; }
-.pass-card:hover, .locker-card:hover { background: rgba(255, 255, 255, 0.06); }
+.pass-card, .mission-card, .locker-card, .rank-card { border-radius: 18px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); color: var(--chalk); padding: 14px 16px; text-align: left; }
+.pass-card, .locker-card, .rank-card { cursor: pointer; }
+.pass-card:hover, .locker-card:hover, .rank-card:hover { background: rgba(255, 255, 255, 0.06); }
+/* 내 단계 칸(ui/rank.js rankCard, 11-25) — 그림 · 이름 · 다음 단계까지 막대. 누르면 단계표 */
+.rank-card { display: block; width: 100%; font: inherit; }
+.rank-card-more { color: var(--mute); font-size: 13px; font-weight: 800; }
+.rank-card:hover .rank-card-more { color: var(--chalk); }
+.rank-card-now { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.rank-card-now > b { font-size: 17px; font-weight: 900; }
+.rank-badge.is-lg { gap: 2px; }
+.rank-badge.is-lg img { width: 30px; height: 30px; }
+.rank-card .rm-next { display: block; margin-top: 7px; }
+/* 만나는 난이도 — 그림 하나 + ×개수 */
+.odds-rank { display: inline-flex; align-items: center; gap: 1px; vertical-align: -0.25em; }
+.odds-rank img { width: 20px; height: 20px; object-fit: contain; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.5)); }
+.odds-rank small { color: #e9d9b0; font-size: 12px; font-weight: 800; }
 .pass-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
 .pass-head b { font-size: 16px; }
 .pass-head span { color: var(--gold); font: 800 15px/1 var(--font-display); }
@@ -123,7 +135,10 @@
   .lobby-actions { overflow: visible; }
 }
 @media (max-width: 560px) {
-  .chip-text small { display: none; }
+  /* 휴대폰 — 점수 아래 단계 그림만(저장 상태 글은 숨김). 내 단계 칸은 대전 단추 아래(11-25 선생님 「모바일 메인 화면에서도 잘 보이게」) */
+  .chip-status { display: none; }
+  .chip-text small { display: flex; margin-top: 2px; }
+  .chip-text small .rank-badge img { width: 17px; height: 17px; }
   .stage { min-height: 360px; border-radius: 22px; }
   .stage-lineup { height: 60%; }
   .rival-plate { padding: 4px 8px; }

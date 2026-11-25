@@ -6,6 +6,8 @@ import { loadMissionDashboard } from '../core/missions.js';
 import { WIN_REWARDS, LOSS_PENALTY } from '../core/rating.js';
 import { suitSvg } from './suits.js';
 import { play } from './sound.js';
+import { hasMusic } from './music.js';
+import { MUSIC } from '../data/music.js';
 
 function toggleRow({ label, sub, options, value, onChange }) {
   const group = h('div.seg', { role: 'group', 'aria-label': label }, ...options.map((option) => h('button.seg-btn', {
@@ -27,9 +29,16 @@ export function openSettings({ onReplayOpening, onAccount, onRules, onCredits })
     onInput: (event) => settings.set({ volume: Number(event.currentTarget.value) }),
     onChange: () => play('click'),
   });
+  // 배경음악 줄은 곡이 들어온 뒤에만(src/data/music.js). 소리를 끄면 배경음악도 같이 꺼진다
+  const musicVolume = h('input.volume', {
+    type: 'range', min: '0', max: '1', step: '0.05', value: String(state.musicVolume), 'aria-label': '배경음악 크기',
+    onInput: (event) => settings.set({ musicVolume: Number(event.currentTarget.value) }),
+  });
   const body = h('div.settings', {},
     toggleRow({ label: '소리', options: [{ label: '켜기', value: true }, { label: '끄기', value: false }], value: state.sound, onChange: (value) => settings.set({ sound: value }) }),
     h('div.set-row', {}, h('div.set-text', {}, h('b', {}, '소리 크기')), volume),
+    hasMusic() ? toggleRow({ label: '배경음악', options: [{ label: '켜기', value: true }, { label: '끄기', value: false }], value: state.music, onChange: (value) => settings.set({ music: value }) }) : null,
+    hasMusic() ? h('div.set-row', {}, h('div.set-text', {}, h('b', {}, '배경음악 크기')), musicVolume) : null,
     toggleRow({ label: '연출', sub: '줄이면 화면 흔들림과 큰 소품이 빠져요', options: [{ label: '크게', value: 'full' }, { label: '줄이기', value: 'reduced' }], value: state.effects, onChange: (value) => settings.set({ effects: value }) }),
     toggleRow({ label: '연출 속도', options: [{ label: '보통', value: 1 }, { label: '빠르게', value: 1.6 }], value: state.speed, onChange: (value) => settings.set({ speed: value }) }),
     h('div.set-links', {},
@@ -78,6 +87,7 @@ export async function openCredits() {
     ['반응 스티커', 'Microsoft Fluent Emoji 3D (MIT)'],
     ['리얼 로즈 사진', '선생님이 찍은 사진'],
     ['글꼴', 'Pretendard, Big Shoulders Display (OFL)'],
+    ...MUSIC.map((track) => [`배경음악 ${track.title}`, [track.author, track.license].filter(Boolean).join(', ')]),
   ];
   const list = h('div.credits-groups', {}, h('p.modal-text', {}, '출처 목록을 불러오고 있어요'));
   const modal = openModal({

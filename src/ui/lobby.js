@@ -1,7 +1,7 @@
 // 로비 — 장착한 맵 사진을 깐 무대 위에 지금 점수로 만나는 상대들 + 시즌 2 글자. 나머지(패스 · 미션 · 보관함)는 차분하게
 import gsap from 'gsap';
 import { h, formatNumber } from './dom.js';
-import { rankBadge } from './rank.js';
+import { aiOddsBadge, rankBadge, rankCard } from './rank.js';
 import { cut } from '../data/assets.js';
 import { lookOf } from '../data/looks.js';
 import { mapVars } from './look-apply.js';
@@ -87,7 +87,7 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
       h('div.top-right', {},
         h('button.profile-chip', { type: 'button', onClick: () => onProfile?.(), 'aria-label': `내 프로필 열기, ${formatNumber(profile.points)}점, ${statusLabel}` },
           h('img', { src: cut(avatar.portrait), alt: '' }),
-          h('span.chip-text', {}, h('b', {}, `${formatNumber(profile.points)}점`), h('small', {}, rankBadge(profile.points), ` ${statusLabel}`))),
+          h('span.chip-text', {}, h('b', {}, `${formatNumber(profile.points)}점`), h('small', {}, rankBadge(profile.points), h('span.chip-status', {}, ` ${statusLabel}`)))),
         h('button.icon-btn.sound-btn', { type: 'button', 'aria-label': '소리 켜기 끄기', html: soundIcon(), onClick: (event) => { onToggleSound?.(); event.currentTarget.innerHTML = soundIcon(); } }),
         h('button.icon-btn', { type: 'button', 'aria-label': '설정', html: ICON.gear, onClick: () => onSettings?.() }))),
     h('div.lobby-main', {},
@@ -96,8 +96,7 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
         h('div.stage-felt', { 'aria-hidden': 'true' }),
         h('div.stage-copy', {},
           h('h1.stage-title', {}, '오늘은 누구와 붙을까요'),
-          h('p.stage-sub', {}, '캐릭터와 난이도는 판마다 따로 정해져요'),
-          h('p.stage-odds', { 'aria-label': `${formatNumber(profile.points)}점에서 만나는 난이도` }, h('small', {}, '만나는 난이도'), ...odds.map((level) => h('span', {}, h('i', {}, `★${level.stars}`), ` ${level.chance}%`))),
+          h('p.stage-odds', { 'aria-label': `${formatNumber(profile.points)}점에서 만나는 난이도` }, h('small', {}, '만나는 난이도'), ...odds.map((level) => h('span', {}, aiOddsBadge(level.stars), ` ${level.chance}%`))),
           eventOn ? h('p.event-ribbon', {}, h('b', {}, OPENING_EVENT.name), h('span', {}, `${openingEventDaysLeft()}일 남음, 경험치 2배에 보너스판이 더 자주 나와요`)) : null),
         lineupEl),
       h('aside.lobby-actions', {},
@@ -107,6 +106,7 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
         h('button.play-btn', { type: 'button', onClick: () => onOnline?.() },
           h('span.play-label', {}, h('b', {}, '친구와 대전'), h('small', {}, '방 코드 여섯 자리로 둘이서')),
           h('img.play-art', { src: cut('dice'), alt: '' })),
+        rankCard(profile.points),
         h('button.pass-card', { type: 'button', onClick: () => onPass?.() },
           h('div.pass-head', {}, h('b', {}, `${SEASON.name} 패스`), h('span', {}, pass.maxed ? '마지막 단계까지 왔어요' : pass.tier > 0 ? `${pass.tier}단계` : '첫 판부터 시작')),
           h('div.xp-bar', {}, h('i.xp-fill', { style: { transform: `scaleX(${pass.ratio})` } })),

@@ -1,8 +1,8 @@
-// 이 브라우저 설정 — 소리 · 효과 크기 · 연출 속도 · 시즌 2 오프닝을 봤는지
+// 이 브라우저 설정 — 소리 · 배경음악 · 효과 크기 · 연출 속도 · 시즌 2 오프닝을 봤는지
 const KEY = 'onecard-s2-settings';
 const LEGACY_SOUND_KEY = 'onecard-sound-enabled';
 
-const defaults = { sound: true, volume: 0.8, effects: 'full', speed: 1, seenOpening: false, nickname: '' };
+const defaults = { sound: true, volume: 0.8, music: true, musicVolume: 0.5, effects: 'full', speed: 1, seenOpening: false, nickname: '' };
 
 function read() {
   try {

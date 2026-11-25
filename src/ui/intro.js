@@ -5,7 +5,7 @@ import { cut } from '../data/assets.js';
 import { CHARACTERS } from '../data/characters.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
-import { rankBadge } from './rank.js';
+import { aiBadge, rankArtReady, rankBadge } from './rank.js';
 
 const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
 const FACE_ROT = { 1: [0, 0], 2: [-90, 0], 3: [0, 90], 4: [0, -90], 5: [90, 0], 6: [180, 0] };
@@ -102,20 +102,35 @@ export async function showVersus({ host, me, rival, reward, bonus, eventName }) 
   await pause(450);
 
   // 둘째 박자 「얼마나 센가?」 — 별이 하나씩 켜지고, 그 난이도가 어떻게 두는지 한 줄
-  for (let count = 1; count <= rival.stars; count += 1) {
-    if (skipped) break;
-    rivalStars.textContent = stars(count);
-    play('tick', { volume: 0.55, rate: 1 + count * 0.09 });
-    gsap.fromTo(rivalStars, { scale: 1.35 }, { scale: 1, duration: 0.18, ease: 'power2.out' });
-    await pause(rival.stars >= 6 ? 130 : 110);
+  if (rankArtReady()) {
+    // 단계 그림(금별 · 루비 · 분홍 장미 · 왕관)이 하나씩 켜진다(11-25 — 옛 별 글자 대신)
+    const badge = aiBadge(rival.stars, { size: 'md' });
+    const icons = [...badge.querySelectorAll('img')];
+    gsap.set(icons, { opacity: 0, scale: 0.4 });
+    rivalStars.replaceChildren(badge);
+    for (const [index, icon] of icons.entries()) {
+      if (skipped) break;
+      play('tick', { volume: 0.55, rate: 1 + (index + 1) * 0.12 });
+      gsap.to(icon, { opacity: 1, scale: 1, duration: 0.22, ease: 'back.out(2.4)' });
+      await pause(rival.stars >= 6 ? 160 : 130);
+    }
+    if (skipped) gsap.set(icons, { opacity: 1, scale: 1 });
+  } else {
+    for (let count = 1; count <= rival.stars; count += 1) {
+      if (skipped) break;
+      rivalStars.textContent = stars(count);
+      play('tick', { volume: 0.55, rate: 1 + count * 0.09 });
+      gsap.fromTo(rivalStars, { scale: 1.35 }, { scale: 1, duration: 0.18, ease: 'power2.out' });
+      await pause(rival.stars >= 6 ? 130 : 110);
+    }
+    rivalStars.textContent = stars(rival.stars);
   }
-  rivalStars.textContent = stars(rival.stars);
   rivalLevel.textContent = rival.blurb || '';
   rivalSide.classList.toggle('is-elite', rival.stars >= 6);
   if (!skipped) gsap.fromTo(rivalLevel, { y: 8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: 'power2.out' });
   if (rival.stars >= 6 && !skipped) {
     play('bonus', { volume: 0.5 });
-    gsap.fromTo(rivalStars, { textShadow: '0 0 0 rgba(255,210,120,0)' }, { textShadow: '0 0 18px rgba(255,210,120,.95)', duration: 0.3, yoyo: true, repeat: 1 });
+    gsap.fromTo(rivalStars, { filter: 'drop-shadow(0px 0px 0px rgba(255, 210, 120, 0))' }, { filter: 'drop-shadow(0px 0px 12px rgba(255, 210, 120, 0.95))', duration: 0.3, yoyo: true, repeat: 1 });
   }
   await pause(320);
   rewardLine.textContent = `이기면 +${formatNumber(reward)}점`;

@@ -18,14 +18,30 @@ export const RANK_LEVELS = LADDER.length;
 
 const nameOf = (step) => `${step.unit.name} ${step.count}단계`;
 
+// AI 상대 난이도(★1~★8)도 같은 그림으로(11-25 선생님 「AI 상대방도 같이 — 별이 옛날 모양」) — 그 난이도를 주로 만나는 점수대의 단계.
+// rating.js MATCH_BANDS 에서 난이도마다 가장 자주 나오는 점수대를 보고 정함(30만 점대는 분홍 장미 1 · 4 를 주로, 가끔 왕관 3)
+export const AI_RANK_LEVELS = Object.freeze([1, 2, 3, 5, 8, 11, 14, 18]);
+
+function describe(step) {
+  const next = LADDER[step.level] || null;
+  return {
+    level: step.level, unit: step.unit.key, unitName: step.unit.name, art: step.unit.art, count: step.count,
+    name: nameOf(step), min: step.min, next: next ? { level: next.level, name: nameOf(next), min: next.min } : null,
+  };
+}
+
+export function rankForLevel(level) {
+  return describe(LADDER[Math.min(LADDER.length, Math.max(1, Math.floor(Number(level) || 1))) - 1]);
+}
+
+export function aiRankForStars(stars) {
+  return rankForLevel(AI_RANK_LEVELS[Math.min(AI_RANK_LEVELS.length, Math.max(1, Math.floor(Number(stars) || 1))) - 1]);
+}
+
 // { level 1~20, unit 'star' · 'ruby' · 'rose' · 'crown', unitName, art, count 1~5, name, min, next: { level, name, min } | null }
 export function rankForPoints(points) {
   const score = Math.max(0, Math.floor(Number(points) || 0));
   let current = LADDER[0];
   for (const step of LADDER) if (score >= step.min) current = step;
-  const next = LADDER[current.level] || null;
-  return {
-    level: current.level, unit: current.unit.key, unitName: current.unit.name, art: current.unit.art, count: current.count,
-    name: nameOf(current), min: current.min, next: next ? { level: next.level, name: nameOf(next), min: next.min } : null,
-  };
+  return describe(current);
 }

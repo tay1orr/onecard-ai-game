@@ -163,6 +163,21 @@
 .rank-btn { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 6px; border-radius: 99px; border: 1px solid var(--line-strong); background: rgba(255, 255, 255, 0.05); color: inherit; font: inherit; cursor: pointer; vertical-align: middle; }
 .rank-btn small { font-size: 12px; font-weight: 800; color: var(--mute); }
 .rank-btn:hover small, .rank-btn:focus-visible small { color: var(--chalk); }
+/* 다음 단계까지 막대(ui/rank.js rankMeter — 로비 「내 단계」 · 결과 판). 단계 색 — 금별 · 왕관 금, 루비 빨강, 분홍 장미 분홍.
+   얻은 만큼(rm-gain)은 밝게 아래에 깔고 원래 있던 만큼(rm-base)을 위에 덮는다. 움직이는 동안 끝에 빛 방울(rm-tip) */
+.rank-meter { --rk: #ffd77a; }
+.rank-meter.u-ruby { --rk: #ff7b7b; }
+.rank-meter.u-rose { --rk: #ff9fcb; }
+.rm-badge { display: inline-flex; }
+.rm-track { position: relative; }
+.rm-bar { position: relative; height: 10px; border-radius: 99px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.rm-bar i { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); }
+.rm-base { background: linear-gradient(90deg, color-mix(in srgb, var(--rk) 45%, #2a2216), var(--rk)); }
+.rm-gain { background: color-mix(in srgb, var(--rk) 30%, #fff); }
+.rm-gain.is-minus { background: #ff6b62; }
+.rm-tip { position: absolute; left: 0; top: 50%; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: radial-gradient(circle, #fff 0 24%, color-mix(in srgb, var(--rk) 70%, #fff) 42%, transparent 72%); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.rm-track.is-moving .rm-tip { opacity: 1; }
+.rm-next { color: #c9d2e2; font-size: 13px; font-weight: 700; }
 /* 단계표 창 — 넓으면 두 칸, 휴대폰은 한 칸. 줄마다 그림 · 이름 · 점수 · 지금/남은 점수 */
 .modal-card.is-rank { width: min(760px, 94vw); }
 .rt-now { margin: -2px 0 14px; color: #d7deeb; font-size: 15px; }

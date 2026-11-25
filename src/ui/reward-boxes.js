@@ -1,6 +1,7 @@
 // 보상 상자 고르기 — 미스터리 상자 셋이 떨어지고, 하나를 고르면 흔들리다 뚜껑이 젖혀지며 열린다(열린 그림으로 바뀜).
 // 빛은 몸통이 아니라 열린 입구에서 나온다(11-25 선생님). 좋은 상자(영웅 이상)는 흔들릴 때 뚜껑 틈으로 금빛이 새고, 열리면 입구에서 금빛 빛살이 위로 퍼진다(전설 이상은 빛기둥도).
-// 열리면 기본 점수가 먼저 오르고, 배수(×2 · ×3 · ×5 · ×10) 도장이 찍히며 한 번 더 뛴다. 아이템이 들어 있으면 점수와 함께 나온다.
+// 열리는 순간 입구에서 동전이 쏟아지고 점수 카드가 튀어나와 자리를 잡는다(11-25 선생님 「상자가 열리면서 뭔가 나와야지」). 아이템도 바로 뒤따라 나온다.
+// 기본 점수가 먼저 오르고, 배수(×2 · ×3 · ×5 · ×10) 도장이 찍히며 한 번 더 뛴다.
 // 고른 뒤 나머지 둘도 열어 무엇이 들어 있었는지 보여 준다. 내용은 미리 정해져 있고 고르는 것은 순수한 선택이다.
 import gsap from 'gsap';
 import { Physics2DPlugin } from 'gsap/Physics2DPlugin';
@@ -16,7 +17,8 @@ gsap.registerPlugin(Physics2DPlugin);
 
 const rand = (min, max) => min + Math.random() * (max - min);
 const slotName = (slot) => COSMETIC_SLOTS.find((entry) => entry.key === slot)?.name || '';
-const COINS = { common: 3, rare: 5, epic: 7, legend: 10, mythic: 16 };
+// 뚜껑이 열리는 순간 입구에서 쏟아지는 동전 수(좋은 상자일수록 많이 · 큰 동전이라 떼로 보이지 않게 14개까지)
+const COINS = { common: 6, rare: 8, epic: 10, legend: 12, mythic: 14 };
 // 열린 상자 그림에서 안쪽 빛이 나오는 입구(상자 칸에 대한 비율) — 빛 · 빛살 · 동전이 여기서 나온다. 열린 그림을 닫힌 몸통에 겹치는 자리는 fx.css .rb-open
 const OPENING = { x: 0.5, y: 0.25 };
 
@@ -106,16 +108,29 @@ export function openRewardBoxes({ host, boxes, won, veteran = 1, games = 0 }) {
       play('unlock', { volume: legend ? 0.9 : 0.6 });
     }
 
-    // 점수 카드 — 기본 점수가 오른 뒤 배수 도장이 찍히고 다시 오른다. 아이템은 아래에 함께
+    // 상자 입구(at)에서 튀어나와 제자리로 — 작게 나와 위로 솟았다가 내려앉는다(11-25 선생님 「상자가 열리면서 뭔가 나와야지 —
+    // 열리고 1초 있다가 따로 나오는 것보다」). 제자리는 지금 놓인 자리로 잰다
+    function emerge(el, at, { lift = 70, duration = 0.7 } = {}) {
+      const r = el.getBoundingClientRect();
+      const o = overlay.getBoundingClientRect();
+      const dx = at.x - (r.left - o.left + r.width / 2);
+      const dy = at.y - (r.top - o.top + r.height / 2);
+      return gsap.timeline()
+        .fromTo(el, { x: dx, y: dy, scale: 0.12, opacity: 0, rotation: -14 }, { x: dx * 0.45, y: Math.min(dy, 0) - lift, scale: 0.7, opacity: 1, rotation: 6, duration: duration * 0.42, ease: 'power2.out' })
+        .to(el, { x: 0, y: 0, scale: 1, rotation: 0, duration: duration * 0.58, ease: 'back.out(1.7)' });
+    }
+
+    // 점수 카드 — 상자에서 튀어나와 자리를 잡고, 기본 점수가 오른 뒤 배수 도장이 찍히고 다시 오른다. 아이템도 상자에서 뒤따라 나온다
     function playContent(box, at) {
       const number = h('b.rb-points', {}, '+0');
       const card = h(`div.rb-card.r-${box.rarity}`, {}, h('span.rb-rarity', {}, `${RARITY_NAMES[box.rarity] || '일반'} 상자`), number, h('small.rb-kind', {}, '점'));
       reveal.replaceChildren(card);
+      gsap.set(card, { opacity: 0 });
       const timeline = gsap.timeline();
       const counter = { value: 0 };
       const show = () => { number.textContent = `+${formatNumber(Math.round(counter.value))}`; };
-      timeline.fromTo(card, { scale: 0.3, y: 60, opacity: 0, rotation: -8 }, { scale: 1, y: 0, opacity: 1, rotation: 0, duration: reduced ? 0.15 : 0.55, ease: 'back.out(2)' });
-      timeline.to(counter, { value: box.base, duration: reduced ? 0.1 : 0.6, ease: 'power2.out', onUpdate: show }, reduced ? 0 : 0.2);
+      timeline.call(() => { if (reduced) gsap.set(card, { opacity: 1 }); else emerge(card, at); }, null, 0);
+      timeline.to(counter, { value: box.base, duration: reduced ? 0.1 : 0.6, ease: 'power2.out', onUpdate: show }, reduced ? 0 : 0.25);
       if (box.multiplier > 1) {
         const stamp = h('b.rb-mult', {}, `×${box.multiplier}`);
         card.append(stamp);
@@ -128,18 +143,20 @@ export function openRewardBoxes({ host, boxes, won, veteran = 1, games = 0 }) {
             gsap.fromTo(card, { scale: 1.08 }, { scale: 1, duration: 0.35, ease: 'elastic.out(1.2, 0.4)' });
             gsap.fromTo(flash, { opacity: big ? 0.85 : 0.4 }, { opacity: 0, duration: big ? 0.7 : 0.4, ease: 'power2.out' });
           }
-          burstCoins(at, COINS[box.rarity] || 4);
+          if (big) burstCoins(at, 6); // 큰 배수(×5 이상)는 도장에 맞춰 상자에서 한 번 더
         });
         timeline.to(counter, { value: box.amount, duration: reduced ? 0.1 : (big ? 1.1 : 0.7), ease: 'power2.out', onUpdate: show }, '>');
       } else {
-        timeline.call(() => { play('stack', { volume: 0.7 }); burstCoins(at, COINS.common); });
+        timeline.call(() => play('stack', { volume: 0.7 }));
       }
       if (box.itemId) {
         const item = cosmeticById(box.itemId);
         const extra = h('div.rb-item', {}, itemPreview(item), h('div.rb-item-text', {}, h('small.rb-kind', {}, `상자 전용 ${slotName(item?.slot)}도 함께`), h('b.rb-name', {}, item?.name || '아이템')));
         card.append(extra);
-        timeline.fromTo(extra, { y: 18, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, duration: reduced ? 0.1 : 0.4, ease: 'back.out(1.8)' }, '+=0.1');
-        timeline.call(() => play('unlock'));
+        gsap.set(extra, { opacity: 0 });
+        // 점수 카드가 자리를 잡자마자 뒤따라 나온다(전에는 점수가 다 오른 뒤라 열고 2초 넘게 빈 칸이었다)
+        timeline.call(() => { if (reduced) gsap.set(extra, { opacity: 1 }); else emerge(extra, at, { lift: 50, duration: 0.6 }); play('unlock'); }, null, reduced ? 0 : 0.6);
+        timeline.to({}, { duration: 0.01 }, reduced ? 0.05 : 1.25); // 아이템이 자리를 잡을 때까지는 끝나지 않게
       }
       timeline.call(show);
       return timeline;
@@ -205,6 +222,7 @@ export function openRewardBoxes({ host, boxes, won, veteran = 1, games = 0 }) {
       Object.assign(at, { x: rect.left - box0.left + rect.width * OPENING.x, y: rect.top - box0.top + rect.height * OPENING.y });
       gsap.set(glow, { left: at.x, top: at.y, xPercent: -50, yPercent: -50 });
       gsap.fromTo(glow, { scale: 0.2, opacity: 0.95 }, { scale: good ? 3 : 2.2, opacity: 0, duration: reduced ? 0.2 : good ? 1.2 : 0.8, ease: 'power2.out' });
+      burstCoins(at, COINS[box.rarity] || 6); // 열리는 순간 입구에서 동전이 쏟아진다(점수 카드 · 아이템도 이 입구에서 튀어나온다)
       gsap.set(art, { opacity: 0 });
       gsap.set(open, { opacity: 1 });
       if (reduced) gsap.set(inner, { opacity: 0.8 });

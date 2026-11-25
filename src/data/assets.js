@@ -7,6 +7,7 @@ export const anim = (key) => `${BASE}/a/${key}.webp`;
 export const tex = (key) => `${BASE}/t/${key}.webp`; // 실제 재질 사진(CC0)
 export const photo = (key, kind = 'card') => `${BASE}/p/${key}-${kind}.webp`; // 선생님 장미 사진
 export const sfxUrl = (key) => `${BASE}/sfx/${key}.mp3`;
+export const musicUrl = (file) => `${BASE}/bgm/${file}.mp3`; // 배경음악(src/data/music.js)
 
 // 실사 에셋 — 맵 배경 사진 · 시즌 1 그림 · 카드 뒷면 그림 · 그림카드 · 누끼
 export const scene = (key, variant) => `${BASE}/r/scene/${key}${suffix(variant)}.webp`; // 1920 · -m 휴대폰 세로 · -s 작은 그림

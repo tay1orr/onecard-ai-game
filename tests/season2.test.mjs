@@ -299,5 +299,14 @@ check(rankAt(0) === 'star1' && rankAt(999) === 'star1' && rankAt(1000) === 'star
 check(rankAt(42000) === 'ruby1' && rankAt(160000) === 'ruby5' && rankAt(199999) === 'ruby5' && rankAt(200000) === 'rose1', '루비 → 분홍 장미 경계');
 check(rankAt(335000) === 'rose3' && rankAt(540000) === 'crown1' && rankAt(1000000) === 'crown5' && rankAt(5000000) === 'crown5' && rankForPoints(1000000).next === null, '분홍 장미 → 왕관, 100만 점이 마지막(다음 없음)');
 check(rankForPoints(41999).next?.name === '루비 1단계' && rankForPoints(-5).level === 1 && rankForPoints('abc').level === 1, '다음 단계 이름 · 이상한 점수는 1단계');
+// AI 난이도(★1~★8)도 단계 그림으로(11-25) — 난이도가 오를수록 단계도 오르고, 30만 점대(★5~★8)는 루비 · 분홍 장미 · 왕관
+const { AI_RANK_LEVELS, aiRankForStars } = await import('../src/core/rank.js');
+const aiRanks = [1, 2, 3, 4, 5, 6, 7, 8].map((stars) => aiRankForStars(stars));
+check(AI_RANK_LEVELS.length === 8 && aiRanks.every((rank, index) => index === 0 || rank.level > aiRanks[index - 1].level), 'AI 난이도 단계는 ★1 → ★8 로 갈수록 오름');
+check(aiRanks.slice(4).map((rank) => rank.unit).join() === 'ruby,rose,rose,crown' && aiRankForStars(0).level === 1 && aiRankForStars(99).level === aiRanks[7].level, '★5 루비 · ★6 ★7 분홍 장미 · ★8 왕관, 벗어난 값은 끝에 맞춤');
+
+// 배경음악 목록(scripts/build-music.mjs) — 넣은 곡은 파일이 있고 장면은 로비 · 대전뿐, 출처가 적혀 있음
+const { MUSIC } = await import('../src/data/music.js');
+check(MUSIC.every((track) => ['lobby', 'game'].includes(track.scene) && fs.existsSync(path.join(root, 'public/assets/s2/bgm', `${track.file}.mp3`)) && track.title && track.license), `배경음악 ${MUSIC.length}곡은 파일 · 장면 · 출처가 맞아야 함`);
 
 console.log(`시즌 2 테스트 ${count}개 통과`);

@@ -26,6 +26,7 @@ import { showVersus, runDice, closeVersus } from './intro.js';
 import { pickSuit, showHistory, playHint, blockedReason } from './play-ui.js';
 import { showResult } from './result.js';
 import { showRankUp } from './rank.js';
+import { setMusicScene } from './music.js';
 import { confirmModal, toast } from './modal.js';
 import { stickerPicker, showSticker } from './reactions.js';
 import { play } from './sound.js';
@@ -270,6 +271,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     table.setTurn('');
     await director.idle();
     const won = winner === 0;
+    setMusicScene(null); // 승리 · 패배 잔음악이 들리게 배경음악은 줄여 끈다(로비 · 다음 판에서 다시)
     const xpBefore = xpAtStart;
     const rating = recordMatchResult({ won, opponentStars: rival.stars, mode: 'ai', matchId, bonusMultiplier: bonus ? 2 : 1 });
     const resultEvents = [

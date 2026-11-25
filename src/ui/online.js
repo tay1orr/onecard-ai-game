@@ -18,6 +18,7 @@ import { mountToys } from './toys.js';
 import { pickSuit, playHint, blockedReason } from './play-ui.js';
 import { showResult } from './result.js';
 import { rankBadge, showRankUp } from './rank.js';
+import { setMusicScene } from './music.js';
 import { confirmModal, toast } from './modal.js';
 import { stickerPicker, showSticker } from './reactions.js';
 import { rollDie } from './intro.js';
@@ -285,6 +286,7 @@ export function startOnline({ host, onExit, openRules }) {
       return undefined;
     }
     if (view.status === 'playing' && (!previous || previous.status !== 'playing') && !table?.dealt) {
+      setMusicScene('game');
       await finishDice(view);
       ensureTable(view);
       table.resetPile(view.topCard);
@@ -348,6 +350,7 @@ export function startOnline({ host, onExit, openRules }) {
     const key = `multi:${view.roomId}:round:${view.roundNo}`;
     if (resultKey === key) return;
     resultKey = key;
+    setMusicScene(null); // 승리 · 패배 잔음악이 들리게(재대결 판이 시작되면 다시 대전 곡)
     const { mine, opponent } = getSeatView(view);
     const won = view.winnerSeat === view.mySeat;
     const before = loadPlayerProfile();

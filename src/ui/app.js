@@ -5,6 +5,7 @@ import { installSuitSprite } from './suits.js';
 import { settings } from './settings.js';
 import { applySpeed } from './director.js';
 import { preloadSounds, unlockAudio } from './sound.js';
+import { setMusicScene, unlockMusic } from './music.js';
 import { renderLobby } from './lobby.js';
 import { startAiMatch } from './ai-match.js';
 import { startOnline } from './online.js';
@@ -30,7 +31,7 @@ export function createApp(root) {
   let accountStatus = hasStoredSession() ? 'checking' : 'local';
   let accountModule = null;
 
-  document.addEventListener('pointerdown', () => { unlockAudio(); preloadSounds(); }, { once: true });
+  document.addEventListener('pointerdown', () => { unlockAudio(); preloadSounds(); unlockMusic(); }, { once: true });
   warm(CHARACTERS.map((rival) => cut(rival.portrait)));
 
   async function loadAccount() {
@@ -67,6 +68,7 @@ export function createApp(root) {
   function showLobby() {
     current = 'lobby';
     document.body.dataset.screen = 'lobby';
+    setMusicScene('lobby');
     const profile = loadPlayerProfile();
     applyEquipped(document.body, profile.equipped);
     renderLobby({
@@ -107,6 +109,7 @@ export function createApp(root) {
   async function startAi() {
     current = 'game';
     document.body.dataset.screen = 'game';
+    setMusicScene('game');
     await startAiMatch({
       host: screen,
       openRules: () => openRules(),
@@ -118,6 +121,7 @@ export function createApp(root) {
   function startFriend() {
     current = 'online';
     document.body.dataset.screen = 'online';
+    setMusicScene('lobby'); // 친구 방 · 주사위는 로비 곡, 판이 시작되면 대전 곡(online.js)
     startOnline({ host: screen, openRules: () => openRules(), onExit: () => { requestSync(); showLobby(); } });
   }
 

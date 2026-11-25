@@ -224,7 +224,9 @@
 .vs-text { display: flex; flex-direction: column; min-width: 0; }
 .vs-title { color: #d7deeb; font-size: 14px; font-weight: 700; }
 .vs-name { font-size: clamp(26px, 3.4vw, 50px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; }
-.vs-stars { display: inline-block; min-height: 1.5em; color: var(--gold); letter-spacing: 2px; transform-origin: 100% 50%; } /* 별 · 설명 자리는 처음부터 한 줄 높이 그대로(룰렛이 끝나고 별이 켜질 때 칸이 커지지 않게) */
+.vs-stars { display: inline-block; height: 28px; line-height: 28px; color: var(--gold); letter-spacing: 2px; transform-origin: 100% 50%; } /* 별 · 설명 자리는 처음부터 한 줄 높이 그대로(룰렛이 끝나고 단계 그림이 켜질 때 칸이 커지지 않게) */
+.vs-text .vs-stars .rank-badge { vertical-align: middle; }
+.vs-text .vs-stars .rank-badge img { width: 26px; height: 26px; } /* 두 쪽 같은 크기(fx.css .is-md 보다 먼저 걸리게) */
 .vs-level { min-height: 1.5em; margin-top: 2px; color: #c9d2e2; font-size: 13px; font-weight: 600; }
 .vs-rival.is-elite .vs-stars { color: #ffd77a; }
 .vs-mark { position: relative; font: 900 clamp(56px, 8vw, 132px)/0.8 var(--font-display); color: var(--gold); text-shadow: 6px 6px 0 #05070d; opacity: 0; }
@@ -291,6 +293,15 @@
 .res-row-item { grid-column: 1 / -1; color: #e9d9b0; font-size: 13px; font-weight: 700; }
 .res-total { color: #d7deeb; font-size: 15px; }
 .res-total b { color: var(--chalk); font-weight: 900; }
+/* 지금 점수 · 다음 단계까지 막대(11-25) — 칸 전체가 단추(누르면 단계표) */
+.res-rank { display: flex; flex-direction: column; gap: 7px; width: 100%; padding: 11px 14px 10px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.res-rank:hover { background: rgba(255, 255, 255, 0.07); }
+.res-rank-top, .res-rank-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.res-rank-now { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.res-rank-now .rm-name { font-size: 15px; font-weight: 900; white-space: nowrap; }
+.res-rank .res-total { flex: none; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.res-rank-more { flex: none; color: var(--mute); font-size: 12px; font-weight: 800; }
+.res-rank:hover .res-rank-more { color: var(--chalk); }
 .res-xp { width: 100%; text-align: left; }
 .xp-top { display: flex; justify-content: space-between; font-size: 13px; color: var(--mute); margin-bottom: 6px; }
 .xp-top b { color: var(--chalk); }
@@ -298,8 +309,12 @@
 .res-label { font-weight: 800; font-size: 14px; margin-bottom: 6px; }
 .res-unlocks { width: 100%; }
 .unlock-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; perspective: 600px; }
-.unlock-card { width: min(90px, calc((100% - 40px) / 5)); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; background: rgba(242, 181, 68, 0.1); border: 1px solid rgba(242, 181, 68, 0.4); }
+.unlock-card { position: relative; width: min(90px, calc((100% - 40px) / 5)); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border-radius: 12px; background: rgba(242, 181, 68, 0.1); border: 1px solid rgba(242, 181, 68, 0.4); }
 .unlock-card small { font-size: 12px; font-weight: 700; }
+/* 상자에서 나온 아이템 — 상자 등급 색 테두리 + 위에 「상자」 이름표(11-25) */
+.unlock-card.is-box { border-color: var(--rb); background: color-mix(in srgb, var(--rb) 14%, transparent); }
+.unlock-from { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: max-content; display: inline-flex; align-items: center; gap: 1px; padding: 0 7px 0 2px; border-radius: 99px; background: #121826; border: 1px solid var(--rb); color: var(--rb); font-size: 11px; font-weight: 900; line-height: 18px; white-space: nowrap; }
+.unlock-from img { width: 18px; height: 18px; object-fit: contain; }
 .res-stats { color: var(--mute); font-size: 13px; }
 .res-actions { flex: none; display: flex; gap: 10px; width: 100%; }
 /* 휴대폰 — 점수 글씨 · 새 아이템 칸을 줄여 다섯 칸이 한 줄에, 판이 한 화면에 들어오게(11-24) */
