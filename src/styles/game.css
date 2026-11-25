@@ -296,7 +296,7 @@
 /* 지금 점수 · 다음 단계까지 막대(11-25) — 칸 전체가 단추(누르면 단계표) */
 .res-rank { display: flex; flex-direction: column; gap: 7px; width: 100%; padding: 11px 14px 10px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .res-rank:hover { background: rgba(255, 255, 255, 0.07); }
-.res-rank-top, .res-rank-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.res-rank-top, .res-rank-bottom { display: flex; align-items: center; justify-content: space-between; gap: 2px 10px; flex-wrap: wrap; } /* 왕관 다섯 · 100만 점처럼 길면 지금 점수가 다음 줄로 */
 .res-rank-now { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 .res-rank-now .rm-name { font-size: 15px; font-weight: 900; white-space: nowrap; }
 .res-rank .res-total { flex: none; white-space: nowrap; font-variant-numeric: tabular-nums; }

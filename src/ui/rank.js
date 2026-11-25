@@ -13,11 +13,17 @@ import { openModal } from './modal.js';
 export const rankArtReady = () => RANK_UNITS.every((unit) => hasGptArt(unit.art));
 
 // 단계 그림 줄 — 그림이 없으면 지금 별 글자(문장 안에 그대로 넣을 수 있게 글자 마디로)
-export function rankBadge(points, { size = 'sm' } = {}) {
+// compact — 그림 하나 + ×개수(휴대폰 점수 칩처럼 좁은 자리. 다섯 개를 다 그리면 칩 밖으로 넘쳤다, 11-25 선생님 사진)
+export function rankBadge(points, { size = 'sm', compact = false } = {}) {
   if (!rankArtReady()) return document.createTextNode(stars(playerStarsForPoints(points)));
   const rank = rankForPoints(points);
+  const icon = () => h('img', { src: cut(rank.art, 's'), alt: '', draggable: 'false' });
+  if (compact) {
+    return h(`span.rank-badge.is-compact.u-${rank.unit}.is-${size}`, { role: 'img', 'aria-label': rank.name, title: rank.name },
+      icon(), rank.count > 1 ? h('small.rank-count', {}, `×${rank.count}`) : null);
+  }
   return h(`span.rank-badge.u-${rank.unit}.is-${size}`, { role: 'img', 'aria-label': rank.name, title: rank.name },
-    ...Array.from({ length: rank.count }, () => h('img', { src: cut(rank.art, 's'), alt: '', draggable: 'false' })));
+    ...Array.from({ length: rank.count }, icon));
 }
 
 // AI 상대 난이도(★1~★8) — 같은 그림으로(core/rank.js AI_RANK_LEVELS). 그림이 없으면 옛 별 글자

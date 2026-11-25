@@ -87,7 +87,7 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
       h('div.top-right', {},
         h('button.profile-chip', { type: 'button', onClick: () => onProfile?.(), 'aria-label': `내 프로필 열기, ${formatNumber(profile.points)}점, ${statusLabel}` },
           h('img', { src: cut(avatar.portrait), alt: '' }),
-          h('span.chip-text', {}, h('b', {}, `${formatNumber(profile.points)}점`), h('small', {}, rankBadge(profile.points), h('span.chip-status', {}, ` ${statusLabel}`)))),
+          h('span.chip-text', {}, h('b', {}, `${formatNumber(profile.points)}점`), h('small', {}, rankBadge(profile.points), rankBadge(profile.points, { compact: true }), h('span.chip-status', {}, ` ${statusLabel}`)))),
         h('button.icon-btn.sound-btn', { type: 'button', 'aria-label': '소리 켜기 끄기', html: soundIcon(), onClick: (event) => { onToggleSound?.(); event.currentTarget.innerHTML = soundIcon(); } }),
         h('button.icon-btn', { type: 'button', 'aria-label': '설정', html: ICON.gear, onClick: () => onSettings?.() }))),
     h('div.lobby-main', {},
