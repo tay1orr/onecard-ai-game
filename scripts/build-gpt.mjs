@@ -33,7 +33,8 @@ const CHARACTER_FILES = {
 };
 
 // 보상 상자(11-25) — 배경이 이미 투명한 그림 → cut/chest-<이름>.webp
-const CHEST_FILES = { 미스터리상자: 'chest-mystery' };
+// 「미스터리상자-열림」도 「미스터리상자」로 시작하니 열린 그림부터 찾는다(그대로 두면 더 새 파일인 열린 그림이 닫힌 상자 자리를 덮었다, 11-25)
+const CHEST_FILES = [[/^미스터리상자\s*[-_ ]?\s*열림/, '미스터리상자 열림', 'chest-mystery-open'], [/^미스터리상자/, '미스터리상자', 'chest-mystery']];
 
 fs.mkdirSync(SRC, { recursive: true });
 const files = fs.readdirSync(SRC, { withFileTypes: true })
@@ -46,10 +47,10 @@ const files = fs.readdirSync(SRC, { withFileTypes: true })
       const full = path.join(SRC, entry.name);
       return { kind: 'tall', number: 0, target, label: `세로판 ${target}`, file: full, time: fs.statSync(full).mtimeMs, name: entry.name };
     }
-    const chest = Object.keys(CHEST_FILES).find((name) => entry.name.startsWith(name));
+    const chest = CHEST_FILES.find(([pattern]) => pattern.test(entry.name));
     if (chest) {
       const full = path.join(SRC, entry.name);
-      return { kind: 'chest', number: 0, target: CHEST_FILES[chest], label: chest, file: full, time: fs.statSync(full).mtimeMs, name: entry.name };
+      return { kind: 'chest', number: 0, target: chest[2], label: chest[1], file: full, time: fs.statSync(full).mtimeMs, name: entry.name };
     }
     const match = entry.name.match(/^(상대|나|울음|승리|판|뒷면|앞면|효과|배경)\s*0*(\d+)/);
     if (!match) return null;

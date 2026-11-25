@@ -180,10 +180,10 @@ Use the attached picture only as a style reference (painting style, lighting and
 
 Use the attached picture only as a style reference (painting style, lighting and colors). Create a sticker sheet of 6 separate small objects for a card-game effect, arranged in a grid of 3 columns and 2 rows, numbered left to right then top to bottom. Each object sits fully inside its own cell with plenty of empty space around it and never touches another. Objects: (1) a tiny sitting teddy bear with a red bow, (2) a red satin bow, (3) a small red heart, (4) a little pink heart balloon, (5) a tiny golden star, (6) a small curl of red ribbon. Painterly storybook illustration matching the reference, soft light from the top left, crisp clean edges, readable even when shrunk to a small icon. No outlines, no shadows on the ground, no text, no frame, no grid lines. Transparent background (PNG). Landscape 3:2.
 
-## 보상 상자(11-25 — 1장 들어감)
+## 보상 상자(11-25 — 2장 들어감)
 - 파일 이름 `미스터리상자`(배경 투명) → `cut/chest-mystery.webp`. 보상 상자 셋이 모두 이 그림(src/core/reward-box.js 의 BOX_ART). 넣기: `node scripts/build-gpt.mjs`.
-- 열 때는 지금 이 그림을 뚜껑 틈에서 뚜껑 · 몸통으로 나눠 뚜껑을 들어 올리고, 빛은 그 틈에서 나옵니다(reward-boxes.js).
-- 더 자연스럽게 하려면(선택) 뚜껑이 젖혀진 그림 한 장. 들어오면 여는 순간 이 그림으로 바꿉니다(아직 안 들어옴 — build-gpt 의 CHEST_FILES 에 한 줄, 여는 자리 맞추기는 그때).
+- 열린 상자 `미스터리상자-열림`(밑줄 · 띄어쓰기도 됨) → `cut/chest-mystery-open.webp`(BOX_OPEN_ART). 여는 순간 이 그림으로 바뀌고, 빛 · 빛살 · 동전은 열린 입구에서 나옵니다.
+  - 닫힌 그림 몸통에 겹치는 자리는 fx.css `.rb-open`(두 그림의 앞면 · 발을 색 차이로 맞춰 잼). 그림을 다시 만들면 이 자리도 다시 잽니다.
 
 **미스터리상자_열림** · 첨부: `미스터리상자.png`
 

@@ -1,5 +1,5 @@
-// 보상 상자 고르기 — 미스터리 상자 셋이 떨어지고, 하나를 고르면 흔들리다 뚜껑이 들리며 열린다.
-// 빛은 몸통이 아니라 열리는 뚜껑 틈에서 나온다(11-25 선생님). 좋은 상자(영웅 이상)는 흔들릴 때 틈으로 금빛이 새고, 열리면 틈에서 금빛 빛살이 위로 퍼진다(전설 이상은 빛기둥도).
+// 보상 상자 고르기 — 미스터리 상자 셋이 떨어지고, 하나를 고르면 흔들리다 뚜껑이 젖혀지며 열린다(열린 그림으로 바뀜).
+// 빛은 몸통이 아니라 열린 입구에서 나온다(11-25 선생님). 좋은 상자(영웅 이상)는 흔들릴 때 뚜껑 틈으로 금빛이 새고, 열리면 입구에서 금빛 빛살이 위로 퍼진다(전설 이상은 빛기둥도).
 // 열리면 기본 점수가 먼저 오르고, 배수(×2 · ×3 · ×5 · ×10) 도장이 찍히며 한 번 더 뛴다. 아이템이 들어 있으면 점수와 함께 나온다.
 // 고른 뒤 나머지 둘도 열어 무엇이 들어 있었는지 보여 준다. 내용은 미리 정해져 있고 고르는 것은 순수한 선택이다.
 import gsap from 'gsap';
@@ -7,7 +7,7 @@ import { Physics2DPlugin } from 'gsap/Physics2DPlugin';
 import { h, formatNumber } from './dom.js';
 import { cut } from '../data/assets.js';
 import { cosmeticById, COSMETIC_SLOTS } from '../core/cosmetics.js';
-import { BOX_ART, RARITY_NAMES, RARITY_ORDER } from '../core/reward-box.js';
+import { BOX_ART, BOX_OPEN_ART, RARITY_NAMES, RARITY_ORDER } from '../core/reward-box.js';
 import { itemPreview } from './item-preview.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
@@ -17,9 +17,8 @@ gsap.registerPlugin(Physics2DPlugin);
 const rand = (min, max) => min + Math.random() * (max - min);
 const slotName = (slot) => COSMETIC_SLOTS.find((entry) => entry.key === slot)?.name || '';
 const COINS = { common: 3, rare: 5, epic: 7, legend: 10, mythic: 16 };
-// 미스터리 상자 그림의 뚜껑 틈(상자 칸에 대한 비율) — 앞면은 위에서 32.5%, 오른쪽 옆면으로 가며 30% 쪽으로 오른다(fx.css .rb-lid · .is-body 의 자르는 선)
-const SEAM = { x: 0.49, y: 0.325 };
-const LIFT = 0.17; // 뚜껑이 들리는 높이(상자 높이에 대한 비율)
+// 열린 상자 그림에서 안쪽 빛이 나오는 입구(상자 칸에 대한 비율) — 빛 · 빛살 · 동전이 여기서 나온다. 열린 그림을 닫힌 몸통에 겹치는 자리는 fx.css .rb-open
+const OPENING = { x: 0.5, y: 0.25 };
 
 function peekLabel(box) {
   const points = `${box.multiplier > 1 ? `×${box.multiplier} ` : ''}+${formatNumber(box.amount)}점`;
@@ -35,7 +34,8 @@ export function openRewardBoxes({ host, boxes, won, veteran = 1, games = 0 }) {
     const buttons = boxes.map((box, index) => h('button.rb-box', {
       type: 'button', 'aria-label': `${index + 1}번 상자 열기`, dataset: { slot: index },
       onClick: () => pick(index),
-    }, h('span.rb-shadow'), h('img.rb-art', { src: cut(BOX_ART), alt: '', draggable: 'false' }), h('span.rb-peek')));
+    }, h('span.rb-shadow'), h('img.rb-art', { src: cut(BOX_ART), alt: '', draggable: 'false' }),
+    h('img.rb-open', { src: cut(BOX_OPEN_ART), alt: '', draggable: 'false' }), h('span.rb-peek'))); // 열린 그림은 미리 받아 숨겨 둔다(열 때 바로 바뀌게)
     const row = h('div.rb-row', {}, ...buttons);
     const reveal = h('div.rb-reveal', { role: 'status', 'aria-live': 'polite' });
     const take = h('button.btn.primary.rb-take', { type: 'button', style: { visibility: 'hidden' } }, '받기'); // 자리는 처음부터 — 나중에 나타나며 열린 상자를 밀어 올리지 않게
@@ -186,36 +186,38 @@ export function openRewardBoxes({ host, boxes, won, veteran = 1, games = 0 }) {
         });
       }
       await shake;
-      // 열림 — 같은 그림을 뚜껑 틈에서 뚜껑 · 몸통 두 장으로 나눠 뚜껑을 들어 올린다. 안쪽 빛 · 빛살 · 동전은 그 틈에서 나온다
-      // (11-25 선생님 「몸에서 빛이 뻗어 나가는 게 아니고 열리는 곳에서」 — 전에는 상자 가운데에서 사방으로 퍼지고 상자는 빛 속으로 사라졌다)
+      // 열림 — 빛이 번쩍이는 순간 뚜껑이 젖혀진 그림(선생님 GPT)으로 바뀌며 통 튄다. 두 그림은 몸통이 꼭 겹치게 맞춰 두었다(fx.css .rb-open).
+      // 안쪽 빛 · 빛살 · 동전은 열린 입구에서 나온다(11-25 선생님 「몸에서 빛이 뻗어 나가는 게 아니고 열리는 곳에서」 — 전에는 상자 가운데에서 사방으로 퍼지고 상자는 빛 속으로 사라졌다)
       play('pack', { volume: 0.9 });
       sub.textContent = box.multiplier > 1 ? `${RARITY_NAMES[box.rarity]} 상자 — 점수 ×${box.multiplier}!` : '점수를 받았어요';
-      const lid = h('img.rb-art.rb-lid', { src: art.src, alt: '', draggable: 'false' });
+      const open = chosen.querySelector('.rb-open');
       const inner = h('span.rb-inner');
-      art.classList.add('is-body');
-      art.after(inner, lid);
-      // 열린 상자는 조금 내려앉아 뚜껑이 들릴 자리를 낸다(흔들릴 때처럼 떠 있으면 들린 뚜껑이 위 글씨를 가렸다). 빛 · 빛살 자리는 내려앉은 자리로 잰다
+      open.after(inner);
+      // 열린 상자는 조금 내려앉고(흔들릴 때처럼 떠 있으면 뚜껑이 위 글씨를 더 가린다), 젖혀진 뚜껑이 그래도 위 글씨에 닿으면 글씨 묶음이 그만큼 위로 비킨다.
+      // 빛 · 빛살 자리와 뚜껑 높이는 내려앉은 자리로 잰다
       gsap.set(chosen, { scale: 1.06, y: 0 });
       const rect = chosen.getBoundingClientRect();
-      if (!reduced) gsap.fromTo(chosen, { scale: 1.18, y: -18 }, { scale: 1.06, y: 0, duration: 0.35, ease: 'power2.out' });
       const box0 = overlay.getBoundingClientRect();
-      Object.assign(at, { x: rect.left - box0.left + rect.width * SEAM.x, y: rect.top - box0.top + rect.height * (SEAM.y - LIFT / 2) });
+      const clash = (vet || sub).getBoundingClientRect().bottom + 6 - open.getBoundingClientRect().top;
+      const lift = Math.min(clash, title.getBoundingClientRect().top - box0.top - 8); // 제목이 화면 위로 밀려 나가지 않을 만큼만(낮은 화면 · 아이템 든 상자)
+      if (!reduced) gsap.fromTo(chosen, { scale: 1.18, y: -18 }, { scale: 1.06, y: 0, duration: 0.35, ease: 'power2.out' });
+      if (lift > 0) gsap.to([title, sub, vet].filter(Boolean), { y: -lift, duration: reduced ? 0 : 0.35, ease: 'power2.out', overwrite: 'auto' });
+      Object.assign(at, { x: rect.left - box0.left + rect.width * OPENING.x, y: rect.top - box0.top + rect.height * OPENING.y });
       gsap.set(glow, { left: at.x, top: at.y, xPercent: -50, yPercent: -50 });
       gsap.fromTo(glow, { scale: 0.2, opacity: 0.95 }, { scale: good ? 3 : 2.2, opacity: 0, duration: reduced ? 0.2 : good ? 1.2 : 0.8, ease: 'power2.out' });
-      if (reduced) {
-        gsap.set(lid, { yPercent: -LIFT * 100 });
-        gsap.set(inner, { opacity: 0.8 });
-      } else {
-        // 뚜껑이 툭 들리며 살짝 기울고, 받기 전까지 틈 위에 둥실 떠 있다. 안쪽 빛은 숨 쉬듯 일렁인다
-        gsap.to(lid, { yPercent: -LIFT * 100, rotation: -4, transformOrigin: '50% 32%', duration: 0.34, ease: 'back.out(2.4)' });
-        gsap.to(lid, { yPercent: -LIFT * 100 + 3, duration: 1.1, delay: 0.4, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+      gsap.set(art, { opacity: 0 });
+      gsap.set(open, { opacity: 1 });
+      if (reduced) gsap.set(inner, { opacity: 0.8 });
+      else {
+        // 뚜껑이 젖혀지는 순간 상자가 납작했다가 통 튀어 오르고, 입구의 빛은 받기 전까지 숨 쉬듯 일렁인다
+        gsap.fromTo(open, { scaleX: 1.08, scaleY: 0.9, transformOrigin: '50% 100%' }, { scaleX: 1, scaleY: 1, duration: 0.5, ease: 'elastic.out(1.1, 0.5)' });
         gsap.fromTo(inner, { opacity: 0, scaleX: 0.5, scaleY: 0.2 }, { opacity: good ? 1 : 0.8, scaleX: 1, scaleY: 1, duration: 0.3, ease: 'power2.out' });
-        gsap.to(inner, { opacity: good ? 0.7 : 0.5, duration: 0.9, delay: 0.4, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+        gsap.to(inner, { opacity: good ? 0.6 : 0.45, duration: 0.9, delay: 0.4, repeat: -1, yoyo: true, ease: 'sine.inOut' });
       }
       if (good) {
-        // 틈에서 빛살이 솟고, 안에서 나온 빛이 상자를 한 번 환하게 비춘 뒤 가라앉는다
+        // 입구에서 빛살이 솟고, 안에서 나온 빛이 상자를 한 번 환하게 비춘 뒤 가라앉는다
         goldBeams(at, rank, rect);
-        gsap.fromTo([art, lid], { filter: 'brightness(1.8) drop-shadow(0px 0px 22px rgba(255, 222, 140, 0.9))' }, { filter: 'brightness(1) drop-shadow(0px 18px 16px rgba(0, 0, 0, 0.55))', duration: 0.9, ease: 'power2.out' });
+        gsap.fromTo(open, { filter: 'brightness(1.8) drop-shadow(0px 0px 22px rgba(255, 222, 140, 0.9))' }, { filter: 'brightness(1) drop-shadow(0px 18px 16px rgba(0, 0, 0, 0.55))', duration: 0.9, ease: 'power2.out' });
         gsap.to(leak, { opacity: 0, duration: 0.3, onComplete: () => leak.remove() });
       }
       reveal.removeAttribute('aria-busy');
@@ -236,7 +238,7 @@ export function openRewardBoxes({ host, boxes, won, veteran = 1, games = 0 }) {
       take.focus();
       take.addEventListener('click', () => {
         play('confirm');
-        gsap.to(overlay, { opacity: 0, duration: 0.25, onComplete: () => { gsap.killTweensOf([lid, inner]); overlay.remove(); resolve(box); } });
+        gsap.to(overlay, { opacity: 0, duration: 0.25, onComplete: () => { gsap.killTweensOf(inner); overlay.remove(); resolve(box); } });
       }, { once: true });
     }
   });

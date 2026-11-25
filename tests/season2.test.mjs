@@ -89,7 +89,7 @@ Object.entries(VICTORIES).forEach(([key, victory]) => {
 Object.entries(TOYS).forEach(([key, toy]) => { needCut(toy.img, `장난감 ${key}`); (toy.burst || []).forEach((cut) => needCut(cut, `장난감 ${key} 소품`)); });
 CHARACTERS.forEach((rival) => needCut(rival.portrait, `상대 ${rival.name}`));
 COSMETICS.filter((item) => item.slot === 'avatar').forEach((item) => needCut(item.portrait, `캐릭터 ${item.name}`));
-['fire', 'smoke', 'gift-box', 'confetti', 'sword', 'dice', 'chest-mystery', 'gold-coins', 'gold-star', 'soap-bubble'].forEach((cut) => needCut(cut, '연출 · 로비 · 승리'));
+['fire', 'smoke', 'gift-box', 'confetti', 'sword', 'dice', 'chest-mystery', 'chest-mystery-open', 'gold-coins', 'gold-star', 'soap-bubble'].forEach((cut) => needCut(cut, '연출 · 로비 · 승리'));
 STICKERS.forEach((sticker) => need(`m/${sticker.motif}.webp`, `스티커 ${sticker.label}`));
 assert.deepEqual(missing, [], `없는 에셋 ${missing.length}개:\n  ${missing.slice(0, 40).join('\n  ')}`);
 count += 1;
@@ -187,9 +187,9 @@ check(avatars.filter((item) => item.threshold === 0).length === 3 && avatars.fil
 const { GPT_ART } = await import('../src/data/gpt-art.js');
 const LOOKS_BY_SLOT = { table: MAPS, cardBack: BACKS, cardFace: FACES };
 const gptKeyOf = (slot, look) => ({ table: look?.painted, cardBack: look?.paint, cardFace: look?.frame?.replace?.(/^paint:/, '') }[slot] || '').replace(/^gpt-/, '');
-const { BOX_ART } = await import('../src/core/reward-box.js');
+const { BOX_ART, BOX_OPEN_ART } = await import('../src/core/reward-box.js');
 const gptUsed = new Set([
-  BOX_ART, // 보상 상자 그림(셋 모두 같은 상자)
+  BOX_ART, BOX_OPEN_ART, // 보상 상자 그림(셋 모두 같은 상자) · 열린 상자
   ...CHARACTERS.map((persona) => persona.portrait),
   ...COSMETICS.map((item) => item.portrait),
   ...COSMETICS.filter((item) => LOOKS_BY_SLOT[item.slot]).map((item) => gptKeyOf(item.slot, LOOKS_BY_SLOT[item.slot][item.look])),
@@ -198,7 +198,7 @@ const gptUsed = new Set([
   ...Object.values(VICTORIES).flatMap((look) => [look.hero, (look.backdrop?.paint || '').replace(/^gpt-/, ''), ...(look.sprites || []), ...(look.petals || []), ...(look.sweep || [])]),
 ]);
 const unusedGpt = GPT_ART.filter((key) => !gptUsed.has(key));
-check(GPT_ART.length === 216 && unusedGpt.length === 0, `선생님 GPT 그림(캐릭터 29 · 판 19 · 세로 판 26 · 뒷면 14 · 앞면 13 · 승리 배경 6 · 효과 조각 108 · 보상 상자 1)은 모두 써야 함(지금 ${GPT_ART.length} · 안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
+check(GPT_ART.length === 217 && unusedGpt.length === 0, `선생님 GPT 그림(캐릭터 29 · 판 19 · 세로 판 26 · 뒷면 14 · 앞면 13 · 승리 배경 6 · 효과 조각 108 · 보상 상자 2)은 모두 써야 함(지금 ${GPT_ART.length} · 안 쓴 그림: ${unusedGpt.join(', ') || '없음'})`);
 // 시즌 2 첫 판 선물 — 크리스마스 다섯 칸, 상자에서는 나오지 않음
 const { FIRST_GAME_GIFT } = await import('../src/core/cosmetics.js');
 check(FIRST_GAME_GIFT.length === 5 && new Set(FIRST_GAME_GIFT.map((item) => item.slot)).size === 5 && FIRST_GAME_GIFT.every((item) => !item.box && item.set === 'christmas'), '첫 판 선물은 크리스마스 세트 다섯 칸(맵 · 뒷면 · 앞면 · 효과 · 승리)');
