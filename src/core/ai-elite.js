@@ -9,15 +9,19 @@ import {
 const now = () => (globalThis.performance?.now ? globalThis.performance.now() : Date.now());
 
 // 단계별 설정 — worlds: 뽑아 볼 판 수(상한) · budgetMs: 한 수에 쓰는 시간(상한)
-// candidates: 어림 점수 상위 몇 수를 두어 볼지 · rounds: 판 수 몇 할마다 아래 절반을 버릴지(8성)
+// candidates: 어림 점수 상위 몇 수를 두어 볼지 · rounds: 판 수 몇 할마다 아래 절반을 버릴지
+// search80 ~ search300 은 AI 난이도 16~19단계(7성과 8성 사이, 11-27) — 판 수 · 시간 · 후보를 고르게 늘림
 const SETTINGS = {
   star6: { search: false },
   star7: { search: true, worlds: 40, minWorlds: 8, budgetMs: 30, candidates: 5, rounds: [1] },
+  search80: { search: true, worlds: 80, minWorlds: 10, budgetMs: 31, candidates: 6, rounds: [0.5, 1] },
+  search140: { search: true, worlds: 140, minWorlds: 12, budgetMs: 32, candidates: 6, rounds: [0.5, 1] },
+  search210: { search: true, worlds: 210, minWorlds: 13, budgetMs: 34, candidates: 7, rounds: [0.25, 0.5, 1] },
+  search300: { search: true, worlds: 300, minWorlds: 14, budgetMs: 35, candidates: 8, rounds: [0.25, 0.5, 1] },
   star8: { search: true, worlds: 400, minWorlds: 16, budgetMs: 36, candidates: 8, rounds: [0.25, 0.5, 1] },
 };
 
 export const ELITE_KEYS = Object.keys(SETTINGS);
-export const eliteThinkMs = (level) => SETTINGS[level]?.budgetMs || 0;
 
 export function chooseEliteMove(game, level, random = Math.random) {
   const settings = SETTINGS[level] || SETTINGS.star6;

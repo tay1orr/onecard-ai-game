@@ -42,11 +42,11 @@ assert.doesNotThrow(() => loadMissionDashboard(storage, new Date('2026-11-25T10:
 assert.equal(loadPlayerProfile(storage).points, before.points, '미션을 읽는 것만으로 점수가 바뀌면 안 됨');
 
 // 2) 시즌 2 에서 한 판 이기면 시즌 1 숫자에서 이어서 늘어난다 · 원본 사본은 그대로
-const firstGame = recordMatchResult({ won: true, opponentStars: 5, mode: 'ai', matchId: 'ai:s2-first' }, storage);
+const firstGame = recordMatchResult({ won: true, opponentLevel: 8, mode: 'ai', matchId: 'ai:s2-first' }, storage);
 const next = loadPlayerProfile(storage);
 assert.ok(FIRST_GAME_GIFT.every((gift) => next.boxItems.includes(gift.id)), '시즌 2 첫 판을 마치면 크리스마스 세트를 가져야 함');
 assert.ok(FIRST_GAME_GIFT.every((gift) => firstGame.unlockedItems.some((item) => item.id === gift.id)), '크리스마스 세트가 결과 화면의 새로 얻은 아이템에 떠야 함');
-const secondGame = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'ai:s2-second' }, storage);
+const secondGame = recordMatchResult({ won: false, opponentLevel: 8, mode: 'ai', matchId: 'ai:s2-second' }, storage);
 assert.ok(!secondGame.unlockedItems.some((item) => item.gift), '첫 판 선물은 한 번만');
 assert.equal(next.games, before.games + 1, '판수는 시즌 1 판수 + 1');
 assert.equal(loadPlayerProfile(storage).games, before.games + 2, '둘째 판도 이어서 셈');

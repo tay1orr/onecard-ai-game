@@ -142,10 +142,13 @@ export function startOnline({ host, onExit, openRules }) {
   let roomEl = null;
   function renderRoom(view) {
     const { mine, opponent } = getSeatView(view);
+    // 단계 그림 · 점수 · 준비를 줄마다 따로 — 한 줄에 넣었더니 휴대폰에서 줄이 꺾이고, 그림이 캐릭터 그림 크기(84px)로 커져 칸 밖으로 넘쳤다(11-27)
     const seat = (player, label, me) => h(`div.seat${player?.ready ? '.is-ready' : ''}${me ? '.is-me' : ''}`, {},
-      h('img', { src: cut(me ? avatar.portrait : onlineLook(player?.nickname || '').portrait), alt: '' }),
-      h('b', {}, player?.nickname || '친구를 기다리는 중'),
-      h('small', {}, ...(player ? [rankBadge(player.rating || 0), ` ${formatNumber(player.rating || 0)}점, ${player.ready ? '준비 완료' : '준비 전'}`] : ['방 코드를 알려 주세요'])),
+      h('img.seat-art', { src: cut(me ? avatar.portrait : onlineLook(player?.nickname || '').portrait), alt: '' }),
+      h('b.seat-name', {}, player?.nickname || '친구를 기다리는 중'),
+      ...(player
+        ? [h('span.seat-rank', {}, rankBadge(player.rating || 0)), h('small', {}, `${formatNumber(player.rating || 0)}점`), h('span.seat-state', {}, player.ready ? '준비 완료' : '준비 전')]
+        : [h('small', {}, '방 코드를 알려 주세요')]),
       h('span.seat-label', {}, label));
     const readyButton = h('button.btn.primary', { type: 'button', disabled: !opponent, onClick: () => run(() => client.setReady()) }, mine?.ready ? '준비 취소' : opponent ? '준비 완료' : '친구를 기다려요');
     const next = h('section.room', { 'aria-label': '대기실' },

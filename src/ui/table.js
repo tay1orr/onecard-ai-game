@@ -417,11 +417,11 @@ export function createTable({ mode = 'ai', onPlay, onDraw, onPileTap, onExit, on
       matchSub.textContent = sub || '';
       bonusTag.hidden = !bonus;
     },
-    // starsCount = AI 상대 난이도(★1~★8) · rankPoints = 친구(사람)의 점수 — 사람은 내 단계와 같은 그림으로
-    setRival({ name, starsCount, rankPoints, color, portrait, status }) {
+    // aiLevel = AI 상대 난이도(1~20단계) · rankPoints = 친구(사람)의 점수 — 둘 다 내 단계와 같은 그림으로
+    setRival({ name, aiLevel, rankPoints, color, portrait, status }) {
       rivalName.textContent = name;
       if (rankPoints != null) rivalStars.replaceChildren(rankBadge(rankPoints));
-      else rivalStars.replaceChildren(...(starsCount ? [aiBadge(starsCount)] : [])); // AI 난이도도 단계 그림으로(그림이 없으면 옛 별 글자)
+      else rivalStars.replaceChildren(...(aiLevel ? [aiBadge(aiLevel)] : [])); // 그림이 없으면 단계 이름 글자
       rivalStatus.textContent = status || '';
       rivalZone.style.setProperty('--who-color', color);
       rivalImg.src = cut(portrait);

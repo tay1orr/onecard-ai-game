@@ -12,40 +12,67 @@ export const PROFILE_KEY = 'onecard-player-profile-v2';
 export const S1_PROFILE_BACKUP_KEY = 'onecard-player-profile-s1-backup';
 export const S2_PROGRESS_KEY = 'onecard-s2-progress-v1';
 
-// ★6~★8 은 5만 점부터 만나는 상대 — 더 세고, 이기면 더 많이, 지면 조금 더 잃는다
-export const WIN_REWARDS = Object.freeze({ 1: 125, 2: 180, 3: 250, 4: 340, 5: 500, 6: 700, 7: 1000, 8: 1400 });
-export const LOSS_PENALTY = -50;
-export const LOSS_PENALTIES = Object.freeze({ 6: -80, 7: -120, 8: -160 });
+// AI 상대 난이도 — 내 단계와 같은 20단계(금별 1단계 ~ 왕관 5단계 그림 · 이름, 11-27 선생님 「만나는 AI 상대도 왜 2종류의 난이도밖에 없어 — 세분화」).
+// 옛 ★1~★8 AI 는 1 · 2 · 3 · 5 · 8 · 11 · 15 · 20단계에 그대로 두고, 사이 단계는 이웃 두 AI 를 섞어 세기가 고르게 오른다(core/ai-player.js AI_LEVELS).
+// tier = 옛 별로 치면 몇 성인지(경험치 · 생각하는 시간 · 반응에 씀). status = 대결 화면 · 게임판 · 만나는 상대 창에 나오는 한 줄
+export const AI_LEVEL_COUNT = 20;
+export const AI_OPPONENTS = Object.freeze([
+  { level: 1, tier: 1, status: '마음 가는 카드를 고르고 있어요' },
+  { level: 2, tier: 2, status: '무늬와 공격 카드를 살펴봐요' },
+  { level: 3, tier: 3, status: '좋은 수를 생각하고 있어요' },
+  { level: 4, tier: 3.5, status: '좋은 수 몇 가지를 견줘 봐요' },
+  { level: 5, tier: 4, status: '최선과 차선의 흐름을 계산해요' },
+  { level: 6, tier: 4.33, status: '가끔 한 수 앞을 읽어요' },
+  { level: 7, tier: 4.67, status: '한 수 앞을 자주 읽어요' },
+  { level: 8, tier: 5, status: '공개된 정보로 다음 수를 읽어요' },
+  { level: 9, tier: 5.33, status: '가끔 나온 카드를 세어 봐요' },
+  { level: 10, tier: 5.67, status: '나온 카드를 자주 세어 봐요' },
+  { level: 11, tier: 6, status: '지나간 카드를 모두 기억해요' },
+  { level: 12, tier: 6.25, status: '가끔 나올 카드를 그려 봐요' },
+  { level: 13, tier: 6.5, status: '나올 카드를 자주 그려 봐요' },
+  { level: 14, tier: 6.75, status: '거의 늘 나올 카드를 그려 보고 골라요' },
+  { level: 15, tier: 7, status: '나올 카드를 수백 번 그려 봐요' },
+  { level: 16, tier: 7.2, status: '나올 카드를 더 많이 그려 봐요' },
+  { level: 17, tier: 7.4, status: '좋은 수에 생각을 몰아 써요' },
+  { level: 18, tier: 7.6, status: '판을 끝까지 여러 번 두어 봐요' },
+  { level: 19, tier: 7.8, status: '아주 깊이 읽고 골라요' },
+  { level: 20, tier: 8, status: '가장 깊이 읽고 골라요' },
+].map((entry) => Object.freeze({ key: `lv${entry.level}`, ...entry })));
 export const MAX_AI_STARS = 8;
 export const BONUS_MATCH_MULTIPLIER = 2;
 
-export const AI_OPPONENTS = Object.freeze([
-  { key: 'star1', stars: 1, name: '느긋한 루미', icon: '☁', status: '마음 가는 카드를 고르고 있어요', delay: 820 },
-  { key: 'star2', stars: 2, name: '재빠른 미오', icon: '◆', status: '무늬와 공격 카드를 살펴봐요', delay: 900 },
-  { key: 'star3', stars: 3, name: '영리한 네오', icon: '✦', status: '좋은 수를 생각하고 있어요', delay: 1030 },
-  { key: 'star4', stars: 4, name: '냉철한 아스트라', icon: '♛', status: '최선과 차선의 흐름을 계산해요', delay: 1160 },
-  { key: 'star5', stars: 5, name: '무결한 오르비스', icon: '◈', status: '공개된 정보로 다음 수를 읽어요', delay: 1280 },
-  { key: 'star6', stars: 6, name: '우아한 세레나', icon: '◇', status: '지나간 카드를 모두 기억해요', delay: 1320 },
-  { key: 'star7', stars: 7, name: '그림자 녹턴', icon: '◆', status: '나올 카드를 수백 번 그려 봐요', delay: 1380 },
-  { key: 'star8', stars: 8, name: '장미 정원의 로제아', icon: '❀', status: '가장 깊이 읽고 골라요', delay: 1440 },
-]);
+// AI 대전 승리 점수 — 옛 ★ 보상(125 · 180 · 250 · 340 · 500 · 700 · 1,000 · 1,400)을 단계 사이에 고르게 펴고
+// 20% 올림(11-27 선생님 「친구 대전 · AI 대전 · 상자 점수 20퍼센트 정도 상향」), 10점 단위
+export const WIN_REWARDS = Object.freeze({
+  1: 150, 2: 220, 3: 300, 4: 350, 5: 410, 6: 470, 7: 540, 8: 600, 9: 680, 10: 760,
+  11: 840, 12: 930, 13: 1020, 14: 1110, 15: 1200, 16: 1300, 17: 1390, 18: 1490, 19: 1580, 20: 1680,
+});
+// 지면 −50점, 9단계부터 조금씩 더 잃는다(옛 ★6 −80 · ★7 −120 · ★8 −160 그대로 — 잃는 점수는 올리지 않음)
+export const LOSS_PENALTY = -50;
+export const LOSS_PENALTIES = Object.freeze({ 9: -60, 10: -70, 11: -80, 12: -90, 13: -100, 14: -110, 15: -120, 16: -130, 17: -140, 18: -140, 19: -150, 20: -160 });
+// 친구 대전 승리 점수 — 상대 점수의 별(★1~★5, 서로 점수 몰아주기 막기로 ★5 까지). 옛 125 · 180 · 250 · 340 · 500 에서 20% 올림
+export const FRIEND_WIN_REWARDS = Object.freeze({ 1: 150, 2: 220, 3: 300, 4: 410, 5: 600 });
 
-// 점수대별로 만나는 상대(★1~★8) 확률. 2만 점 아래는 시즌 1 그대로, 5만 점부터 ★6~★8 이 섞인다
+// 점수대별로 만나는 AI 난이도(단계: %) — 옛 ★1~★8 표를 20단계로 펴되 점수대마다 판당 기대 점수(판 + 상자)는 옛 표와 같게 맞췄다
+// (가운데 단계 둘레로 3~5가지, 계산은 tests/economy-sim.mjs 의 가정 승률로). 5만 점 아래(학생 점수대)는 옛 표처럼 카드를 세는 AI(9단계부터 섞임)가 안 나오게 8단계까지.
+// 100만 점을 넘으면 왕관 5단계까지
+const band = (min, max, odds) => Object.freeze({ min, max, weights: Object.freeze(Array.from({ length: AI_LEVEL_COUNT }, (_, index) => odds[index + 1] || 0)) });
 export const MATCH_BANDS = Object.freeze([
-  { min: 0, max: 499, weights: [55, 35, 10, 0, 0, 0, 0, 0] },
-  { min: 500, max: 1499, weights: [20, 45, 30, 5, 0, 0, 0, 0] },
-  { min: 1500, max: 3499, weights: [5, 25, 45, 22, 3, 0, 0, 0] },
-  { min: 3500, max: 6999, weights: [0, 8, 42, 40, 10, 0, 0, 0] },
-  { min: 7000, max: 10999, weights: [0, 2, 25, 48, 25, 0, 0, 0] },
-  { min: 11000, max: 14999, weights: [0, 0, 12, 48, 40, 0, 0, 0] },
-  { min: 15000, max: 19999, weights: [0, 0, 5, 40, 55, 0, 0, 0] },
-  { min: 20000, max: 49999, weights: [0, 0, 0, 30, 70, 0, 0, 0] },
-  { min: 50000, max: 99999, weights: [0, 0, 0, 15, 55, 30, 0, 0] },
-  { min: 100000, max: 199999, weights: [0, 0, 0, 0, 35, 50, 15, 0] },
-  { min: 200000, max: 299999, weights: [0, 0, 0, 0, 15, 45, 40, 0] },
-  { min: 300000, max: 399999, weights: [0, 0, 0, 0, 5, 30, 50, 15] },
-  { min: 400000, max: 599999, weights: [0, 0, 0, 0, 0, 20, 50, 30] },
-  { min: 600000, max: Number.POSITIVE_INFINITY, weights: [0, 0, 0, 0, 0, 10, 45, 45] },
+  band(0, 499, { 1: 54, 2: 37, 3: 9 }),
+  band(500, 1499, { 1: 22, 2: 41, 3: 29, 4: 8 }),
+  band(1500, 3499, { 1: 4, 2: 19, 3: 39, 4: 30, 5: 8 }),
+  band(3500, 6999, { 2: 3, 3: 19, 4: 39, 5: 30, 6: 9 }),
+  band(7000, 10999, { 3: 4, 4: 19, 5: 39, 6: 30, 7: 8 }),
+  band(11000, 14999, { 4: 6, 5: 25, 6: 40, 7: 24, 8: 5 }),
+  band(15000, 19999, { 5: 12, 6: 35, 7: 38, 8: 15 }),
+  band(20000, 49999, { 5: 3, 6: 20, 7: 43, 8: 34 }),
+  band(50000, 99999, { 6: 3, 7: 18, 8: 39, 9: 31, 10: 9 }),
+  band(100000, 199999, { 9: 11, 10: 34, 11: 39, 12: 16 }),
+  band(200000, 299999, { 10: 4, 11: 20, 12: 39, 13: 29, 14: 8 }),
+  band(300000, 399999, { 12: 4, 13: 19, 14: 39, 15: 30, 16: 8 }),
+  band(400000, 599999, { 14: 10, 15: 32, 16: 40, 17: 18 }),
+  band(600000, 999999, { 15: 9, 16: 30, 17: 39, 18: 19, 19: 3 }),
+  band(1000000, Number.POSITIVE_INFINITY, { 17: 13, 18: 37, 19: 37, 20: 13 }),
 ]);
 
 // 내 별 — ★5 까지는 시즌 1 그대로, ★6 5만 · ★7 15만 · ★8 40만. 100만 점이 끝
@@ -114,7 +141,7 @@ export function loadPlayerProfile(storage = defaultStorage()) {
     multiWins: safeInteger(saved.multiWins),
     multiGames: safeInteger(saved.multiGames),
     awardedMatchIds: Array.isArray(saved.awardedMatchIds) ? saved.awardedMatchIds.slice(-150) : [],
-    recentAiStars: Array.isArray(saved.recentAiStars) ? saved.recentAiStars.filter((value) => value >= 1 && value <= MAX_AI_STARS).slice(-2) : [],
+    recentAiStars: Array.isArray(saved.recentAiStars) ? saved.recentAiStars.filter((value) => value >= 1 && value <= AI_LEVEL_COUNT).slice(-2) : [], // 이름은 옛 그대로, 값은 AI 난이도 단계(11-27 부터 1~20)
     boxItems,
     claimedBoxIds: claimedList(saved.claimedBoxIds, kept.claimedBoxIds),
     equipped: normalizeEquipped(equipped || DEFAULT_EQUIPPED, peakPoints, tierForXp(seasonXp), boxItems),
@@ -158,15 +185,17 @@ export function savePlayerProfile(profile, storage = defaultStorage()) {
   return normalized;
 }
 
-export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId, bonusMultiplier: requestedMultiplier = 1 }, storage = defaultStorage()) {
+// AI 대전은 상대 난이도 단계(opponentLevel 1~20)로, 친구 대전은 상대 점수의 별(opponentStars, ★5 까지 — 서로 점수 몰아주기 막기)로 셈
+export function recordMatchResult({ won, opponentLevel = 1, opponentStars = 1, mode = 'ai', matchId, bonusMultiplier: requestedMultiplier = 1 }, storage = defaultStorage()) {
   const profile = loadPlayerProfile(storage);
-  // 친구 대전은 ★5 보상까지(서로 점수 몰아주기 막기), AI 대전은 ★8 까지
-  const safeStars = Math.min(mode === 'multi' ? 5 : MAX_AI_STARS, Math.max(1, safeInteger(opponentStars, 1)));
+  const friend = mode === 'multi';
+  const level = Math.min(AI_LEVEL_COUNT, Math.max(1, safeInteger(opponentLevel, 1)));
+  const friendStars = Math.min(5, Math.max(1, safeInteger(opponentStars, 1)));
   const id = String(matchId || `${mode}:${Date.now()}`);
   if (profile.awardedMatchIds.includes(id)) return { profile, delta: 0, duplicate: true };
 
   const bonusMultiplier = Math.max(1, Math.min(BONUS_MATCH_MULTIPLIER, safeInteger(requestedMultiplier, 1)));
-  const baseDelta = won ? WIN_REWARDS[safeStars] : lossForStars(safeStars);
+  const baseDelta = friend ? (won ? FRIEND_WIN_REWARDS[friendStars] : LOSS_PENALTY) : (won ? WIN_REWARDS[level] : lossForLevel(level));
   const requestedDelta = won ? baseDelta * bonusMultiplier : baseDelta;
   const previousPoints = profile.points;
   const previousPeak = profile.peakPoints;
@@ -185,7 +214,7 @@ export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId
   }
   profile.awardedMatchIds = [...profile.awardedMatchIds, id].slice(-150);
   const previousTier = tierForXp(profile.seasonXp);
-  const xpGained = xpForMatch({ won, stars: safeStars, bonus: bonusMultiplier > 1, mode });
+  const xpGained = xpForMatch({ won, stars: friend ? friendStars : aiTier(level), bonus: bonusMultiplier > 1, mode });
   profile.seasonXp = safeInteger(profile.seasonXp) + xpGained;
   const tier = tierForXp(profile.seasonXp);
   // 시즌 2 첫 판 선물(크리스마스 세트) — 아직 없으면 이 판으로 받는다. 결과 화면의 새로 얻은 아이템에 함께 뜬다
@@ -205,8 +234,8 @@ export function recordMatchResult({ won, opponentStars = 1, mode = 'ai', matchId
 }
 
 // 보상 상자 받기 — 판마다 한 번(matchId). 점수는 늘 받고(기본 × 배수), 상자 전용 아이템이 함께 들어 있으면 그것도 받는다.
-// 한 상자 점수 상한 3만 점(★8 · 보너스판 · 판수 ×2 · ×10 이 겹쳐도 넘지 않음)
-export const BOX_POINTS_CAP = 30000;
+// 한 상자 점수 상한 3만 6천 점(20단계 · 보너스판 · 판수 ×2 · ×10 이 겹쳐도 넘지 않음 — 11-27 점수 20% 올리며 상한도 함께)
+export const BOX_POINTS_CAP = 36000;
 export function claimRewardBox({ matchId, box }, storage = defaultStorage()) {
   const profile = loadPlayerProfile(storage);
   const id = `box:${String(matchId || '')}`;
@@ -278,17 +307,24 @@ export function selectAiOpponent(points, random = Math.random, recentStars = [])
   return AI_OPPONENTS[index];
 }
 
-export function rememberAiOpponent(profile, stars, storage = defaultStorage()) {
-  profile.recentAiStars = [...(profile.recentAiStars || []), stars].slice(-2);
+export function rememberAiOpponent(profile, level, storage = defaultStorage()) {
+  profile.recentAiStars = [...(profile.recentAiStars || []), level].slice(-2);
   return savePlayerProfile(profile, storage);
 }
 
-export function rewardForStars(stars) {
-  return WIN_REWARDS[Math.min(MAX_AI_STARS, Math.max(1, safeInteger(stars, 1)))];
+const clampLevel = (level) => Math.min(AI_LEVEL_COUNT, Math.max(1, safeInteger(level, 1)));
+
+export function rewardForLevel(level) {
+  return WIN_REWARDS[clampLevel(level)];
 }
 
-export function lossForStars(stars) {
-  return LOSS_PENALTIES[safeInteger(stars, 1)] ?? LOSS_PENALTY;
+export function lossForLevel(level) {
+  return LOSS_PENALTIES[clampLevel(level)] ?? LOSS_PENALTY;
+}
+
+// 그 단계를 옛 별로 치면 몇 성인지(1~8, 소수) — 경험치 · 생각하는 시간 · 반응
+export function aiTier(level) {
+  return AI_OPPONENTS[clampLevel(level) - 1].tier;
 }
 
 export function bonusMatchChance(points) {

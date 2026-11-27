@@ -6,7 +6,8 @@ export const SUIT_SYMBOLS = {
   hearts: '♥', diamonds: '♦', spades: '♠', clubs: '♣', joker: '★',
 };
 
-const VALID_DIFFICULTIES = new Set(['easy', 'normal', 'hard', 'star1', 'star2', 'star3', 'star4', 'star5', 'star6', 'star7', 'star8']);
+// lv1~lv20 = AI 난이도 20단계(11-27, ai-player.js AI_LEVELS)
+const VALID_DIFFICULTIES = new Set(['easy', 'normal', 'hard', 'star1', 'star2', 'star3', 'star4', 'star5', 'star6', 'star7', 'star8', ...Array.from({ length: 20 }, (_, index) => `lv${index + 1}`)]);
 
 export function createDeck() {
   const standardCards = SUITS.flatMap((suit) => RANKS.map((rank) => ({

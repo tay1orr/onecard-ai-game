@@ -4,8 +4,8 @@ import gsap from 'gsap';
 import { h, formatNumber, stars } from './dom.js';
 import { cut } from '../data/assets.js';
 import { hasGptArt } from '../data/gpt-art.js';
-import { RANK_UNITS, aiRankForStars, rankForPoints } from '../core/rank.js';
-import { playerStarsForPoints } from '../core/rating.js';
+import { RANK_UNITS, rankForLevel, rankForPoints } from '../core/rank.js';
+import { AI_OPPONENTS, MATCH_BANDS, lossForLevel, matchmakingWeights, playerStarsForPoints, rewardForLevel } from '../core/rating.js';
 import { play } from './sound.js';
 import { settings } from './settings.js';
 import { openModal } from './modal.js';
@@ -22,20 +22,34 @@ export function rankBadge(points, { size = 'sm' } = {}) {
     ...Array.from({ length: rank.count }, () => h('img', { src: cut(rank.art, 's'), alt: '', draggable: 'false' })));
 }
 
-// AI 상대 난이도(★1~★8) — 같은 그림으로(core/rank.js AI_RANK_LEVELS). 그림이 없으면 옛 별 글자
-export function aiBadge(difficulty, { size = 'sm' } = {}) {
-  if (!rankArtReady()) return document.createTextNode(stars(difficulty));
-  const rank = aiRankForStars(difficulty);
+// AI 상대 난이도(1~20단계) — 내 단계와 같은 그림 · 이름(11-27 20단계로 나눔). 그림이 없으면 단계 이름 글자
+export function aiBadge(level, { size = 'sm' } = {}) {
+  const rank = rankForLevel(level);
+  if (!rankArtReady()) return document.createTextNode(rank.name);
   return h(`span.rank-badge.u-${rank.unit}.is-${size}`, { role: 'img', 'aria-label': `난이도 ${rank.name}`, title: rank.name },
     ...Array.from({ length: rank.count }, () => h('img', { src: cut(rank.art, 's'), alt: '' })));
 }
 
-// 로비 「만나는 난이도」 한 칸 — 그 난이도의 단계 그림을 모두(11-25 선생님 「×4 말고 다 표기」)
-export function aiOddsBadge(difficulty) {
-  if (!rankArtReady()) return h('i', {}, `★${difficulty}`);
-  const rank = aiRankForStars(difficulty);
-  return h(`span.odds-rank.u-${rank.unit}`, { role: 'img', 'aria-label': rank.name, title: rank.name },
-    ...Array.from({ length: rank.count }, () => h('img', { src: cut(rank.art, 's'), alt: '' })));
+// 만나는 상대 창 — 지금 점수에서 만나는 AI 난이도 · 확률 · 이기면 · 지면 점수 · 어떻게 두는지
+// (11-27 선생님 「만나는 레벨을 굳이 메인에 표기할 필요 없고 인포메이션 아이콘을 누르면 만나는 상대를 보여 주는 창으로」 — 로비 무대 제목 옆 단추)
+export function openMatchOdds(points) {
+  const score = Math.max(0, Math.floor(Number(points) || 0));
+  const weights = matchmakingWeights(score);
+  const next = MATCH_BANDS.find((band) => band.min > score);
+  const rows = AI_OPPONENTS.filter((opponent) => weights[opponent.level - 1] > 0).map((opponent) => {
+    const rank = rankForLevel(opponent.level);
+    return h(`li.mo-row.u-${rank.unit}`, {},
+      h('span.mo-badge', {}, aiBadge(opponent.level)),
+      h('b.mo-name', {}, rank.name),
+      h('b.mo-chance', {}, `${weights[opponent.level - 1]}%`),
+      h('small.mo-points', {}, `이기면 +${formatNumber(rewardForLevel(opponent.level))}점, 지면 ${formatNumber(lossForLevel(opponent.level))}점`),
+      h('small.mo-desc', {}, opponent.status));
+  });
+  const body = h('div.match-odds', {},
+    h('p.mo-lead', {}, rankBadge(score), ` ${formatNumber(score)}점에서 만나는 AI 난이도예요.`),
+    h('ol.mo-rows', {}, ...rows),
+    h('p.modal-note', {}, next ? `${formatNumber(next.min)}점부터 더 센 상대가 섞여요.` : '가장 센 상대까지 모두 만나요.'));
+  return openModal({ title: '만나는 상대', body, className: 'is-odds', label: '만나는 상대' });
 }
 
 // 단계표 창 — 네 가지 × 다섯 단계를 점수와 함께. 지난 단계는 흐리게, 지금은 「지금」, 다음은 「○점 남음」(11-25 선생님 「어떤 걸 누르면 랭크표를 볼 수 있게」)

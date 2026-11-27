@@ -11,7 +11,7 @@ import {
   loadPlayerProfile,
   matchmakingWeights,
   recordMatchResult,
-  rewardForStars,
+  rewardForLevel,
   rollBonusMatch,
   savePlayerProfile,
   selectAiOpponent,
@@ -148,6 +148,9 @@ assert.equal(chooseAiReaction('player-win', 'hard', () => 0.99), 'gg', '게임 �
 assert.equal(chooseAiReaction({ type: 'player-emote', emote: 'lol' }, 'normal', () => 0), 'lol', '플레이어 스티커에 어울리는 답장을 선택해야 함');
 assert.equal(chooseAiReaction('player-attack', 'hard', () => 0.99), null, '냉철한 AI는 모든 행동에 과하게 반응하지 않아야 함');
 assert.ok(aiReactionDelay('easy', () => 0.5) < aiReactionDelay('hard', () => 0.5), '쉬운 AI가 어려운 AI보다 빠르게 반응해야 함');
+assert.ok(aiReactionDelay('lv1', () => 0.5) < aiReactionDelay('lv11', () => 0.5) && aiReactionDelay('lv11', () => 0.5) < aiReactionDelay('lv20', () => 0.5), 'AI 난이도 단계가 오를수록 반응이 조금씩 늦어야 함');
+assert.equal(aiReactionDelay('lv20', () => 0.5), aiReactionDelay('star8', () => 0.5), '20단계는 옛 ★8 과 같은 반응');
+assert.equal(chooseAiReaction('player-attack', 'lv1', () => 0.7), chooseAiReaction('player-attack', 'star1', () => 0.7), '1단계는 옛 ★1 과 같은 반응');
 
 const legacyRaw = JSON.stringify({ wins: 12, games: 20, nickname: '기존 플레이어' });
 const legacyStorage = memoryStorage({ [LEGACY_RECORD_KEY]: legacyRaw });
@@ -157,32 +160,34 @@ assert.equal(legacyStorage.getItem(LEGACY_BACKUP_KEY), legacyRaw, '이전 전 �
 assert.deepEqual(JSON.parse(legacyStorage.getItem(LEGACY_RECORD_KEY)), { wins: 12, games: 20, nickname: '기존 플레이어' }, '기존 기록의 추가 필드까지 보존해야 함');
 assert.ok(legacyStorage.getItem(PROFILE_KEY), '새 프로필을 별도 키로 저장해야 함');
 
-assert.deepEqual([1, 2, 3, 4, 5].map(rewardForStars), [125, 180, 250, 340, 500], '상대 등급별 상향된 승리 보상을 적용해야 함');
-const firstWin = recordMatchResult({ won: true, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-1' }, legacyStorage);
-assert.deepEqual([firstWin.delta, firstWin.profile.points, firstWin.profile.wins, firstWin.profile.games], [500, 500, 13, 21], '5성 승리는 기존 기록 위에 상향된 점수와 승리를 더해야 함');
-const duplicateWin = recordMatchResult({ won: true, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-1' }, legacyStorage);
+// AI 난이도 단계(11-27 20단계) — 옛 ★1~★5 자리(1 · 2 · 3 · 5 · 8단계)의 보상은 옛 125 · 180 · 250 · 340 · 500 에서 20% 올림
+assert.deepEqual([1, 2, 3, 5, 8].map(rewardForLevel), [150, 220, 300, 410, 600], '상대 난이도 단계별 승리 보상(옛 ★1~★5 자리, 20% 올림)을 적용해야 함');
+const firstWin = recordMatchResult({ won: true, opponentLevel: 8, mode: 'ai', matchId: 'ai-safe-1' }, legacyStorage);
+assert.deepEqual([firstWin.delta, firstWin.profile.points, firstWin.profile.wins, firstWin.profile.games], [600, 600, 13, 21], '8단계(옛 5성) 승리는 기존 기록 위에 점수와 승리를 더해야 함');
+const duplicateWin = recordMatchResult({ won: true, opponentLevel: 8, mode: 'ai', matchId: 'ai-safe-1' }, legacyStorage);
 assert.deepEqual([duplicateWin.duplicate, duplicateWin.profile.wins, duplicateWin.profile.games], [true, 13, 21], '같은 경기 결과는 중복 반영하지 않아야 함');
-const fixedLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'ai-safe-2' }, legacyStorage);
-assert.deepEqual([fixedLoss.delta, fixedLoss.profile.points, fixedLoss.profile.games], [-50, 450, 22], '상대 등급과 무관하게 패배는 50점만 차감해야 함');
+const fixedLoss = recordMatchResult({ won: false, opponentLevel: 8, mode: 'ai', matchId: 'ai-safe-2' }, legacyStorage);
+assert.deepEqual([fixedLoss.delta, fixedLoss.profile.points, fixedLoss.profile.games], [-50, 550, 22], '8단계까지는 패배가 50점만 차감해야 함');
 assert.deepEqual(JSON.parse(legacyStorage.getItem(LEGACY_RECORD_KEY)), { wins: 13, games: 22, nickname: '기존 플레이어' }, '새 결과 반영 뒤에도 기존 키의 승수·판수와 추가 필드를 보존해야 함');
 
 const bonusStorage = memoryStorage();
-const bonusWin = recordMatchResult({ won: true, opponentStars: 3, mode: 'ai', matchId: 'bonus-win', bonusMultiplier: 2 }, bonusStorage);
-assert.deepEqual([bonusWin.baseDelta, bonusWin.delta, bonusWin.bonusMultiplier, bonusWin.profile.points], [250, 500, 2, 500], '보너스판 승리는 기본 승리 보상을 2배로 지급해야 함');
-const bonusLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'bonus-loss', bonusMultiplier: 2 }, bonusStorage);
-assert.deepEqual([bonusLoss.delta, bonusLoss.bonusMultiplier, bonusLoss.profile.points], [-50, 2, 450], '보너스판에서 져도 패배 차감은 2배가 아니어야 함');
+const bonusWin = recordMatchResult({ won: true, opponentLevel: 3, mode: 'ai', matchId: 'bonus-win', bonusMultiplier: 2 }, bonusStorage);
+assert.deepEqual([bonusWin.baseDelta, bonusWin.delta, bonusWin.bonusMultiplier, bonusWin.profile.points], [300, 600, 2, 600], '보너스판 승리는 기본 승리 보상을 2배로 지급해야 함');
+const bonusLoss = recordMatchResult({ won: false, opponentLevel: 8, mode: 'ai', matchId: 'bonus-loss', bonusMultiplier: 2 }, bonusStorage);
+assert.deepEqual([bonusLoss.delta, bonusLoss.bonusMultiplier, bonusLoss.profile.points], [-50, 2, 550], '보너스판에서 져도 패배 차감은 2배가 아니어야 함');
 assert.equal(bonusMatchChance(0), 0.2, '초기 보너스판 확률은 20%여야 함');
 assert.equal(bonusMatchChance(40000), 0.15, '고점 보너스판 확률은 15%까지 완만히 줄어야 함');
 assert.equal(rollBonusMatch(0, () => 0.19), true, '확률 안쪽이면 보너스판이 등장해야 함');
 assert.equal(rollBonusMatch(40000, () => 0.16), false, '고점 확률 밖이면 일반판이어야 함');
 
 const floorStorage = memoryStorage();
-const floorLoss = recordMatchResult({ won: false, opponentStars: 1, matchId: 'floor-loss' }, floorStorage);
+const floorLoss = recordMatchResult({ won: false, opponentLevel: 1, matchId: 'floor-loss' }, floorStorage);
 assert.equal(floorLoss.profile.points, 0, '점수는 0 아래로 내려가지 않아야 함');
 assert.equal(floorLoss.delta, 0, '0점에서 패배하면 실제 점수 변화도 0으로 표시해야 함');
-assert.deepEqual(matchmakingWeights(0), [55, 35, 10, 0, 0, 0, 0, 0], '초기 점수대 매칭 확률을 적용해야 함');
-assert.deepEqual(matchmakingWeights(20000), [0, 0, 0, 30, 70, 0, 0, 0], '2만~5만점은 4·5성만 매칭해야 함');
-assert.equal(selectAiOpponent(0, () => 0, [1, 1]).stars, 2, '같은 AI가 세 번 연속 걸리려 하면 다른 가능한 등급으로 바꿔야 함');
+const levelsOf = (weights) => Object.fromEntries(weights.map((weight, index) => [index + 1, weight]).filter(([, weight]) => weight > 0));
+assert.deepEqual(levelsOf(matchmakingWeights(0)), { 1: 54, 2: 37, 3: 9 }, '처음 점수대는 1~3단계(옛 ★1~★3 과 같은 몫)를 만나야 함');
+assert.deepEqual(levelsOf(matchmakingWeights(20000)), { 5: 3, 6: 20, 7: 43, 8: 34 }, '2만~5만 점은 5~8단계(금별 5 ~ 루비 3, 옛 ★4 · ★5 사이)를 만나야 함');
+assert.equal(selectAiOpponent(0, () => 0, [1, 1]).level, 2, '같은 AI가 세 번 연속 걸리려 하면 다른 가능한 단계로 바꿔야 함');
 
 const cosmeticStorage = memoryStorage({
   [PROFILE_KEY]: JSON.stringify({ points: 1800, wins: 2, games: 3 }),
@@ -208,7 +213,7 @@ assert.equal(normalizeEquipped({ cardBack: 'back-space-whale' }, 1000).cardBack,
 assert.equal(normalizeEquipped({ cardBack: 'back-strawberry-milk' }, 1000).cardBack, 'back-strawberry-milk', '해금한 아이템은 장착 상태를 유지해야 함');
 cosmeticProfile.equipped.cardBack = 'back-strawberry-milk';
 savePlayerProfile(cosmeticProfile, cosmeticStorage);
-const cosmeticLoss = recordMatchResult({ won: false, opponentStars: 5, mode: 'ai', matchId: 'cosmetic-loss' }, cosmeticStorage);
+const cosmeticLoss = recordMatchResult({ won: false, opponentLevel: 8, mode: 'ai', matchId: 'cosmetic-loss' }, cosmeticStorage);
 assert.deepEqual([cosmeticLoss.profile.points, cosmeticLoss.profile.peakPoints], [1750, 1800], '패배해 현재 점수가 내려가도 역대 최고 점수는 유지해야 함');
 assert.equal(cosmeticLoss.profile.equipped.cardBack, 'back-strawberry-milk', '점수가 내려가도 이미 해금하고 장착한 스킨은 유지해야 함');
 assert.equal(nextCosmeticUnlock(20000).threshold, 20700, '2만점 이후에는 마스터 꾸미기 라인이 이어져야 함');
@@ -277,7 +282,7 @@ assert.equal(missionDashboard.weekly.total, WEEKLY_MISSION_COUNT, '주간 미션
 assert.equal(missionDashboard.weekly.missions.reduce((sum, mission) => sum + mission.target, 0) >= 18, true, '주간 미션은 일일보다 높은 목표량으로 구성되어야 함');
 const missionEvents = [
   { id: 'mission-game', type: 'game', mode: 'ai', amount: 99, bonus: true },
-  { id: 'mission-win', type: 'win', mode: 'ai', amount: 99, opponentStars: 5, bonus: true },
+  { id: 'mission-win', type: 'win', mode: 'ai', amount: 99, opponentLevel: 8, bonus: true },
   { id: 'mission-card', type: 'card-play', amount: 99 },
   { id: 'mission-draw', type: 'draw-card', amount: 99 },
   { id: 'mission-attack', type: 'attack-card', amount: 99 },

@@ -182,9 +182,9 @@ export function mergeProfiles(localProfile = {}, remoteProfile = {}, options = {
       safeArray(remoteProfile.awardedMatchIds),
       safeArray(localProfile.awardedMatchIds),
     ).slice(-100),
-    recentAiStars: safeArray(localProfile.recentAiStars).length
-      ? safeArray(localProfile.recentAiStars).filter((value) => value >= 1 && value <= 8).slice(-2)
-      : safeArray(remoteProfile.recentAiStars).filter((value) => value >= 1 && value <= 8).slice(-2),
+    recentAiStars: safeArray(localProfile.recentAiStars).length // 이름은 옛 그대로, 값은 AI 난이도 단계(11-27 부터 1~20)
+      ? safeArray(localProfile.recentAiStars).filter((value) => value >= 1 && value <= 20).slice(-2)
+      : safeArray(remoteProfile.recentAiStars).filter((value) => value >= 1 && value <= 20).slice(-2),
     boxItems: uniqueStrings(safeArray(remoteProfile.boxItems), safeArray(localProfile.boxItems)),
     claimedBoxIds: uniqueStrings(safeArray(remoteProfile.claimedBoxIds), safeArray(localProfile.claimedBoxIds)).slice(-150),
     seasonXp: Math.max(safeInteger(localProfile.seasonXp), safeInteger(remoteProfile.seasonXp)),

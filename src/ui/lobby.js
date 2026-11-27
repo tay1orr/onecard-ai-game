@@ -1,7 +1,7 @@
 // 로비 — 장착한 맵 사진을 깐 무대 위에 지금 점수로 만나는 상대들 + 시즌 2 글자. 나머지(패스 · 미션 · 보관함)는 차분하게
 import gsap from 'gsap';
 import { h, formatNumber } from './dom.js';
-import { aiOddsBadge, rankBadge, rankCard } from './rank.js';
+import { openMatchOdds, rankBadge, rankCard } from './rank.js';
 import { cut } from '../data/assets.js';
 import { lookOf } from '../data/looks.js';
 import { mapVars } from './look-apply.js';
@@ -9,7 +9,6 @@ import { CHARACTERS, pickLine, shufflePersonas } from '../data/characters.js';
 import { loadMissionDashboard } from '../core/missions.js';
 import { tierProgress, isOpeningEventActive, openingEventDaysLeft, OPENING_EVENT, SEASON, PASS_REWARDS } from '../core/season.js';
 import { cosmeticById, nextCosmeticUnlock, DEFAULT_EQUIPPED } from '../core/cosmetics.js';
-import { matchmakingWeights, playerStarsForPoints } from '../core/rating.js';
 import { rankForPoints } from '../core/rank.js';
 import { itemPreview } from './item-preview.js';
 import { play } from './sound.js';
@@ -19,6 +18,7 @@ const ICON = {
   gear: '<svg viewBox="0 0 24 24"><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Zm8.2 4.6-1.9-.4a6.7 6.7 0 0 1-.6 1.5l1.1 1.6-1.6 1.6-1.6-1.1a6.7 6.7 0 0 1-1.5.6l-.4 1.9h-2.3l-.4-1.9a6.7 6.7 0 0 1-1.5-.6l-1.6 1.1-1.6-1.6 1.1-1.6a6.7 6.7 0 0 1-.6-1.5l-1.9-.4v-2.3l1.9-.4a6.7 6.7 0 0 1 .6-1.5L4.4 7.2 6 5.6l1.6 1.1a6.7 6.7 0 0 1 1.5-.6l.4-1.9h2.3l.4 1.9a6.7 6.7 0 0 1 1.5.6L15.3 5.6l1.6 1.6-1.1 1.6c.3.5.5 1 .6 1.5l1.9.4Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
   sound: '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5v14l-4.5-4.5H4Z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.2 6a8.6 8.6 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
   mute: '<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5v14l-4.5-4.5H4Z" fill="currentColor"/><path d="m16 9.5 5 5m0-5-5 5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
+  info: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 10.8v5.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.35" fill="currentColor"/></svg>',
 };
 
 function soundIcon() { return settings.get().sound ? ICON.sound : ICON.mute; }
@@ -41,7 +41,6 @@ function say(button, line) {
 }
 
 export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCollection, onPass, onMissions, onSettings, onAccount, onProfile, onToggleSound }) {
-  const weights = matchmakingWeights(profile.points);
   const pass = tierProgress(profile.seasonXp);
   const nextPass = PASS_REWARDS.find((reward) => reward.tier > pass.tier);
   const nextPassItem = nextPass ? cosmeticById(nextPass.itemId) : null;
@@ -50,9 +49,8 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
   const avatar = cosmeticById(profile.equipped.avatar) || cosmeticById(DEFAULT_EQUIPPED.avatar);
   const eventOn = isOpeningEventActive();
 
-  // 캐릭터와 난이도는 따로 무작위 — 이 점수에서 만나는 난이도 확률은 따로 한 줄로(30만 점대면 ★5~★8)
+  // 캐릭터와 난이도는 따로 무작위 — 이 점수에서 만나는 난이도 확률은 무대 제목 옆 ⓘ 단추를 누르면 창으로(11-27, 전에는 무대에 한 줄)
   // 무대 자리는 넓으면 다섯 · 좁으면 넷이고, 상대 열다섯이 몇 초마다 한 자리씩 번갈아 앉는다(11-24 「넷만 나오는 게 아깝다」)
-  const odds = weights.map((chance, index) => ({ stars: index + 1, chance })).filter((level) => level.chance > 0);
   const order = shufflePersonas(CHARACTERS.length);
   const lineupEl = h('div.stage-lineup');
   let holdUntil = 0;
@@ -96,8 +94,9 @@ export function renderLobby({ host, profile, accountStatus, onAi, onOnline, onCo
         h('div.stage-scene', { 'aria-hidden': 'true' }),
         h('div.stage-felt', { 'aria-hidden': 'true' }),
         h('div.stage-copy', {},
-          h('h1.stage-title', {}, '오늘은 누구와 붙을까요'),
-          h('p.stage-odds', { 'aria-label': `${formatNumber(profile.points)}점에서 만나는 난이도` }, h('small', {}, '만나는 난이도'), ...odds.map((level) => h('span', {}, aiOddsBadge(level.stars), ` ${level.chance}%`))),
+          h('div.stage-head', {},
+            h('h1.stage-title', {}, '오늘은 누구와 붙을까요'),
+            h('button.odds-btn', { type: 'button', 'aria-label': '만나는 상대 보기', title: '만나는 상대', html: ICON.info, onClick: () => { play('click'); openMatchOdds(profile.points); } })),
           eventOn ? h('p.event-ribbon', {}, h('b', {}, OPENING_EVENT.name), h('span', {}, `${openingEventDaysLeft()}일 남음, 경험치 2배에 보너스판이 더 자주 나와요`)) : null),
         lineupEl),
       h('aside.lobby-actions', {},

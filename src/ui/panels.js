@@ -3,7 +3,7 @@ import { h, formatNumber } from './dom.js';
 import { openModal, toast } from './modal.js';
 import { settings } from './settings.js';
 import { loadMissionDashboard } from '../core/missions.js';
-import { WIN_REWARDS, LOSS_PENALTY } from '../core/rating.js';
+import { AI_LEVEL_COUNT, FRIEND_WIN_REWARDS, LOSS_PENALTY, LOSS_PENALTIES, WIN_REWARDS } from '../core/rating.js';
 import { suitSvg } from './suits.js';
 import { play } from './sound.js';
 import { hasMusic } from './music.js';
@@ -65,7 +65,8 @@ export function openRules() {
     h('ul.rules-list', {}, ...rows.map(([rank, title, text]) => h('li', {},
       h(`span.rule-card${['2', 'J', '7'].includes(rank) ? '.is-red' : ''}`, { html: rank === 'JOKER' ? '<b>JK</b>' : `<b>${rank}</b>${suitSvg(['2', 'J', '7'].includes(rank) ? 'hearts' : 'spades')}` }),
       h('div', {}, h('b', {}, title), h('small', {}, text))))),
-    h('p.rules-points', {}, `이기면 상대 별에 따라 +${WIN_REWARDS[1]}점에서 +${WIN_REWARDS[5]}점, 지면 ${LOSS_PENALTY}점이에요. 보너스판에서 이기면 2배예요.`),
+    h('p.rules-points', {}, `AI 대전은 이기면 상대 난이도에 따라 +${formatNumber(WIN_REWARDS[1])}점에서 +${formatNumber(WIN_REWARDS[AI_LEVEL_COUNT])}점, 지면 ${LOSS_PENALTY}점에서 ${LOSS_PENALTIES[AI_LEVEL_COUNT]}점이에요.`),
+    h('p.rules-points', {}, `친구와 대전은 이기면 상대 점수에 따라 +${formatNumber(FRIEND_WIN_REWARDS[1])}점에서 +${formatNumber(FRIEND_WIN_REWARDS[5])}점, 지면 ${LOSS_PENALTY}점이에요. 보너스판에서 이기면 2배예요.`),
     h('p.rules-points', {}, '꾸미기는 역대 최고 점수나 시즌 패스 단계로 열리고, 한 번 열리면 다시 잠기지 않아요.'));
   return openModal({ title: '규칙', body, className: 'is-rules', actions: [{ label: '확인', kind: 'primary', onClick: (modal) => modal.close() }] });
 }

@@ -1,4 +1,4 @@
-// AI 상대 캐릭터 — 누구인지(이름 · 그림 · 대사)만 정한다. 별 · AI 세기 · 설명은 난이도(rating.js 의 AI_OPPONENTS)가 따로 정한다(makeRival)
+// AI 상대 캐릭터 — 누구인지(이름 · 그림 · 대사)만 정한다. 단계 · AI 세기 · 설명은 난이도(rating.js 의 AI_OPPONENTS)가 따로 정한다(makeRival)
 // 그림은 선생님이 GPT 로 만든 것(gpt그림/ → scripts/build-gpt.mjs → cut/char-<이름>).
 // 11-24 선생님 「그림 제목에 영향받지 말고 알아서 판단해서 캐릭터 배치」 — 카드를 든 열다섯은 상대로, 장미 · 디저트 · 풍선을 든 일곱은 내 캐릭터(cosmetics.js)로 나눴다
 // 출처: 치이카와 · 하치와레 · 우사기 · 랏코(나가노 「치이카와」) · 짱구(우스이 요시토 「크레용 신짱」) · 체리(CLAMP 「카드캡터 사쿠라」)
@@ -254,9 +254,10 @@ export function shufflePersonas(count, random = Math.random) {
   return list.slice(0, Math.max(0, count));
 }
 
-// 상대 = 캐릭터(누구) + 난이도(별, rating.js 의 AI_OPPONENTS 한 줄). key 는 난이도(AI 세기 · 반응이 쓴다)
-export function makeRival(level, persona = pickPersona()) {
-  return Object.freeze({ ...persona, key: level.key, stars: level.stars, elite: level.stars >= 6, blurb: level.status });
+// 상대 = 캐릭터(누구) + 난이도(1~20단계, rating.js 의 AI_OPPONENTS 한 줄). key 는 난이도(AI 세기 · 반응이 쓴다)
+// elite = 11단계(옛 ★6, 카드를 세는 AI)부터 — 대결 화면에서 조금 더 무게 있게 보인다
+export function makeRival(opponent, persona = pickPersona()) {
+  return Object.freeze({ ...persona, key: opponent.key, level: opponent.level, tier: opponent.tier, elite: opponent.level >= 11, blurb: opponent.status });
 }
 
 export function pickLine(rival, situation, random = Math.random) {

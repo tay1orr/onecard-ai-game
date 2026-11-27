@@ -39,8 +39,8 @@ export function openingEventDaysLeft(now = new Date()) {
 }
 
 export function xpForMatch({ won, stars = 1, bonus = false, mode = 'ai', now = new Date() } = {}) {
-  const safeStars = Math.min(8, Math.max(1, Number(stars) || 1));
-  let xp = won ? 100 + safeStars * 20 : 45;
+  const safeStars = Math.min(8, Math.max(1, Number(stars) || 1)); // AI 난이도 사이 단계는 옛 별로 소수(4.67 성 …)
+  let xp = won ? Math.round(100 + safeStars * 20) : 45;
   if (mode === 'multi') xp += 20;
   if (bonus && won) xp = Math.round(xp * 1.5);
   if (isOpeningEventActive(now)) xp *= OPENING_EVENT.xpMultiplier;

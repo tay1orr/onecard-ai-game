@@ -133,14 +133,24 @@
 .room-code { display: flex; align-items: center; gap: 6px; padding: 14px 20px; border-radius: 18px; border: 1.5px dashed var(--line-strong); background: transparent; color: var(--chalk); cursor: pointer; flex-wrap: wrap; justify-content: center; }
 .room-code b { width: clamp(42px, 5vw, 64px); height: clamp(56px, 6vw, 80px); display: grid; place-items: center; border-radius: 12px; background: #fbf7ee; color: #121a2b; font: 900 clamp(30px, 4vw, 48px)/1 var(--font-display); box-shadow: var(--hard); }
 .room-code small { width: 100%; text-align: center; color: var(--mute); margin-top: 6px; }
-.seats { display: flex; align-items: center; gap: clamp(12px, 3vw, 40px); flex-wrap: wrap; justify-content: center; }
-.seat { position: relative; width: 230px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px; border-radius: 20px; background: var(--ink-2); border: 1.5px solid var(--line); text-align: center; }
-.seat img { width: 84px; height: 84px; object-fit: contain; }
+/* 두 자리는 늘 한 줄(방장 · VS · 손님) — 칸 폭이 230px 로 묶여 휴대폰에서는 VS 가 한쪽에 붙고 손님 칸이 아래로 떨어졌다(11-27) */
+.seats { width: min(560px, 100%); display: grid; grid-template-columns: minmax(0, 230px) auto minmax(0, 230px); justify-content: center; align-items: stretch; gap: clamp(8px, 3vw, 40px); }
+.seat { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px; border-radius: 20px; background: var(--ink-2); border: 1.5px solid var(--line); text-align: center; }
+.seat-art { width: 84px; height: 84px; object-fit: contain; }
+.seat-name { max-width: 100%; word-break: keep-all; overflow-wrap: anywhere; }
+.seat-rank { display: flex; justify-content: center; min-height: 1.4em; }
 .seat small { color: var(--mute); }
+.seat-state { margin-top: 2px; padding: 2px 10px; border-radius: 99px; background: rgba(255, 255, 255, 0.07); color: var(--mute); font-size: 12px; font-weight: 800; }
+.seat.is-ready .seat-state { background: rgba(79, 209, 161, 0.16); color: var(--mint); }
 .seat.is-ready { border-color: var(--mint); }
 .seat.is-me { box-shadow: 0 0 0 2px rgba(242, 181, 68, 0.5); }
 .seat-label { position: absolute; top: 10px; left: 12px; font-size: 11px; font-weight: 800; color: var(--mute); }
-.seats-vs { font: 900 40px/1 var(--font-display); color: var(--gold); }
+.seats-vs { align-self: center; font: 900 40px/1 var(--font-display); color: var(--gold); }
+@media (max-width: 520px) {
+  .seat { padding: 28px 8px 14px; }
+  .seat-art { width: 64px; height: 64px; }
+  .seats-vs { font-size: 26px; }
+}
 .room-score { color: var(--mute); }
 .versus.is-online { position: fixed; }
 .versus .dice-top { position: absolute; top: 0; left: 0; right: 0; z-index: 2; }

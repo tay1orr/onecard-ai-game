@@ -222,16 +222,18 @@ const diceState = (page) => page.evaluate(() => {
   return button ? { disabled: button.disabled, text: button.textContent, note: document.querySelector('.versus.is-online .dice-note')?.textContent, mine: document.querySelector('.dice-value.mine')?.textContent, theirs: document.querySelector('.dice-value.theirs')?.textContent, back: Boolean(document.querySelector('.versus.is-online .dice-top .icon-btn')) } : null;
 });
 
-async function player(browser, name) {
+async function player(browser, name, points = null) {
   const context = await browser.newContext(mobile
     ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'ko-KR' }
     : { viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, locale: 'ko-KR' });
-  await context.addInitScript((nickname) => {
+  await context.addInitScript(({ nickname, points: seedPoints }) => {
     if (sessionStorage.getItem('seeded')) return;
     sessionStorage.setItem('seeded', '1');
     if (!localStorage.getItem('onecard-s2-settings')) localStorage.setItem('onecard-s2-settings', JSON.stringify({ seenOpening: true, sound: false, speed: 2, effects: 'full', nickname }));
     localStorage.setItem('onecard-s2-gift-shown', '1');
-  }, name);
+    // 점수를 정해 두는 사람(대기실 모습 찍기) — 처음 한 번만
+    if (seedPoints != null && !localStorage.getItem('onecard-player-profile-v2')) localStorage.setItem('onecard-player-profile-v2', JSON.stringify({ version: 4, seasonId: 's2', points: seedPoints, peakPoints: seedPoints, wins: 120, games: 200 }));
+  }, { nickname: name, points });
   await wire(context);
   const page = await context.newPage();
   page.on('pageerror', (error) => console.log(`[${name}] 화면 오류: ${error.message}`));
@@ -272,6 +274,50 @@ let browser;
 try {
   for (let i = 0; i < 80; i += 1) { try { if ((await fetch(BASE)).ok) break; } catch { /* 기다림 */ } await sleep(250); }
   browser = await chromium.launch({ executablePath: CHROME, headless: true, args: ['--host-resolver-rules=MAP *.supabase.co 127.0.0.1, MAP supabase.co 127.0.0.1'] });
+
+  // 0) 대기실 모습 — 두 자리가 한 줄(방장 · VS · 손님), 단계 그림은 작게 칸 안에, 화면이 옆으로 넘치지 않음
+  //    (11-27 선생님 휴대폰 사진: 569,515점 방장 · 36,280점 손님 — 왕관 · 별 다섯이 84px 로 커져 칸 밖으로, 손님 칸은 아래로 떨어짐)
+  {
+    const roomHost = await player(browser, 'bella', 569515);
+    const roomGuest = await player(browser, '서냇', 36280);
+    await openFriend(roomHost.page);
+    await press(roomHost.page, '.online-entry .entry-col .btn.primary');
+    await roomHost.page.waitForSelector('.room .room-code', { timeout: 15000 });
+    const roomCode = await roomHost.page.evaluate(() => [...document.querySelectorAll('.room .room-code b')].map((el) => el.textContent).join(''));
+    await openFriend(roomGuest.page);
+    await roomGuest.page.fill('.online-entry .code-input', roomCode);
+    await press(roomGuest.page, '.online-entry .btn.ghost');
+    await roomGuest.page.waitForFunction(() => document.querySelectorAll('.room .seat .seat-rank img').length >= 2, null, { timeout: 15000 });
+    const roomLayout = (page) => page.evaluate(() => {
+      const box = (el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, width: r.width }; };
+      const seats = [...document.querySelectorAll('.room .seat')].map(box);
+      const icons = [...document.querySelectorAll('.room .seat-rank img')].map(box);
+      return {
+        seats, view: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth,
+        maxIcon: Math.max(...icons.map((icon) => icon.width)),
+        inside: icons.every((icon) => seats.some((seat) => icon.left >= seat.left - 0.5 && icon.right <= seat.right + 0.5)),
+        texts: [...document.querySelectorAll('.room .seat')].map((el) => el.innerText.replace(/\s+/g, ' ')),
+      };
+    });
+    for (const width of mobile ? [360, 390, 412] : [1280]) {
+      if (mobile) await roomGuest.page.setViewportSize({ width, height: 844 });
+      await sleep(400);
+      const layout = await roomLayout(roomGuest.page);
+      const [left, right] = layout.seats;
+      check(layout.seats.length === 2 && Math.abs(left.top - right.top) < 1 && left.right < right.left, `[${width}] 대기실 두 자리가 한 줄 — ${JSON.stringify(layout.seats.map((seat) => [Math.round(seat.left), Math.round(seat.right), Math.round(seat.top)]))}`);
+      check(layout.maxIcon <= 26 && layout.inside, `[${width}] 단계 그림은 작게(가장 큰 ${Math.round(layout.maxIcon)}px) 칸 안에`);
+      check(layout.scroll <= layout.view, `[${width}] 화면이 옆으로 넘치지 않음(${layout.scroll} / ${layout.view})`);
+      check(layout.texts[0].includes('569,515점') && layout.texts[1].includes('36,280점') && layout.texts.every((text) => text.includes('준비 전')), `[${width}] 점수 · 준비 상태 — ${layout.texts.join(' | ')}`);
+      await roomGuest.page.screenshot({ path: path.join(SHOTS, `${tag}-online-room-${width}.png`) });
+    }
+    await press(roomGuest.page, '.room .btn.primary');
+    await roomHost.page.waitForFunction(() => document.querySelector('.room .seat.is-ready .seat-state')?.textContent === '준비 완료', null, { timeout: 15000 });
+    await sleep(300);
+    await roomHost.page.screenshot({ path: path.join(SHOTS, `${tag}-online-room-ready.png`) });
+    check(true, '손님이 준비하면 방장 화면의 손님 칸에 준비 완료');
+    await roomHost.context.close();
+    await roomGuest.context.close();
+  }
 
   // 1 ~ 3) 같은 눈 → 다시 굴리기 → 다시 들어와도 켜짐 → 게임 시작
   const first = await pairUp(browser, '장미여왕', '케로로');

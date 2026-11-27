@@ -146,7 +146,7 @@ function eventMatches(mission, event) {
   if (mission.counter === 'win-any') return event.type === 'win';
   if (mission.counter === 'win-ai') return event.type === 'win' && event.mode === 'ai';
   if (mission.counter === 'win-multi') return event.type === 'win' && event.mode === 'multi';
-  if (mission.counter === 'win-strong-ai') return event.type === 'win' && event.mode === 'ai' && safeInteger(event.opponentStars, 1) >= 4;
+  if (mission.counter === 'win-strong-ai') return event.type === 'win' && event.mode === 'ai' && safeInteger(event.opponentLevel, 1) >= 5; // AI 난이도 5단계(금별 5단계) 이상 — 옛 ★4 와 같은 자리
   return false;
 }
 

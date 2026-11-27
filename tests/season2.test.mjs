@@ -9,7 +9,10 @@ import { MAPS, BACKS, FACES, EFFECTS, VICTORIES, lookOf } from '../src/data/look
 import { CHARACTERS, makeRival, pickPersona, shufflePersonas } from '../src/data/characters.js';
 import { mergeProfiles3, snapshotForBase } from '../src/core/profile-merge.js';
 import { SEASON, PASS_REWARDS, tierForXp, tierProgress, xpForMatch, isOpeningEventActive } from '../src/core/season.js';
-import { PROFILE_KEY, recordMatchResult, loadPlayerProfile, MATCH_BANDS, matchmakingWeights, playerStarsForPoints, AI_OPPONENTS, WIN_REWARDS } from '../src/core/rating.js';
+import { PROFILE_KEY, recordMatchResult, loadPlayerProfile, MATCH_BANDS, matchmakingWeights, playerStarsForPoints, AI_OPPONENTS, AI_LEVEL_COUNT, WIN_REWARDS, FRIEND_WIN_REWARDS, LOSS_PENALTIES } from '../src/core/rating.js';
+import { AI_LEVELS, chooseAiMove, engineFor } from '../src/core/ai-player.js';
+import { ELITE_KEYS } from '../src/core/ai-elite.js';
+import { OneCardGame } from '../src/core/game-engine.js';
 import { MultiplayerClient } from '../src/net/multiplayer.js';
 import { STICKERS } from '../src/ui/reactions.js';
 
@@ -131,7 +134,7 @@ check(normalizeEquipped({ ...DEFAULT_EQUIPPED, avatar: 'avatar-pompompurin' }, 5
 check(PASS_REWARDS.filter((reward) => cosmeticById(reward.itemId)?.slot === 'avatar').length === 4 && PASS_REWARDS.every((reward) => !['charm-s2-die', 'effect-s2-thunder', 'effect-s2-spotlight', 'face-s2-league'].includes(reward.itemId)), '패스 캐릭터 넷 · 뺀 보상(주사위 · 번개 · 스포트라이트 · 금박 테)은 없어야 함');
 
 const passStorage = memoryStorage({ [PROFILE_KEY]: JSON.stringify({ points: 100, peakPoints: 100, wins: 1, games: 2, seasonXp: 290 }) });
-const passWin = recordMatchResult({ won: true, opponentStars: 1, mode: 'ai', matchId: 'pass-win' }, passStorage);
+const passWin = recordMatchResult({ won: true, opponentLevel: 1, mode: 'ai', matchId: 'pass-win' }, passStorage);
 check(passWin.xpGained >= 120 && passWin.tier >= 1, '이기면 경험치가 쌓여 단계가 올라야 함');
 check(passWin.unlockedItems.some((item) => item.id === 'avatar-pompompurin'), '1단계 보상(폼폼푸린)이 결과에 함께 나와야 함');
 check(loadPlayerProfile(passStorage).seasonXp === 290 + passWin.xpGained, '경험치가 저장돼야 함');
@@ -174,11 +177,34 @@ count += 1;
 const roseItems = COSMETICS.filter((item) => (item.tags || []).includes('rose'));
 check(roseItems.length >= 40, `장미 아이템이 넉넉해야 함(지금 ${roseItems.length}개)`);
 check(COSMETICS.filter((item) => item.threshold > 300000 && item.threshold <= 400000).every((item) => (item.tags || []).length), '30만~40만 보상은 모두 장미 · 꽃이어야 함');
-check(MATCH_BANDS.every((band) => band.weights.length === 8 && band.weights.reduce((sum, value) => sum + value, 0) === 100), '점수대별 상대 확률은 8명 합이 100이어야 함');
-check(matchmakingWeights(330000).slice(5).every((weight) => weight > 0), '33만 점이면 ★6 · ★7 · ★8 을 모두 만날 수 있어야 함');
-check(matchmakingWeights(10000).slice(5).every((weight) => weight === 0), '1만 점에서는 ★6~★8 이 나오지 않아야 함(학생 점수대 그대로)');
+// AI 난이도 20단계(11-27 선생님 「만나는 AI 상대도 왜 2종류의 난이도밖에 없어 — 세분화」)
+check(MATCH_BANDS.every((band) => band.weights.length === AI_LEVEL_COUNT && band.weights.reduce((sum, value) => sum + value, 0) === 100), '점수대별 상대 확률은 20단계 합이 100이어야 함');
+check(MATCH_BANDS.every((band, index) => index === 0 || band.min === MATCH_BANDS[index - 1].max + 1) && MATCH_BANDS[0].min === 0 && MATCH_BANDS.at(-1).max === Number.POSITIVE_INFINITY, '점수대는 0점부터 빈틈없이 이어져야 함');
+const kinds = (points) => matchmakingWeights(points).filter((weight) => weight > 0).length;
+check(MATCH_BANDS.every((band) => kinds(band.min) >= 3) && MATCH_BANDS.filter((band) => band.min >= 1500).every((band) => kinds(band.min) >= 4), `점수대마다 난이도가 3~5가지(1,500점부터는 넷 이상) — 지금 ${MATCH_BANDS.map((band) => kinds(band.min)).join(' · ')}`);
+check(kinds(36280) >= 4 && kinds(569515) >= 4, '선생님 사진의 두 점수(36,280 · 569,515)도 네 가지 넘게 만남');
+const meanLevel = (points) => matchmakingWeights(points).reduce((sum, weight, index) => sum + weight * (index + 1), 0) / 100;
+check(MATCH_BANDS.every((band, index) => index === 0 || meanLevel(band.min) > meanLevel(MATCH_BANDS[index - 1].min)), '점수대가 오를수록 만나는 난이도도 올라야 함');
+check(matchmakingWeights(49999).slice(8).every((weight) => weight === 0), '5만 점 아래(학생 점수대)는 8단계까지 — 카드를 세는 AI(9단계부터 섞임)가 나오지 않아야 함');
+check(matchmakingWeights(330000).slice(10).filter((weight) => weight > 0).length >= 4, '33만 점이면 카드를 세는 · 판을 그려 보는 AI(11단계 이상)를 여러 단계 만나야 함');
+check(matchmakingWeights(999999)[19] === 0 && matchmakingWeights(1000000)[19] > 0, '왕관 5단계(20단계 = 옛 ★8) 상대는 100만 점부터');
 check(playerStarsForPoints(330000) === 7 && playerStarsForPoints(400000) === 8, '33만 점은 ★7, 40만 점부터 ★8');
-check(AI_OPPONENTS.length === 8 && CHARACTERS.length === 15 && new Set(CHARACTERS.map((persona) => persona.id)).size === 15, '난이도 ★1~★8 여덟 단계, 상대 캐릭터 열다섯');
+check(AI_OPPONENTS.length === AI_LEVEL_COUNT && AI_OPPONENTS.every((opponent, index) => opponent.level === index + 1 && opponent.key === `lv${index + 1}` && opponent.status) && CHARACTERS.length === 15 && new Set(CHARACTERS.map((persona) => persona.id)).size === 15, '난이도 20단계(lv1~lv20, 설명 한 줄씩), 상대 캐릭터 열다섯');
+check([1, 2, 3, 5, 8, 11, 15, 20].every((level, index) => AI_OPPONENTS[level - 1].tier === index + 1) && AI_OPPONENTS.every((opponent, index) => index === 0 || opponent.tier > AI_OPPONENTS[index - 1].tier), '옛 ★1~★8 은 1 · 2 · 3 · 5 · 8 · 11 · 15 · 20단계, 옛 별로 친 값은 단계마다 오름');
+// 엔진 — 옛 별 자리는 그 엔진 그대로, 사이 단계는 이웃 둘을 섞고(센 쪽 비율이 오름), 16~19단계는 판을 더 많이 그려 봄
+const ENGINES = ['star1', 'star2', 'star3', 'star4', 'star5', ...ELITE_KEYS];
+check(AI_LEVELS.length === AI_LEVEL_COUNT && AI_LEVELS.every((plan, index) => plan.level === index + 1 && ENGINES.includes(plan.base) && (!plan.up || (ENGINES.includes(plan.up) && plan.mix > 0 && plan.mix < 1 && ENGINES.indexOf(plan.up) === ENGINES.indexOf(plan.base) + 1))), '단계마다 엔진이 있고, 섞는 단계는 바로 위 엔진을 0~1 사이 비율로');
+check([1, 2, 3, 5, 8, 11, 15, 20].every((level, index) => AI_LEVELS[level - 1].base === `star${index + 1}` && !AI_LEVELS[level - 1].up), '옛 ★ 자리 단계는 옛 엔진 그대로(섞지 않음)');
+const strength = (plan) => ENGINES.indexOf(plan.base) + (plan.up ? plan.mix : 0);
+check(AI_LEVELS.every((plan, index) => index === 0 || strength(plan) > strength(AI_LEVELS[index - 1])), '단계가 오를수록 엔진 세기(섞는 비율 포함)가 늘 오름');
+check(engineFor('lv13', () => 0.49) === 'star7' && engineFor('lv13', () => 0.51) === 'star6' && engineFor('lv20') === 'star8' && engineFor('star5') === 'star5' && engineFor('lv99') === 'star8', '단계 키는 이번 수의 엔진으로, 옛 키는 그대로');
+const sampleRandom = (seed) => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+const sampleGame = new OneCardGame({ random: sampleRandom(5) });
+sampleGame.reset('lv1');
+check(sampleGame.difficulty === 'lv1', '엔진은 단계 키(lv1~lv20)를 받음');
+sampleGame.currentPlayer = 1;
+const legalIds = new Set(sampleGame.playableCards(1).map((card) => card.id));
+check(AI_LEVELS.every((plan) => { const move = chooseAiMove(sampleGame, `lv${plan.level}`, sampleRandom(plan.level)); return move.type === 'draw' ? legalIds.size === 0 : legalIds.has(move.cardId); }), '20단계 모두 낼 수 있는 카드 가운데서 고름');
 check(!CHARACTERS.some((persona) => COSMETICS.some((item) => item.portrait === persona.portrait)), '상대 캐릭터와 내 캐릭터는 겹치지 않아야 함');
 const avatars = COSMETICS.filter((item) => item.slot === 'avatar');
 check(avatars.length === 14 && avatars.every((item) => item.character && item.portrait.startsWith('char-')), '내 캐릭터는 동물 없이 GPT 캐릭터 열넷뿐(11-24 동물 뺌 · 저녁 일곱 더함)');
@@ -215,26 +241,36 @@ check(Object.values(EFFECTS).every((effect) => effect.moves.length && effect.mov
 check(new Set(Object.values(EFFECTS).flatMap((effect) => effect.moves)).size === MOVES.length && Object.values(EFFECTS).filter((effect) => effect.moves.length > 1).length >= 18, '동작 여섯이 모두 쓰이고, 대부분의 효과는 동작을 둘 이상 돌려 씀(단조롭지 않게)');
 check(CHARACTERS.every((persona) => persona.stars === undefined && persona.key === undefined && persona.name && persona.portrait && persona.lines?.win?.length), '캐릭터에는 별 · 난이도가 붙어 있지 않아야 함(따로 뽑음)');
 const seededPick = (seed) => () => { seed = (seed * 48271) % 2147483647; return (seed - 1) / 2147483646; };
-const ranked = makeRival(AI_OPPONENTS[6], CHARACTERS[0]);
-check(ranked.key === 'star7' && ranked.stars === 7 && ranked.elite && ranked.name === CHARACTERS[0].name && ranked.blurb === AI_OPPONENTS[6].status, '상대 = 캐릭터(이름 · 그림 · 대사) + 난이도(별 · AI 세기 · 설명)');
+const ranked = makeRival(AI_OPPONENTS[14], CHARACTERS[0]);
+check(ranked.key === 'lv15' && ranked.level === 15 && ranked.tier === 7 && ranked.elite && ranked.name === CHARACTERS[0].name && ranked.blurb === AI_OPPONENTS[14].status, '상대 = 캐릭터(이름 · 그림 · 대사) + 난이도(단계 · AI 세기 · 설명)');
+check(!makeRival(AI_OPPONENTS[9], CHARACTERS[0]).elite && makeRival(AI_OPPONENTS[10], CHARACTERS[0]).elite, '대결 화면의 센 상대 표시는 11단계(옛 ★6)부터');
 const pickRandom = seededPick(11);
-const facesAtStar8 = new Set(Array.from({ length: 200 }, () => makeRival(AI_OPPONENTS[7], pickPersona(pickRandom)).name));
-check(facesAtStar8.size === CHARACTERS.length, `★8 에서도 캐릭터 열다섯이 모두 나와야 함(지금 ${facesAtStar8.size})`);
-const pairsSeen = new Set(Array.from({ length: 400 }, (_, index) => { const rival = makeRival(AI_OPPONENTS[index % 8], pickPersona(pickRandom)); return `${rival.name}:${rival.stars}`; }));
-check(pairsSeen.size > 40, `캐릭터와 별이 짝지어지지 않고 섞여야 함(400판에 짝 ${pairsSeen.size}가지)`);
+const facesAtTop = new Set(Array.from({ length: 200 }, () => makeRival(AI_OPPONENTS[19], pickPersona(pickRandom)).name));
+check(facesAtTop.size === CHARACTERS.length, `20단계에서도 캐릭터 열다섯이 모두 나와야 함(지금 ${facesAtTop.size})`);
+const pairsSeen = new Set(Array.from({ length: 400 }, (_, index) => { const rival = makeRival(AI_OPPONENTS[index % AI_LEVEL_COUNT], pickPersona(pickRandom)); return `${rival.name}:${rival.level}`; }));
+check(pairsSeen.size > 40, `캐릭터와 단계가 짝지어지지 않고 섞여야 함(400판에 짝 ${pairsSeen.size}가지)`);
 let previous = pickPersona(pickRandom).id;
 let repeats = 0;
 for (let index = 0; index < 200; index += 1) { const next = pickPersona(pickRandom).id; if (next === previous) repeats += 1; previous = next; }
 check(repeats === 0, '바로 전 판과 같은 캐릭터는 다시 나오지 않아야 함');
 check(new Set(shufflePersonas(4, seededPick(3)).map((persona) => persona.id)).size === 4, '로비 무대 캐릭터 넷은 서로 달라야 함');
-check(WIN_REWARDS[8] > WIN_REWARDS[7] && WIN_REWARDS[7] > WIN_REWARDS[6] && WIN_REWARDS[6] > WIN_REWARDS[5], '센 상대일수록 승리 점수가 커야 함');
+const rewards = Array.from({ length: AI_LEVEL_COUNT }, (_, index) => WIN_REWARDS[index + 1]);
+check(rewards.every((reward, index) => reward > 0 && reward % 10 === 0 && (index === 0 || reward > rewards[index - 1])), '센 단계일수록 승리 점수가 커야 함(10점 단위)');
+// 11-27 선생님 「친구 대전 · AI 대전 · 상자 점수 20퍼센트 정도 상향」 — 옛 ★ 자리 보상은 옛 값의 1.2배(10점 단위로 반올림)
+const OLD_STAR_REWARDS = [125, 180, 250, 340, 500, 700, 1000, 1400];
+check([1, 2, 3, 5, 8, 11, 15, 20].every((level, index) => Math.abs(WIN_REWARDS[level] - OLD_STAR_REWARDS[index] * 1.2) <= 5), `옛 ★1~★8 자리 승리 점수는 20% 올림 — ${[1, 2, 3, 5, 8, 11, 15, 20].map((level) => WIN_REWARDS[level]).join(' · ')}`);
+check([1, 2, 3, 4, 5].every((stars) => Math.abs(FRIEND_WIN_REWARDS[stars] - OLD_STAR_REWARDS[stars - 1] * 1.2) <= 5), '친구 대전 승리 점수도 20% 올림');
+check(Object.values(LOSS_PENALTIES).every((loss, index, list) => loss <= -60 && loss >= -160 && (index === 0 || loss <= list[index - 1])) && LOSS_PENALTIES[11] === -80 && LOSS_PENALTIES[15] === -120 && LOSS_PENALTIES[20] === -160, '잃는 점수는 옛 ★6 · ★7 · ★8 그대로(−80 · −120 · −160), 사이는 고르게');
 const eliteStorage = memoryStorage({ [PROFILE_KEY]: JSON.stringify({ points: 330000, peakPoints: 330000, wins: 700, games: 900 }) });
-const eliteWin = recordMatchResult({ won: true, opponentStars: 7, mode: 'ai', matchId: 'elite-win' }, eliteStorage);
-check(eliteWin.delta === WIN_REWARDS[7], `★7 을 이기면 +${WIN_REWARDS[7]}점(지금 ${eliteWin.delta})`);
+const eliteWin = recordMatchResult({ won: true, opponentLevel: 15, mode: 'ai', matchId: 'elite-win' }, eliteStorage);
+check(eliteWin.delta === WIN_REWARDS[15], `15단계(옛 ★7)를 이기면 +${WIN_REWARDS[15]}점(지금 ${eliteWin.delta})`);
 const onlineWin = recordMatchResult({ won: true, opponentStars: 8, mode: 'multi', matchId: 'friend-win' }, eliteStorage);
-check(onlineWin.delta === WIN_REWARDS[5], '친구 대전 보상은 ★5 까지만(점수 몰아주기 막기)');
-const eliteLoss = recordMatchResult({ won: false, opponentStars: 8, mode: 'ai', matchId: 'elite-loss' }, eliteStorage);
-check(eliteLoss.delta < -50 && eliteLoss.delta >= -200, `★8 에게 지면 −50보다 조금 더 잃어야 함(지금 ${eliteLoss.delta})`);
+check(onlineWin.delta === FRIEND_WIN_REWARDS[5], '친구 대전 보상은 ★5 까지만(점수 몰아주기 막기)');
+const eliteLoss = recordMatchResult({ won: false, opponentLevel: 20, mode: 'ai', matchId: 'elite-loss' }, eliteStorage);
+check(eliteLoss.delta === -160, `20단계(옛 ★8)에게 지면 −160점(지금 ${eliteLoss.delta})`);
+const friendLoss = recordMatchResult({ won: false, opponentStars: 8, mode: 'multi', matchId: 'friend-loss' }, eliteStorage);
+check(friendLoss.delta === -50, `친구 대전에서 지면 −50점(지금 ${friendLoss.delta})`);
+check(xpForMatch({ won: true, stars: AI_OPPONENTS[6].tier, now: new Date('2027-01-10T12:00:00') }) === 193, '사이 단계 경험치는 옛 별로 친 값으로(7단계 = 4.67성 → 193)');
 check(normalizeEquipped({ cardBack: 'back-s2-emblem', table: 'table-s2-arena' }, 0, 20).cardBack === 'back-classic', '없어진 미리 보기 아이템 ID 는 기본으로 돌아가야 함');
 check(charmToyConfig('charm-rose-dome', 0).img === 'rose-dome', '장난감 아이템은 실물 누끼를 가리켜야 함');
 check(lookOf('table', 'rose-ballroom').painted === 'rose-ballroom-table', '장미 무도회 맵은 시즌 1 그림을 그대로 써야 함');
@@ -244,17 +280,22 @@ const { rollRewardBoxes, boxBase, veteranBonus, BOX_MULTIPLIERS, BOX_SHARE, expe
 const { claimRewardBox } = await import('../src/core/rating.js');
 const { BOX_ITEMS } = await import('../src/core/cosmetics.js');
 const seeded = (seed) => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-check(Object.entries(WIN_REWARDS).every(([stars, reward]) => Math.abs(boxBase({ won: true, stars: Number(stars) }) - reward * BOX_SHARE.win) < 1e-9), '상자 기본 점수는 승리 보상에 비례해야 함(reward-box 의 보상표가 rating 과 같아야 함)');
-check(boxBase({ won: true, stars: 7 }) > boxBase({ won: false, stars: 7 }) && boxBase({ won: false, stars: 7 }) > 0 && Math.abs(boxBase({ won: true, stars: 7, bonus: true }) - 2 * boxBase({ won: true, stars: 7 })) < 1e-9, '이기면 더 크고, 져도 점수가 있고, 보너스판은 두 배');
+check(Object.entries(WIN_REWARDS).every(([level, reward]) => Math.abs(boxBase({ won: true, level: Number(level) }) - reward * BOX_SHARE.win) < 1e-9), '상자 기본 점수는 그 단계 승리 보상에 비례해야 함(보상이 20% 오르면 상자도 함께)');
+check(boxBase({ won: true, level: 15 }) > boxBase({ won: false, level: 15 }) && boxBase({ won: false, level: 15 }) > 0 && Math.abs(boxBase({ won: true, level: 15, bonus: true }) - 2 * boxBase({ won: true, level: 15 })) < 1e-9, '이기면 더 크고, 져도 점수가 있고, 보너스판은 두 배');
+// 11-27 선생님 「상자에서 배율이나 아이템이 약간 더 자주」 — ×2 이상 66% → 72%, 아이템 15% · 6% → 20% · 8%
+const { BOX_ITEM_CHANCE } = await import('../src/core/reward-box.js');
+const multiplierShare = (min) => BOX_MULTIPLIERS.filter((entry) => entry.x >= min).reduce((sum, entry) => sum + entry.weight, 0);
+check(multiplierShare(2) === 72 && multiplierShare(5) === 21 && multiplierShare(10) === 7, `배수가 붙는 상자가 조금 더 자주(×2 이상 ${multiplierShare(2)}% · ×5 이상 ${multiplierShare(5)}% · ×10 ${multiplierShare(10)}%)`);
+check(BOX_ITEM_CHANCE.win === 0.2 && BOX_ITEM_CHANCE.lose === 0.08, '상자 아이템도 조금 더 자주(이기면 20% · 져도 8%)');
 check(veteranBonus(0) === 1 && veteranBonus(99) === 1 && Math.abs(veteranBonus(100) - 1.1) < 1e-9 && Math.abs(veteranBonus(900) - 1.9) < 1e-9 && veteranBonus(5000) === 2, '판수 보너스는 100판마다 +0.1배, 최대 ×2');
 check(BOX_MULTIPLIERS.map((entry) => entry.x).join() === '1,2,3,5,10' && BOX_MULTIPLIERS.reduce((sum, entry) => sum + entry.weight, 0) === 100, '배수는 ×1 · ×2 · ×3 · ×5 · ×10(가중치 합 100)');
-const someBoxes = Array.from({ length: 200 }, (_, index) => rollRewardBoxes({ won: index % 2 === 0, stars: 7, games: 900 }, seeded(index + 7))).flat();
+const someBoxes = Array.from({ length: 200 }, (_, index) => rollRewardBoxes({ won: index % 2 === 0, level: 15, games: 900 }, seeded(index + 7))).flat();
 check(someBoxes.every((box) => box.amount >= 10 && box.amount === box.base * box.multiplier && [1, 2, 3, 5, 10].includes(box.multiplier)), '어느 상자든 점수가 있어야 함(기본 × 배수)');
 check(someBoxes.some((box) => box.multiplier === 10) && someBoxes.some((box) => box.multiplier === 1), '×10 상자도 가끔 나와야 함');
-const itemBoxes = rollRewardBoxes({ won: true, stars: 5 }, () => 0.01);
+const itemBoxes = rollRewardBoxes({ won: true, level: 8 }, () => 0.01);
 check(itemBoxes.every((box) => box.itemId && box.amount > 0) && new Set(itemBoxes.map((box) => box.itemId)).size === 3, '아이템은 점수와 함께, 세 상자에 서로 다른 것');
 check(rollRewardBoxes({ won: true, owned: BOX_ITEMS.map((entry) => entry.id) }, () => 0.01).every((box) => !box.itemId && box.amount > 0), '상자 아이템을 다 가지면 점수만 나와야 함');
-check(expectedBoxPoints({ won: true, stars: 7, games: 900 }) > 1000, '33만 점대(약 900판)가 ★7 을 이기면 상자 하나가 평균 1,000점 넘게 줘야 함');
+check(expectedBoxPoints({ won: true, level: 15, games: 900 }) > 1000, '33만 점대(약 900판)가 15단계(옛 ★7)를 이기면 상자 하나가 평균 1,000점 넘게 줘야 함');
 check(BOX_ITEMS.length >= 30 && BOX_ITEMS.every((entry) => entry.threshold === null && !entry.pass), '상자 전용 아이템은 점수 · 패스로 안 열림');
 check(BOX_ITEMS.some((entry) => (entry.tags || []).includes('dessert')) && BOX_ITEMS.some((entry) => (entry.tags || []).includes('cute')) && BOX_ITEMS.some((entry) => (entry.tags || []).includes('flower')), '상자에는 디저트 · 귀여운 것 · 꽃이 모두 있어야 함');
 const boxStorage = memoryStorage({ [PROFILE_KEY]: JSON.stringify({ points: 330000, peakPoints: 330000, wins: 700, games: 900 }) });
@@ -267,7 +308,7 @@ const itemClaim = claimRewardBox({ matchId: 'm-2', box: { amount: 1500, multipli
 check(itemClaim.item?.id === teddy.id && itemClaim.delta === 1500 && loadPlayerProfile(boxStorage).boxItems.includes(teddy.id), '아이템이 든 상자는 아이템과 점수를 함께 줘야 함');
 const againClaim = claimRewardBox({ matchId: 'm-3', box: { amount: 900, multiplier: 1, itemId: teddy.id } }, boxStorage);
 check(againClaim.item === null && againClaim.delta === 900, '이미 가진 아이템이면 점수만');
-check(claimRewardBox({ matchId: 'm-4', box: { amount: 999999 } }, boxStorage).delta === 30000, '상자 하나 점수는 3만 점을 넘지 않음');
+check(claimRewardBox({ matchId: 'm-4', box: { amount: 999999 } }, boxStorage).delta === 36000, '상자 하나 점수는 3만 6천 점을 넘지 않음(11-27 점수 20% 올리며 상한도 함께)');
 check(normalizeEquipped({ charms: [teddy.id] }, 330000, 0, [teddy.id]).charms[0] === teddy.id && normalizeEquipped({ charms: [teddy.id] }, 330000, 0, []).charms[0] === 'charm-classic', '상자 아이템은 가졌을 때만 장착');
 const mergedBox = mergeProfiles3({ boxItems: ['charm-box-hedgehog'], claimedBoxIds: ['box:a'] }, { boxItems: ['charm-box-duckling'], claimedBoxIds: ['box:b'] }, base);
 check(mergedBox.boxItems.length === 2 && mergedBox.claimedBoxIds.length === 2, '두 기기의 상자 아이템 · 받은 상자를 모두 남겨야 함');
@@ -299,11 +340,11 @@ check(rankAt(0) === 'star1' && rankAt(999) === 'star1' && rankAt(1000) === 'star
 check(rankAt(42000) === 'ruby1' && rankAt(160000) === 'ruby5' && rankAt(199999) === 'ruby5' && rankAt(200000) === 'rose1', '루비 → 분홍 장미 경계');
 check(rankAt(335000) === 'rose3' && rankAt(540000) === 'crown1' && rankAt(1000000) === 'crown5' && rankAt(5000000) === 'crown5' && rankForPoints(1000000).next === null, '분홍 장미 → 왕관, 100만 점이 마지막(다음 없음)');
 check(rankForPoints(41999).next?.name === '루비 1단계' && rankForPoints(-5).level === 1 && rankForPoints('abc').level === 1, '다음 단계 이름 · 이상한 점수는 1단계');
-// AI 난이도(★1~★8)도 단계 그림으로(11-25) — 난이도가 오를수록 단계도 오르고, 30만 점대(★5~★8)는 루비 · 분홍 장미 · 왕관
-const { AI_RANK_LEVELS, aiRankForStars } = await import('../src/core/rank.js');
-const aiRanks = [1, 2, 3, 4, 5, 6, 7, 8].map((stars) => aiRankForStars(stars));
-check(AI_RANK_LEVELS.length === 8 && aiRanks.every((rank, index) => index === 0 || rank.level > aiRanks[index - 1].level), 'AI 난이도 단계는 ★1 → ★8 로 갈수록 오름');
-check(aiRanks.slice(4).map((rank) => rank.unit).join() === 'ruby,rose,rose,crown' && aiRankForStars(0).level === 1 && aiRankForStars(99).level === aiRanks[7].level, '★5 루비 · ★6 ★7 분홍 장미 · ★8 왕관, 벗어난 값은 끝에 맞춤');
+// AI 난이도도 내 단계와 같은 20단계 이름 · 그림(11-27) — 36,280점(금별 5)은 금별 5 ~ 루비 3, 569,515점(왕관 1)은 분홍 장미 4 ~ 왕관 2 를 만남
+const { rankForLevel } = await import('../src/core/rank.js');
+const unitsAt = (points) => matchmakingWeights(points).map((weight, index) => (weight > 0 ? `${rankForLevel(index + 1).unit}${rankForLevel(index + 1).count}` : null)).filter(Boolean).join(',');
+check(unitsAt(36280) === 'star5,ruby1,ruby2,ruby3' && unitsAt(569515) === 'rose4,rose5,crown1,crown2', `만나는 난이도 단계 — 36,280점 ${unitsAt(36280)} · 569,515점 ${unitsAt(569515)}`);
+check(rankForLevel(0).level === 1 && rankForLevel(99).level === 20, '벗어난 단계는 끝에 맞춤');
 
 // 배경음악 목록(scripts/build-music.mjs) — 넣은 곡은 파일이 있고 장면은 로비 · 대전뿐, 출처가 적혀 있음
 const { MUSIC } = await import('../src/data/music.js');

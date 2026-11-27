@@ -4,7 +4,7 @@ import { OneCardGame } from '../core/game-engine.js';
 import { chooseAiMove } from '../core/ai-player.js';
 import { chooseAiReaction } from '../core/ai-reactions.js';
 import {
-  loadPlayerProfile, recordMatchResult, rememberAiOpponent, rewardForStars, selectAiOpponent, bonusMatchChance, claimRewardBox,
+  loadPlayerProfile, recordMatchResult, rememberAiOpponent, rewardForLevel, selectAiOpponent, bonusMatchChance, claimRewardBox,
 } from '../core/rating.js';
 import { rankForPoints } from '../core/rank.js';
 import { rollRewardBoxes, veteranBonus } from '../core/reward-box.js';
@@ -37,14 +37,14 @@ const SPECIAL = new Set(['2', 'A', 'J', '7', 'JOKER']);
 export async function startAiMatch({ host, onExit, onFinished, openRules }) {
   let profile = loadPlayerProfile();
   const opponent = selectAiOpponent(profile.points, Math.random, profile.recentAiStars);
-  const rival = makeRival(opponent); // 난이도(별)와 캐릭터를 따로 무작위로
+  const rival = makeRival(opponent); // 난이도(1~20단계)와 캐릭터를 따로 무작위로
   const myName = normalizeNickname(settings.get().nickname) || '나';
   const bonus = Math.random() < bonusChanceWithEvent(bonusMatchChance(profile.points));
-  profile = rememberAiOpponent(profile, rival.stars);
+  profile = rememberAiOpponent(profile, rival.level);
   const xpAtStart = profile.seasonXp;
   const rankAtStart = rankForPoints(profile.points); // 판이 끝나 단계가 올랐으면 결과 판 앞에 단계 오름 연출
   const matchId = `ai:${Date.now()}:${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`;
-  const reward = rewardForStars(rival.stars) * (bonus ? 2 : 1);
+  const reward = rewardForLevel(rival.level) * (bonus ? 2 : 1);
   const avatar = cosmeticById(profile.equipped.avatar) || cosmeticById(DEFAULT_EQUIPPED.avatar);
   const startedAt = Date.now();
   let moves = 0;
@@ -79,7 +79,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
   const toys = mountToys({ layer: table.toysLayer, equipped: profile.equipped, fx });
 
   table.setMatch({ title: `${rival.title} ${rival.name}`, sub: `이기면 +${reward}점`, bonus });
-  table.setRival({ name: rival.name, starsCount: rival.stars, color: rival.color, portrait: rival.portrait, status: rival.blurb });
+  table.setRival({ name: rival.name, aiLevel: rival.level, color: rival.color, portrait: rival.portrait, status: rival.blurb });
   table.setMe({ name: myName, portrait: avatar.portrait, points: profile.points, color: '#f2b544' });
   table.resetPile(null);
   table.setDeckCount(game.drawPile.length + 10);
@@ -186,7 +186,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     if (ended) return;
     rivalCtl.think(true);
     const speed = Number(settings.get().speed) || 1;
-    await wait((520 + rival.stars * 110 + Math.random() * 380) / speed);
+    await wait((520 + rival.tier * 110 + Math.random() * 380) / speed); // 센 단계일수록 조금 더 생각하는 척(옛 별로 친 값)
     rivalCtl.think(false);
     if (ended) return;
     const move = chooseAiMove(game, rival.key);
@@ -273,12 +273,12 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     const won = winner === 0;
     setMusicScene(null); // 승리 · 패배 잔음악이 들리게 배경음악은 줄여 끈다(로비 · 다음 판에서 다시)
     const xpBefore = xpAtStart;
-    const rating = recordMatchResult({ won, opponentStars: rival.stars, mode: 'ai', matchId, bonusMultiplier: bonus ? 2 : 1 });
+    const rating = recordMatchResult({ won, opponentLevel: rival.level, mode: 'ai', matchId, bonusMultiplier: bonus ? 2 : 1 });
     const resultEvents = [
       { id: `${matchId}:result:game`, type: 'game', mode: 'ai', bonus },
-      ...(won ? [{ id: `${matchId}:result:win`, type: 'win', mode: 'ai', opponentStars: rival.stars, bonus }] : []),
+      ...(won ? [{ id: `${matchId}:result:win`, type: 'win', mode: 'ai', opponentLevel: rival.level, bonus }] : []),
       ...(bonus ? [{ id: `${matchId}:result:bonus-match`, type: 'bonus-match', mode: 'ai' }] : []),
-      ...(bonus && won ? [{ id: `${matchId}:result:bonus-win`, type: 'bonus-win', mode: 'ai', opponentStars: rival.stars }] : []),
+      ...(bonus && won ? [{ id: `${matchId}:result:bonus-win`, type: 'bonus-win', mode: 'ai', opponentLevel: rival.level }] : []),
     ];
     missions(resultEvents);
     const profileNow = loadPlayerProfile();
@@ -297,7 +297,7 @@ export async function startAiMatch({ host, onExit, onFinished, openRules }) {
     await finale.timeline;
     // 보상 상자 — 내용은 지금 정해 두고, 고른 하나만 받는다(같은 판은 한 번만). 점수는 늘 있고, 판수가 쌓일수록 커진다
     const beforeBox = loadPlayerProfile();
-    const boxes = rollRewardBoxes({ won, stars: rival.stars, bonus, games: beforeBox.games, owned: beforeBox.boxItems });
+    const boxes = rollRewardBoxes({ won, level: rival.level, bonus, games: beforeBox.games, owned: beforeBox.boxItems });
     const pickedBox = await openRewardBoxes({ host: table.root, boxes, won, veteran: veteranBonus(beforeBox.games), games: beforeBox.games });
     const claim = claimRewardBox({ matchId, box: pickedBox });
     const profileAfter = loadPlayerProfile();
